@@ -1,0 +1,41 @@
+term :=
+    | Var(String)
+    | Value
+    | Component(String, term, ..., term)
+    | if term then term else term
+
+type :=
+    | TVar(String)
+    | TValue
+    | Pi tvar. type
+    | type[type, ..., type]
+    | type * ... * type => type
+
+
+length : Pi a. List[a] => Int   // Pi (TVar "a"). TConst("List")[TVar "a"] => TConst("Int")
+length[a](x: List[a]): Int = ...
+input: <[], [2], [1,2]>  output: <0, 1, 2>
+
+components:
+    inc: Int => Int
+    isEmpty: Pi a. List[a] => Bool
+    tail: Pi a. List[a] => List[a]
+    zero: Int
+    length : Pi a. List[a] => Int
+    plus: Int * Int => Int
+
+
+[size = 1]
+E1: zero  ->  <0, 0, 0>
+    new goal: if <T, F, F> then E1 else <?, 1 ,2>
+
+[size = 2]
+B1: isEmpty(x)  ->  <T, F, F>
+E2: inc(E1)  ->  <1, 1, 1>
+    new goal: if <T, F, F> then E1 else if <?, T, F> then E2 else <?, ?, 2>
+(discard)E3: plus(E1, E1)  -> <0, 0, 0>
+
+[size = 4]
+E3: inc(length(tail(x)))
+
+
