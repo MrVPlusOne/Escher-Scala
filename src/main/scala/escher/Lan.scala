@@ -1,11 +1,10 @@
 package escher
 
 /**
-  * term :=
-    | Var(name)
-    | Value
-    | Component(name, term, ..., term)
-    | if term then term else term
+  * term := <br>
+    | Var(name) <br>
+    | Component(name, term, ..., term) <br>
+    | if term then term else term <br>
   */
 sealed trait Term
 
@@ -54,17 +53,17 @@ object Term {
 }
 
 /**
-  * type :=
-    | tVar
-    | typeConstructor[type, ... , type]
-    | type * ... * type => type
+  * type := <br>
+    | tVar <br>
+    | typeConstructor[type, ... , type] <br>
+    <br>
+    Our type system is first-order, so function types are not permitted.
   */
 sealed trait Type{
   override def toString: String = Type.show(this)
 }
 
 
-/** Our type system is first-order, so function types are not permitted. */
 object Type {
 
   case class TVar(id: Int) extends Type

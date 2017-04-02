@@ -7,7 +7,7 @@ case class ComponentImpl(inputTypes: List[Type], outputType: Type,
   def execute(args: List[TermValue]): TermValue = {
     try { impl.apply(args) }
     catch {
-      case me: MatchError =>
+      case _: MatchError =>
         println(s"[Warning] Match error in execute!")
         println(s"  input types: $inputTypes")
         println(s"  args: $args")

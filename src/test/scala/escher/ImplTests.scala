@@ -4,9 +4,7 @@ import escher.CommonlyUsedComponents.{allMap, recursiveImpl}
 import escher.DSL._
 import org.scalatest.WordSpec
 
-/**
-  * Created by weijiayi on 02/04/2017.
-  */
+
 class ImplTests extends WordSpec {
   def checkImpl(impl: ComponentImpl)(testCases: (List[TermValue], TermValue)*): Unit ={
     testCases.foreach{
@@ -16,16 +14,19 @@ class ImplTests extends WordSpec {
   }
 
   "a sample length implementation" should {
-    val p =
-      `if`(c("isEmpty", v("xs"))) {
-        "zero" $()
-      } {
-        "inc" $ ("length" $ ("tail" $ v("xs")))
-      }
 
-    val lengthImpl = recursiveImpl("length", List("xs"),
-      List(TList of tVar(0)), TInt.of(), allMap.apply,
-      p
+    val lengthImpl = recursiveImpl(
+      name = "length",
+      argNames = List("xs"),
+      inputTypes = List(TList of tVar(0)),
+      outputType = TInt.of(),
+      compMap = allMap.apply,
+      body =
+        `if`("isEmpty" $ v("xs")) {
+          "zero" $ ()
+        } {
+          "inc" $ ("length" $ ("tail" $ v("xs")))
+        }
     )
 
     "behave correctly" in {

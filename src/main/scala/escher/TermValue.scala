@@ -3,7 +3,7 @@ package escher
 import escher.Type.TApply
 
 
-/** Concrete value in a term */
+/** The computational result to which a term can evaluate */
 trait TermValue {
 
 }

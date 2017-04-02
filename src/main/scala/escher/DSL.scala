@@ -1,7 +1,7 @@
 package escher
 
 /**
-  * Created by weijiayi on 02/04/2017.
+  * using "import DSL._" to write terms more easily
   */
 object DSL {
   import Term._
@@ -28,9 +28,4 @@ object DSL {
 
   def listValue(terms: TermValue*) = TermList(terms.toList)
 
-
-  //input type
-  TList of (TInt of ())
-  //output type
-  TInt of ()
 }

@@ -1,15 +1,11 @@
 term :=
     | Var(String)
-    | Value
-    | Component(String, term, ..., term)
+    | Component(name, term, ..., term)
     | if term then term else term
 
 type :=
     | TVar(String)
-    | TValue
-    | Pi tvar. type
-    | type[type, ..., type]
-    | type * ... * type => type
+    | tName[type, ..., type]
 
 
 length : Pi a. List[a] => Int   // Pi (TVar "a"). TConst("List")[TVar "a"] => TConst("Int")
