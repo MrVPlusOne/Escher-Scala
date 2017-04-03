@@ -23,9 +23,9 @@ object DSL {
 
   def tVar(id: Int) = TVar(id)
 
-  implicit def intConversion(i: Int): TermInt = TermInt(i)
-  implicit def boolConversion(b: Boolean): TermBool = TermBool(b)
+  implicit def intConversion(i: Int): ValueInt = ValueInt(i)
+  implicit def boolConversion(b: Boolean): ValueBool = ValueBool(b)
 
-  def listValue(terms: TermValue*) = TermList(terms.toList)
+  def listValue(terms: TermValue*) = ValueList(terms.toList)
 
 }
