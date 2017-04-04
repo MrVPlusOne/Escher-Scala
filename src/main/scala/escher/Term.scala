@@ -6,7 +6,9 @@ package escher
     | Component(name, term, ..., term) <br>
     | if term then term else term <br>
   */
-sealed trait Term
+sealed trait Term{
+  def show: String = toString
+}
 
 object Term {
 

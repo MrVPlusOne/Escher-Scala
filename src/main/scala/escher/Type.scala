@@ -29,8 +29,8 @@ object Type {
   def show(t: Type): String = t match {
     case TVar(id) => s"'$id"
     case TApply(tc, params) =>
-      if(params.isEmpty) tc.toString
-      else s"$tc${params.map(show).mkString("[",",","]")}"
+      if(params.isEmpty) tc.name
+      else s"${tc.name}${params.map(show).mkString("[",",","]")}"
   }
 
   def varSet(t: Type): Set[Int] = t match {
@@ -59,7 +59,7 @@ case class TypeSubst(map: Map[Int, Type]){
   }
 
   def contains(subst: TypeSubst): Boolean = {
-    subst.map.forall{case (v, t) => map.get(v).contains(t)}
+    subst.map subMapOf this.map
   }
 }
 

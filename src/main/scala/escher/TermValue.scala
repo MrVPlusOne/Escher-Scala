@@ -6,6 +6,7 @@ import escher.Type.{TApply, TVar}
 
 /** The computational result to which a term can evaluate */
 trait TermValue {
+
   def matchType(ty: Type, freeId: Int): Option[(TypeSubst, Int)] = {
     var id = freeId
     def counter(): Int = {
@@ -17,18 +18,26 @@ trait TermValue {
   }
 
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst]
+
+  def show: String
 }
 
 case object ValueError extends TermValue{
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = Some(TypeSubst.empty)
+
+  def show = "Err"
 }
 
 case class ValueBool(value: Boolean) extends TermValue{
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = matchTApply(ty,TBool.of())
+
+  def show: String = value.toString
 }
 
 case class ValueInt(value: Int) extends TermValue{
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = matchTApply(ty, TInt.of())
+
+  def show: String = value.toString
 }
 
 case class ValueList(elems: List[TermValue]) extends TermValue{
@@ -49,6 +58,8 @@ case class ValueList(elems: List[TermValue]) extends TermValue{
       Some(s)
     case _ => None
   }
+
+  def show: String = elems.map(_.show).mkString("[", ", ", "]")
 }
 
 object TermValue{
@@ -63,6 +74,7 @@ object TermValue{
 
 
 trait TypeConstructor{
+  def name: String
   def arity: Int
   def of(params: Type*): TApply = {
     require(params.length == arity)
@@ -74,10 +86,17 @@ trait BasicType extends TypeConstructor{
   def arity = 0
 }
 
-case object TBool extends BasicType
+case object TBool extends BasicType{
+  override def name: String = "bool"
+}
 
-case object TInt extends BasicType
+case object TInt extends BasicType {
+  override def name: String = "int"
+}
+
 
 case object TList extends TypeConstructor{
   def arity: Int = 1
+
+  override def name: String = "list"
 }
