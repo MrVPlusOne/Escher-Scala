@@ -10,12 +10,12 @@ object DSL {
 
   implicit class ComponentFromString(name: String){
     /** allowing us to write <i>"Component(n, args*)"</i> as <i>"n $ (args*)"</i> */
-    def $ (args: Term*) = Component(name, args.toList)
+    def $ (args: Term*) = Component(name, args.toIndexedSeq)
   }
 
   def v(name: String) = Var(name)
 
-  def c(name: String, args: Term*) = Component(name, args.toList)
+  def c(name: String, args: Term*) = Component(name, args.toIndexedSeq)
 
   def `if`(condition: Term)(thenBranch: Term)(elseBranch: Term) = If(condition, thenBranch, elseBranch)
 

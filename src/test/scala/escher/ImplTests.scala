@@ -7,10 +7,10 @@ import org.scalatest.WordSpec
 
 //noinspection RedundantDefaultArgument
 class ImplTests extends WordSpec {
-  def checkImpl(impl: ComponentImpl, debugExecute: Boolean = false)(testCases: (List[TermValue], TermValue)*): Unit ={
+  def checkImpl(impl: ComponentImpl, debugExecute: Boolean = false)(testCases: (Seq[TermValue], TermValue)*): Unit ={
     testCases.foreach{
       case (in, out) =>
-        assert(impl.execute(in, debugExecute) === out)
+        assert(impl.execute(in.toIndexedSeq, debugExecute) === out)
     }
   }
 
@@ -18,8 +18,8 @@ class ImplTests extends WordSpec {
 
     val lengthImpl = recursiveImpl(
       name = "length",
-      argNames = List("xs"),
-      inputTypes = List(TList of tyVar(0)),
+      argNames = IS("xs"),
+      inputTypes = IS(TList of tyVar(0)),
       outputType = tyInt,
       compMap = allMap,
       body =
@@ -43,8 +43,8 @@ class ImplTests extends WordSpec {
   "a simple fib implementation" should {
     val fibImpl = recursiveImpl(
       name = "fib",
-      argNames = List("n"),
-      inputTypes = List(tyInt),
+      argNames = IS("n"),
+      inputTypes = IS(tyInt),
       outputType = tyInt,
       compMap = allMap,
       body =
@@ -97,11 +97,11 @@ class TypeCheckingTests extends WordSpec {
   }
 
   "Type oneWayUnify" should {
-    import Type.oneWayUnify
+    import Type.unify
     def checkOneWayUnify(examples: ((Type, Type), Map[Int, Type])*): Unit ={
       examples.foreach{
         case ((t1,t2), map) =>
-          assert {oneWayUnify(t1,t2).get === TypeSubst(map)}
+          assert {unify(t1,t2).get === TypeSubst(map)}
       }
     }
 
@@ -115,19 +115,21 @@ class TypeCheckingTests extends WordSpec {
 
     "unify list" in {
       checkOneWayUnify(
-        (tyList(tyVar(0)), tyList(tyList(tyInt))) -> Map(0 -> tyList(tyInt))
+        (tyList(tyVar(0)), tyList(tyList(tyInt))) -> Map(0 -> tyList(tyInt)),
+        (tyList(tyVar(0)), tyVar(1)) -> Map(1 -> tyList(tyVar(0))),
+        (tyList(tyInt), tyList(tyVar(0))) -> Map(0 -> tyInt)
       )
 
-      assert{ oneWayUnify(tyList(tyVar(0)), tyVar(1)) === None }
     }
 
     "unify map" in {
       checkOneWayUnify(
-        (TMap.of(tyVar(0), tyVar(1)), TMap.of(tyInt, tyBool)) -> Map(0 -> tyInt, 1 -> tyBool)
+        (TMap.of(tyVar(0), tyVar(1)), TMap.of(tyInt, tyBool)) -> Map(0 -> tyInt, 1 -> tyBool),
+        (TMap.of(tyVar(0), tyVar(0)), TMap.of(tyBool, tyBool)) -> Map(0 -> tyBool)
       )
 
-      assert { oneWayUnify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyInt, tyBool)) === None }
-      assert { oneWayUnify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyFixVar(0), tyBool)) === None }
+      assert { unify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyInt, tyBool)) === None }
+      assert { unify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyFixVar(0), tyBool)) === None }
     }
   }
 

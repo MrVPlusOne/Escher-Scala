@@ -7,9 +7,12 @@ case class ExecutionError(msg: String) extends Exception {
   override def getLocalizedMessage: String = msg
 }
 
-case class ComponentImpl(inputTypes: List[Type], outputType: Type,
-                         impl: PartialFunction[List[TermValue],TermValue]){
-  def execute(args: List[TermValue], debug: Boolean): TermValue = {
+case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
+                         impl: PartialFunction[IS[TermValue],TermValue]){
+
+  def shiftTypeId(amount: Int) = ComponentImpl(inputTypes.map(_.shiftId(amount)), returnType.shiftId(amount), impl)
+
+  def execute(args: IS[TermValue], debug: Boolean): TermValue = {
     val r = try {
       impl.apply(args)
     }
@@ -28,9 +31,9 @@ case class ComponentImpl(inputTypes: List[Type], outputType: Type,
         }
         ValueError
     }
-    if(debug && r.matchType(outputType, outputType.nextFreeId).isEmpty) {
+    if(debug && r.matchType(returnType, returnType.nextFreeId).isEmpty) {
       throw ExecutionError(s"[Warning] Component return value type not match!\n"+
-        s"  output type: $outputType\n  return value: $r"
+        s"  output type: $returnType\n  return value: $r"
       )
     }
     r
@@ -40,50 +43,50 @@ case class ComponentImpl(inputTypes: List[Type], outputType: Type,
 object CommonlyUsedComponents {
   import DSL._
 
-  val length = ComponentImpl(List(TList of tyVar(0)), TInt.of(),
-    impl = { case List(ValueList(elems)) => ValueInt(elems.length) }
+  val length = ComponentImpl(IS(TList of tyVar(0)), TInt.of(),
+    impl = { case IS(ValueList(elems)) => ValueInt(elems.length) }
   )
 
-  val isEmpty = ComponentImpl(List(TList of tyVar(0)), TBool.of(),
-    impl = { case List(ValueList(elems)) => ValueBool(elems.isEmpty)}
+  val isEmpty = ComponentImpl(IS(TList of tyVar(0)), TBool.of(),
+    impl = { case IS(ValueList(elems)) => ValueBool(elems.isEmpty)}
   )
 
-  val isZero = ComponentImpl(List(TInt.of()), TBool.of(),
-    impl = { case List(ValueInt(x)) => x == 0 }
+  val isZero = ComponentImpl(IS(TInt.of()), TBool.of(),
+    impl = { case IS(ValueInt(x)) => x == 0 }
   )
 
   val zero = ComponentImpl(
-    inputTypes = List(),
-    outputType = TInt.of(),
-    impl = { case List() => ValueInt(0)}
+    inputTypes = IS(),
+    returnType = TInt.of(),
+    impl = { case IS() => ValueInt(0)}
   )
 
-  val inc = ComponentImpl(List(TInt of ()), TInt of (),
-    impl = { case List(ValueInt(x)) => ValueInt(x + 1)}
+  val inc = ComponentImpl(IS(TInt of ()), TInt of (),
+    impl = { case IS(ValueInt(x)) => ValueInt(x + 1)}
   )
 
-  val dec = ComponentImpl(List(TInt of ()), TInt of (),
-    impl = { case List(ValueInt(x)) => ValueInt(x - 1)}
+  val dec = ComponentImpl(IS(TInt of ()), TInt of (),
+    impl = { case IS(ValueInt(x)) => ValueInt(x - 1)}
   )
 
-  val tail = ComponentImpl(List(TList of tyVar(0)), TList of tyVar(0),
-    impl = { case List(ValueList(elems)) => ValueList(elems.tail)}
+  val tail = ComponentImpl(IS(TList of tyVar(0)), TList of tyVar(0),
+    impl = { case IS(ValueList(elems)) => ValueList(elems.tail)}
   )
 
-  val cons = ComponentImpl(List(tyVar(0), TList of tyVar(0)), TList of tyVar(0),
-    impl = { case List(x, ValueList(x2)) => ValueList(x :: x2)}
+  val cons = ComponentImpl(IS(tyVar(0), TList of tyVar(0)), TList of tyVar(0),
+    impl = { case IS(x, ValueList(x2)) => ValueList(x :: x2)}
   )
 
-  val equal = ComponentImpl(List(tyVar(0), tyVar(0)), TBool.of(),
-    impl = { case List(a,b) => ValueBool(a == b) }
+  val equal = ComponentImpl(IS(tyVar(0), tyVar(0)), TBool.of(),
+    impl = { case IS(a,b) => ValueBool(a == b) }
   )
 
-  val or = ComponentImpl(List(TBool.of(), TBool.of()), TBool.of(),
-    impl = { case List(ValueBool(a),ValueBool(b)) => a || b }
+  val or = ComponentImpl(IS(TBool.of(), TBool.of()), TBool.of(),
+    impl = { case IS(ValueBool(a),ValueBool(b)) => a || b }
   )
 
-  val plus = ComponentImpl(List(TInt.of(), TInt.of()), TInt.of(),
-    impl = { case List(ValueInt(x), ValueInt(y)) => ValueInt(x + y)}
+  val plus = ComponentImpl(IS(TInt.of(), TInt.of()), TInt.of(),
+    impl = { case IS(ValueInt(x), ValueInt(y)) => ValueInt(x + y)}
   )
 
   val allMap = Map(
@@ -103,8 +106,8 @@ object CommonlyUsedComponents {
 
   )
 
-  def recursiveImpl(name: String, argNames: List[String],
-                  inputTypes: List[Type], outputType: Type,
+  def recursiveImpl(name: String, argNames: IS[String],
+                  inputTypes: IS[Type], outputType: Type,
                   compMap: Map[String, ComponentImpl],
                   body: Term, debug: Boolean = false
                  ): ComponentImpl = {

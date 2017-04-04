@@ -19,6 +19,12 @@ sealed trait Type{
     case TFixedVar(_) => 0
     case TApply(_, params) => (0 :: params.map(_.nextFreeId)).max
   }
+
+  def shiftId(amount: Int): Type = this match {
+    case TVar(id) => TVar(id+amount)
+    case TFixedVar(id) => TFixedVar(id)
+    case TApply(contr, params) => TApply(contr, params.map(_.shiftId(amount)))
+  }
 }
 
 object Type {
@@ -48,20 +54,26 @@ object Type {
     }
   }
 
-  def oneWayUnify(ty: Type, target: Type): Option[TypeSubst] = ty match {
+  def unify(ty: Type, target: Type): Option[TypeSubst] = ty match {
     case TVar(id) => Some(TypeSubst(Map(id -> target)))
-    case TFixedVar(_) => if(target == ty) Some(TypeSubst.empty) else None
-    case TApply(contr, params) => target match{
-      case TApply(contr2, params2) if contr == contr2 =>
-        val r = params.zip(params2).foldLeft(TypeSubst.empty){
-          case (subst, (t1,t2)) =>
-            oneWayUnify(subst(t1), t2) match {
-              case None => return None
-              case Some(ts) => subst compose ts
+    case _ => target match {
+      case TVar(id) => Some(TypeSubst(Map(id -> ty)))
+      case _ => ty match {
+        case TFixedVar(_) => if(target == ty) Some(TypeSubst.empty) else None
+        case TApply(contr, params) => target match{
+          case TApply(contr2, params2) if contr == contr2 =>
+            val r = params.zip(params2).foldLeft(TypeSubst.empty){
+              case (subst, (t1,t2)) =>
+                unify(subst(t1), subst(t2)) match {
+                  case None => return None
+                  case Some(ts) => subst compose ts
+                }
             }
+            Some(r)
+          case _ => None
         }
-        Some(r)
-      case _ => None
+        case _ => throw new Exception("Not possible")
+      }
     }
   }
 

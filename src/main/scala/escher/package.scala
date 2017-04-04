@@ -8,4 +8,7 @@ package object escher {
       map.forall{case (v, t) => that.get(v).contains(t)}
     }
   }
+
+  type IS[A] = IndexedSeq[A]
+  val IS = IndexedSeq
 }

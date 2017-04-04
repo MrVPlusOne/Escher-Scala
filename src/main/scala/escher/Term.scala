@@ -1,20 +1,27 @@
 package escher
 
+import escher.Term.{Component, If, Var}
+
 /**
   * term := <br>
-    | Var(name) <br>
-    | Component(name, term, ..., term) <br>
-    | if term then term else term <br>
+    *| Var(name) <br>
+    *| Component(name, term, ..., term) <br>
+    *| if term then term else term <br>
   */
 sealed trait Term{
-  def show: String = toString
+  def show: String = this match {
+    case Var(name) => s"@$name"
+    case Component(name, terms) => s"$name(${terms.map(_.show).mkString(", ")})"
+    case If(condition, thenBranch, elseBranch) =>
+      s"if ${condition.show} then ${thenBranch.show} else ${elseBranch.show}"
+  }
 }
 
 object Term {
 
   case class Var(name: String) extends Term
 
-  case class Component(name: String, terms: List[Term]) extends Term
+  case class Component(name: String, terms: IS[Term]) extends Term
 
   case class If(condition: Term, thenBranch: Term, elseBranch: Term) extends Term
 
