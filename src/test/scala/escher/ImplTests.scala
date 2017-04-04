@@ -19,8 +19,8 @@ class ImplTests extends WordSpec {
     val lengthImpl = recursiveImpl(
       name = "length",
       argNames = List("xs"),
-      inputTypes = List(TList of tVar(0)),
-      outputType = TInt.of(),
+      inputTypes = List(TList of tyVar(0)),
+      outputType = tyInt,
       compMap = allMap,
       body =
         `if`("isEmpty" $ v("xs")) {
@@ -44,8 +44,8 @@ class ImplTests extends WordSpec {
     val fibImpl = recursiveImpl(
       name = "fib",
       argNames = List("n"),
-      inputTypes = List(TInt.of()),
-      outputType = TInt.of(),
+      inputTypes = List(tyInt),
+      outputType = tyInt,
       compMap = allMap,
       body =
         `if`("or"$ ("isZero" $ v("n"), "isZero" $ ("dec"$ v("n")))) {
@@ -69,32 +69,75 @@ class ImplTests extends WordSpec {
 }
 
 class TypeCheckingTests extends WordSpec {
-  "value type checking" should{
+  "value type checking" should {
     def checkType(termValue: TermValue, ty: Type): Unit ={
       assert(termValue.matchType(ty, 1).get._1 === TypeSubst.empty)
     }
 
     "pass examples" in {
-      checkType(1, TInt.of())
-      checkType(true, TBool.of())
-      checkType(ValueError, TInt.of())
-      checkType(ValueError, TList.of(tVar(0)))
-      checkType(listValue(), TList.of(TBool.of()))
-      checkType(listValue(), TList.of(tVar(0)))
-      checkType(listValue(1,2,3,4), TList.of(TInt.of()))
-      checkType(listValue(listValue()), TList.of(TList.of(tVar(0))))
+      checkType(1, tyInt)
+      checkType(true, tyBool)
+      checkType(ValueError, tyInt)
+      checkType(ValueError, tyList(tyVar(0)))
+      checkType(listValue(), tyList(tyBool))
+      checkType(listValue(), tyList(tyVar(0)))
+      checkType(listValue(1,2,3,4), tyList(tyInt))
+      checkType(listValue(listValue()), tyList(tyList(tyVar(0))))
 
-      assert{ 1.matchType(tVar(0), 1).get._1 === TypeSubst(Map(0->TInt.of()))}
+      assert{ 1.matchType(tyVar(0), 1).get._1 === TypeSubst(Map(0->tyInt))}
 
-      assert{ listValue(listValue(), listValue(true)).matchType(TList of tVar(0),1).get._1 contains TypeSubst(Map(0 -> TList.of(TBool.of())))}
+      assert{ listValue(listValue(), listValue(true)).matchType(TList of tyVar(0),1).get._1 contains TypeSubst(Map(0 -> tyList(tyBool)))}
 
-      assert{ listValue(listValue(), listValue(true)).matchType(tVar(0),1).get._1 contains TypeSubst(Map(0 -> (TList of TList.of(TBool.of()))))}
+      assert{ listValue(listValue(), listValue(true)).matchType(tyVar(0),1).get._1 contains TypeSubst(Map(0 -> (TList of tyList(tyBool))))}
 
       assert{
-        listValue(1,2,true).matchType(TList of tVar(0), 1) === None
+        listValue(1,2,true).matchType(TList of tyVar(0), 1) === None
       }
+    }
+  }
+
+  "Type oneWayUnify" should {
+    import Type.oneWayUnify
+    def checkOneWayUnify(examples: ((Type, Type), Map[Int, Type])*): Unit ={
+      examples.foreach{
+        case ((t1,t2), map) =>
+          assert {oneWayUnify(t1,t2).get === TypeSubst(map)}
+      }
+    }
+
+    "unify vars to any type" in {
+      checkOneWayUnify(
+        (tyVar(1), tyInt) -> Map(1 -> tyInt),
+        (tyVar(0), tyList(tyInt)) -> Map(0 -> tyList(tyInt)),
+        (tyVar(0), tyList(tyFixVar(0))) -> Map(0 -> tyList(tyFixVar(0)))
+      )
+    }
+
+    "unify list" in {
+      checkOneWayUnify(
+        (tyList(tyVar(0)), tyList(tyList(tyInt))) -> Map(0 -> tyList(tyInt))
+      )
+
+      assert{ oneWayUnify(tyList(tyVar(0)), tyVar(1)) === None }
+    }
+
+    "unify map" in {
+      checkOneWayUnify(
+        (TMap.of(tyVar(0), tyVar(1)), TMap.of(tyInt, tyBool)) -> Map(0 -> tyInt, 1 -> tyBool)
+      )
+
+      assert { oneWayUnify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyInt, tyBool)) === None }
+      assert { oneWayUnify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyFixVar(0), tyBool)) === None }
     }
   }
 
 
 }
+
+
+
+
+
+
+
+

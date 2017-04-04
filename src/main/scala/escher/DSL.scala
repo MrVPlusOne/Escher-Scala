@@ -21,11 +21,17 @@ object DSL {
 
   def `var`(name: String) = Var(name)
 
-  def tVar(id: Int) = TVar(id)
+  def tyVar(id: Int) = TVar(id)
+
+  def tyFixVar(id: Int) = TFixedVar(id)
 
   implicit def intConversion(i: Int): ValueInt = ValueInt(i)
   implicit def boolConversion(b: Boolean): ValueBool = ValueBool(b)
 
   def listValue(terms: TermValue*) = ValueList(terms.toList)
+
+  val tyInt: TApply = TInt.of()
+  val tyBool: TApply = TBool.of()
+  def tyList(params: Type*): TApply = TList.of(params:_*)
 
 }

@@ -7,12 +7,20 @@ import scala.collection.mutable
   * The program synthesizing algorithm
   */
 object Synthesis {
-  type ValueMap = Map[Int, TermValue]
+
+  type ValueVector = IndexedSeq[TermValue]
   type Input = IndexedSeq[TermValue]
+  type ValueMap = Map[Int, TermValue]
 
   object ValueMap{
     def show(valueMap: ValueMap, exampleCount: Int): String = {
       (0 until exampleCount).map(i => valueMap.get(i).map(_.show).getOrElse("?")).mkString("<", ", ", ">")
+    }
+  }
+
+  object ValueVector{
+    def show(valueVector: ValueVector): String = {
+      valueVector.map(_.show).mkString("<",", ",">")
     }
   }
 
@@ -23,7 +31,7 @@ object Synthesis {
       levelMaps.length
     }
 
-    def registerTermAt(level: Int, term: Term, ty: Type, valueMap: ValueMap): Boolean = {
+    def registerTermAtLevel(level: Int, term: Term, ty: Type, valueMap: ValueVector): Boolean = {
       totalMap(ty).get(valueMap) match {
         case None =>
           totalMap.registerTerm(term, ty, valueMap)
@@ -36,8 +44,8 @@ object Synthesis {
 
     def print(exampleCount: Int): Unit = {
       println(s"Goal: ${goalGraph.show(exampleCount)}")
-      println(s"TotalMap: ${totalMap.show(exampleCount)}")
-      val levelsShow = levelMaps.map(_.show(exampleCount)).zipWithIndex.map{
+      println(s"TotalMap: ${totalMap.show}")
+      val levelsShow = levelMaps.map(_.show).zipWithIndex.map{
         case (s, level) => s"  $level: $s"
       }.mkString("\n")
       println(s"LevelMaps:\n $levelsShow")
@@ -45,19 +53,19 @@ object Synthesis {
 
   }
 
-  class TypeMap private(private val map: mutable.Map[Type, Map[ValueMap, Term]]){
-    def apply(ty: Type): Map[ValueMap, Term] = {
+  class TypeMap private(private val map: mutable.Map[Type, Map[ValueVector, Term]]){
+    def apply(ty: Type): Map[ValueVector, Term] = {
       map.getOrElse(ty, Map())
     }
 
-    def registerTerm(term: Term, ty: Type, valueMap: ValueMap): Unit = {
+    def registerTerm(term: Term, ty: Type, valueMap: ValueVector): Unit = {
       val v2t = apply(ty)
       map(ty) = v2t.updated(valueMap, term)
     }
 
-    def show(exampleCount: Int): String = {
+    def show: String = {
       map.mapValues{map =>
-        val compList = map.map{case (vMap, term) => s"'${term.show}': ${ValueMap.show(vMap, exampleCount)}"}
+        val compList = map.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
         compList.mkString("{", ", ", "}")
       }.toString
     }
@@ -87,10 +95,14 @@ object Synthesis {
     state.openNextLevel()
     (0 until arity).foreach(argId =>{
       val valueMap = inputs.indices.map(exId => {
-        exId -> inputs(exId)(argId)
-      }).toMap
-      state.registerTermAt(0, v(inputNames(argId)), inputTypes(argId), valueMap)
+        inputs(exId)(argId)
+      })
+      state.registerTermAtLevel(0, v(inputNames(argId)), inputTypes(argId), valueMap)
     })
+
+    def synthesizeTypeAtLevel(level: Int, targetType: Type): Unit ={
+
+    }
 
 
 //    def synUnderCost(maxCost: Int, targetType: Type): Unit ={

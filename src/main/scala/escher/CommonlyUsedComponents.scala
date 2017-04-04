@@ -40,11 +40,11 @@ case class ComponentImpl(inputTypes: List[Type], outputType: Type,
 object CommonlyUsedComponents {
   import DSL._
 
-  val length = ComponentImpl(List(TList of tVar(0)), TInt.of(),
+  val length = ComponentImpl(List(TList of tyVar(0)), TInt.of(),
     impl = { case List(ValueList(elems)) => ValueInt(elems.length) }
   )
 
-  val isEmpty = ComponentImpl(List(TList of tVar(0)), TBool.of(),
+  val isEmpty = ComponentImpl(List(TList of tyVar(0)), TBool.of(),
     impl = { case List(ValueList(elems)) => ValueBool(elems.isEmpty)}
   )
 
@@ -66,15 +66,15 @@ object CommonlyUsedComponents {
     impl = { case List(ValueInt(x)) => ValueInt(x - 1)}
   )
 
-  val tail = ComponentImpl(List(TList of tVar(0)), TList of tVar(0),
+  val tail = ComponentImpl(List(TList of tyVar(0)), TList of tyVar(0),
     impl = { case List(ValueList(elems)) => ValueList(elems.tail)}
   )
 
-  val cons = ComponentImpl(List(tVar(0), TList of tVar(0)), TList of tVar(0),
+  val cons = ComponentImpl(List(tyVar(0), TList of tyVar(0)), TList of tyVar(0),
     impl = { case List(x, ValueList(x2)) => ValueList(x :: x2)}
   )
 
-  val equal = ComponentImpl(List(tVar(0), tVar(0)), TBool.of(),
+  val equal = ComponentImpl(List(tyVar(0), tyVar(0)), TBool.of(),
     impl = { case List(a,b) => ValueBool(a == b) }
   )
 

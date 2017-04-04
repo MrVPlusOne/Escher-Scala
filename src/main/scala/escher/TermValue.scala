@@ -94,9 +94,14 @@ case object TInt extends BasicType {
   override def name: String = "int"
 }
 
-
 case object TList extends TypeConstructor{
   def arity: Int = 1
 
   override def name: String = "list"
+}
+
+case object TMap extends TypeConstructor{
+  override def name: String = "map"
+
+  override def arity: Int = 2
 }

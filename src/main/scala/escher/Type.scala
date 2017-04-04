@@ -1,6 +1,6 @@
 package escher
 
-import escher.Type.{TApply, TVar}
+import escher.Type.{TApply, TFixedVar, TVar}
 
 
 /**
@@ -12,31 +12,56 @@ import escher.Type.{TApply, TVar}
   */
 sealed trait Type{
   override def toString: String = Type.show(this)
-  def varSet: Set[Int] = Type.varSet(this)
+  def varSet: Set[Int] = Type.freeVarSet(this)
 
   def nextFreeId: Int = this match {
     case TVar(id) => id
+    case TFixedVar(_) => 0
     case TApply(_, params) => (0 :: params.map(_.nextFreeId)).max
   }
 }
 
 object Type {
 
+  /** a TVar in Component signatures can vary to match any type */
   case class TVar(id: Int) extends Type
 
-  case class TApply(value: TypeConstructor, params: List[Type]) extends Type
+  /** a TFixedVar shouldn't appear in Component signatures, it's only used in the synthesis program to
+    * denote fixed type parameters of the Component currently being synthesized */
+  case class TFixedVar(id: Int) extends Type
+
+  case class TApply(contr: TypeConstructor, params: List[Type]) extends Type
 
   def show(t: Type): String = t match {
-    case TVar(id) => s"'$id"
+    case TVar(id) => s"?$id"
+    case TFixedVar(id) => s"'$id"
     case TApply(tc, params) =>
       if(params.isEmpty) tc.name
       else s"${tc.name}${params.map(show).mkString("[",",","]")}"
   }
 
-  def varSet(t: Type): Set[Int] = t match {
+  def freeVarSet(t: Type): Set[Int] = t match {
     case TVar(id) => Set(id)
+    case TFixedVar(_) => Set()
     case TApply(_, params) => params.foldRight(Set[Int]()){
-      case (t1, s) => s ++ varSet(t1)
+      case (t1, s) => s ++ freeVarSet(t1)
+    }
+  }
+
+  def oneWayUnify(ty: Type, target: Type): Option[TypeSubst] = ty match {
+    case TVar(id) => Some(TypeSubst(Map(id -> target)))
+    case TFixedVar(_) => if(target == ty) Some(TypeSubst.empty) else None
+    case TApply(contr, params) => target match{
+      case TApply(contr2, params2) if contr == contr2 =>
+        val r = params.zip(params2).foldLeft(TypeSubst.empty){
+          case (subst, (t1,t2)) =>
+            oneWayUnify(subst(t1), t2) match {
+              case None => return None
+              case Some(ts) => subst compose ts
+            }
+        }
+        Some(r)
+      case _ => None
     }
   }
 
@@ -47,6 +72,7 @@ case class TypeSubst(map: Map[Int, Type]){
   def apply(ty: Type): Type = ty match {
     case v@TVar(id) => map.getOrElse(id, v)
     case TApply(value, params) => TApply(value, params.map(apply))
+    case TFixedVar(_) => ty
   }
 
   /** the standard substitution composition */
