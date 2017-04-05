@@ -87,21 +87,21 @@ trait BasicType extends TypeConstructor{
 }
 
 case object TBool extends BasicType{
-  override def name: String = "bool"
+  override def name: String = "Bool"
 }
 
 case object TInt extends BasicType {
-  override def name: String = "int"
+  override def name: String = "Int"
 }
 
 case object TList extends TypeConstructor{
   def arity: Int = 1
 
-  override def name: String = "list"
+  override def name: String = "List"
 }
 
 case object TMap extends TypeConstructor{
-  override def name: String = "map"
+  override def name: String = "Map"
 
   override def arity: Int = 2
 }

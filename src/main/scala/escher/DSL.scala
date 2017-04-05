@@ -32,6 +32,7 @@ object DSL {
 
   val tyInt: TApply = TInt.of()
   val tyBool: TApply = TBool.of()
-  def tyList(params: Type*): TApply = TList.of(params:_*)
+  def tyList(param: Type): TApply = TList.of(param)
+  def tyMap(kt: Type, vt: Type): TApply = TMap.of(kt,vt)
 
 }

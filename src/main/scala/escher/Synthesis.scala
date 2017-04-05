@@ -32,6 +32,11 @@ object Synthesis {
       levelMaps.length
     }
 
+    def unlockTypeAtLevel(level: Int, ty: Type): Unit ={
+      levelMaps(level).unlockType(ty)
+      totalMap.unlockType(ty)
+    }
+
     def registerTermAtLevel(level: Int, term: Term, ty: Type, valueVector: ValueVector): Boolean = {
       totalMap(ty).get(valueVector) match {
         case None =>
@@ -49,7 +54,7 @@ object Synthesis {
       val levelsShow = levelMaps.map(_.show).zipWithIndex.map{
         case (s, level) => s"  $level: $s"
       }.mkString("\n")
-      println(s"LevelMaps:\n $levelsShow")
+      println(s"LevelMaps:\n$levelsShow")
     }
 
   }
@@ -90,7 +95,7 @@ object Synthesis {
 
   def synthesize(name: String, inputTypes: IndexedSeq[Type], inputNames: IndexedSeq[String], outputType: Type)
                 (compMap: Map[String, ComponentImpl], compCostFunction: ComponentImpl => Int,
-                 inputs: IndexedSeq[Input], outputs: IndexedSeq[TermValue]) = {
+                 inputs: IndexedSeq[Input], outputs: IndexedSeq[TermValue]): Unit = {
     require(inputTypes.length == inputNames.length)
 
     import DSL._
@@ -108,10 +113,12 @@ object Synthesis {
       val valueMap = inputs.indices.map(exId => {
         inputs(exId)(argId)
       })
+      state.unlockTypeAtLevel(0, inputTypes(argId))
       state.registerTermAtLevel(0, v(inputNames(argId)), inputTypes(argId), valueMap)
     })
 
     def synthesizeTypeAtLevel(level: Int, targetType: Type): Unit = {
+      state.unlockTypeAtLevel(level, targetType)
       //fixme: need to properly handle polymorphism
       val shiftIdAmount = targetType.nextFreeId
       for(
@@ -125,16 +132,19 @@ object Synthesis {
         val arity = argTypes.length
         val costLeft = level - compCost
         if(arity==0){
-          val result = impl.execute(IS(), debug = false)
-          val valueVector = (0 until exampleCount).map(_ => result)
-          val term = Component(compName, IS())
-          state.registerTermAtLevel(level, term, newTargetType, valueVector)
+          if(compCost == level) {
+            val result = impl.execute(IS(), debug = false)
+            val valueVector = (0 until exampleCount).map(_ => result)
+            val term = Component(compName, IS())
+            state.registerTermAtLevel(level, term, newTargetType, valueVector)
+          }
         }else for(costs <- divideNumberAsSum(costLeft, arity)) {
           val candidatesForArgs = for (argIdx <- 0 until arity) yield {
             val c = costs(argIdx)
             val argType = argTypes(argIdx)
-            if (!state.levelMaps(c).isTypeUnlocked(argType))
+            if (!state.levelMaps(c).isTypeUnlocked(argType)) {
               synthesizeTypeAtLevel(c, argType)
+            }
             state.levelMaps(c)(argType)
           }
           cartesianProduct(candidatesForArgs).foreach(product => {

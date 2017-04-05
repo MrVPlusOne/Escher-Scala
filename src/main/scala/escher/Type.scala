@@ -15,16 +15,20 @@ sealed trait Type{
   def varSet: Set[Int] = Type.freeVarSet(this)
 
   def nextFreeId: Int = this match {
-    case TVar(id) => id
+    case TVar(id) => id + 1
     case TFixedVar(_) => 0
     case TApply(_, params) => (0 :: params.map(_.nextFreeId)).max
   }
 
-  def shiftId(amount: Int): Type = this match {
-    case TVar(id) => TVar(id+amount)
-    case TFixedVar(id) => TFixedVar(id)
-    case TApply(contr, params) => TApply(contr, params.map(_.shiftId(amount)))
+  def shiftId(amount: Int): Type = renameIndices(_ + amount)
+
+  def renameIndices(f: Int => Int): Type = this match {
+    case TVar(id) => TVar(f(id))
+    case TApply(contr, params) => TApply(contr, params.map(_.renameIndices(f)))
+    case fv: TFixedVar => fv
   }
+
+  def instanceOf(that: Type): Boolean = Type.instanceOf(this, that)
 }
 
 object Type {
@@ -54,13 +58,38 @@ object Type {
     }
   }
 
-  def unify(ty: Type, target: Type): Option[TypeSubst] = ty match {
-    case TVar(id) => Some(TypeSubst(Map(id -> target)))
-    case _ => target match {
-      case TVar(id) => Some(TypeSubst(Map(id -> ty)))
-      case _ => ty match {
-        case TFixedVar(_) => if(target == ty) Some(TypeSubst.empty) else None
-        case TApply(contr, params) => target match{
+  /** Two types that are alpha-equivalence are guaranteed to have same alpha-normalization form,
+    * good for being used as Map keys */
+  def alphaNormalize(t: Type): Type = {
+    import collection.mutable
+
+    var nextIndex = 0
+    val map = mutable.Map[Int,Int]()
+
+    def rec(t: Type): Unit = t match {
+      case TVar(id) =>
+        map.getOrElse(id, {
+          map(id) = nextIndex
+          nextIndex += 1
+        })
+      case TFixedVar(id) => // nothing
+      case TApply(contr, params) =>
+        params.foreach(rec)
+    }
+
+    rec(t)
+    t.renameIndices(map.apply)
+  }
+
+  /** return the most general unifier of two types (if exist),
+    * prefer to rename vars in the first argument over the second */
+  def unify(ty1: Type, ty2: Type): Option[TypeSubst] = ty1 match {
+    case TVar(id) => Some(TypeSubst(Map(id -> ty2)))
+    case _ => ty2 match {
+      case TVar(id) => Some(TypeSubst(Map(id -> ty1)))
+      case _ => ty1 match {
+        case TFixedVar(_) => if(ty2 == ty1) Some(TypeSubst.empty) else None
+        case TApply(contr, params) => ty2 match{
           case TApply(contr2, params2) if contr == contr2 =>
             val r = params.zip(params2).foldLeft(TypeSubst.empty){
               case (subst, (t1,t2)) =>
@@ -74,6 +103,17 @@ object Type {
         }
         case _ => throw new Exception("Not possible")
       }
+    }
+  }
+
+  def instanceOf(t: Type, parent: Type): Boolean = {
+    val pFreeId = parent.nextFreeId
+    val t1 = t.shiftId(pFreeId)
+
+    Type.unify(parent, t1) match {
+      case Some(unifier) =>
+        unifier(t1) == t1
+      case None => false
     }
   }
 
