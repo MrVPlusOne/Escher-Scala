@@ -1,6 +1,6 @@
 package escher
 
-import escher.CommonlyUsedComponents.{allMap, recursiveImpl}
+import escher.CommonlyUsedComponents.{noTree, recursiveImpl}
 import escher.DSL._
 import org.scalatest.WordSpec
 

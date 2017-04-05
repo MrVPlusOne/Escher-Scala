@@ -107,9 +107,9 @@ object Synthesis {
       TypeMap.empty
     )
 
-    val arity = inputTypes.length
+    val goalArity = inputTypes.length
     state.openNextLevel()
-    (0 until arity).foreach(argId =>{
+    (0 until goalArity).foreach(argId =>{
       val valueMap = inputs.indices.map(exId => {
         inputs(exId)(argId)
       })
@@ -129,17 +129,17 @@ object Synthesis {
       ){
         val argTypes = impl.inputTypes.map(unifier.apply)
         val newTargetType = unifier(impl.returnType)
-        val arity = argTypes.length
+        val compArity = argTypes.length
         val costLeft = level - compCost
-        if(arity==0){
+        if(compArity==0){
           if(compCost == level) {
             val result = impl.execute(IS(), debug = false)
             val valueVector = (0 until exampleCount).map(_ => result)
             val term = Component(compName, IS())
             state.registerTermAtLevel(level, term, newTargetType, valueVector)
           }
-        }else for(costs <- divideNumberAsSum(costLeft, arity)) {
-          val candidatesForArgs = for (argIdx <- 0 until arity) yield {
+        }else for(costs <- divideNumberAsSum(costLeft, compArity, minNumber = 0)) {
+          val candidatesForArgs = for (argIdx <- 0 until compArity) yield {
             val c = costs(argIdx)
             val argType = argTypes(argIdx)
             if (!state.levelMaps(c).isTypeUnlocked(argType)) {
@@ -168,10 +168,11 @@ object Synthesis {
   }
 
 
-  def divideNumberAsSum(number: Int, pieces: Int): Iterator[IndexedSeq[Int]] = {
+  def divideNumberAsSum(number: Int, pieces: Int, minNumber: Int): Iterator[IndexedSeq[Int]] = {
+    if(number<minNumber) return Iterator()
     if(pieces == 1) return Iterator(IndexedSeq(number))
 
-    (0 to number).toIterator.flatMap(n => divideNumberAsSum(number - n, pieces - 1).map(n +: _))
+    (minNumber to number).toIterator.flatMap(n => divideNumberAsSum(number - n, pieces - 1, minNumber).map(n +: _))
   }
 
   def cartesianProduct[A](listOfSets: IndexedSeq[Iterable[A]]): Iterator[IndexedSeq[A]] = {

@@ -8,7 +8,7 @@ object Main {
   def testDivide(): Unit ={
     import escher.Synthesis._
 
-    val a = divideNumberAsSum(2000,3)
+    val a = divideNumberAsSum(2000,3,0)
     println{
       a.length
     }
@@ -31,14 +31,30 @@ object Main {
 
     synthesize("length", IS(tyList(tyInt)),
       IS("xs"), tyInt
-    )(compMap = CommonlyUsedComponents.allMap,
+    )(compMap = CommonlyUsedComponents.noTree,
       compCostFunction = (_ => 1),
       IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))),
       IS(0,1,2)
     )
   }
 
+  def testSynthesisUntyped(): Unit ={
+    import escher._
+    import DSL._
+
+    import SynthesisUntyped._
+    val IS = IndexedSeq
+
+    synthesize("length", IS(tyList(tyInt)),
+      IS("xs"), tyInt
+    )(envCompMap = CommonlyUsedComponents.noTree ++ CommonlyUsedComponents.treeComps,
+      compCostFunction = (_ => 1),
+      IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))),
+      IS(0,1,2)
+    )(decreasingArgId = 0, oracle = CommonlyUsedComponents.length.impl)
+  }
+
   def main(args: Array[String]): Unit = {
-    testSynthesis()
+    testSynthesisUntyped()
   }
 }

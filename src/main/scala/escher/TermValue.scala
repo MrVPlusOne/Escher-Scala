@@ -1,7 +1,7 @@
 package escher
 
 import escher.TermValue.matchTApply
-import escher.Type.{TApply, TVar}
+import escher.Type.{TApply, TFixedVar, TVar}
 
 
 /** The computational result to which a term can evaluate */
@@ -20,24 +20,35 @@ trait TermValue {
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst]
 
   def show: String
+
+  /** A non-negative number indicating the "size" of this value, by requiring
+    * one argument's size must decrease during recursive calls, we can ensure
+    * the synthesized functions' termination */
+  def valueSize: Int
 }
 
 case object ValueError extends TermValue{
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = Some(TypeSubst.empty)
 
   def show = "Err"
+
+  val valueSize = 0
 }
 
 case class ValueBool(value: Boolean) extends TermValue{
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = matchTApply(ty,TBool.of())
 
   def show: String = value.toString
+
+  def valueSize: Int = if(value) 1 else 0
 }
 
 case class ValueInt(value: Int) extends TermValue{
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = matchTApply(ty, TInt.of())
 
   def show: String = value.toString
+
+  def valueSize: Int = math.abs(value)
 }
 
 case class ValueList(elems: List[TermValue]) extends TermValue{
@@ -60,11 +71,44 @@ case class ValueList(elems: List[TermValue]) extends TermValue{
   }
 
   def show: String = elems.map(_.show).mkString("[", ", ", "]")
+
+  def valueSize: Int = elems.length
+}
+
+sealed trait BinaryTree[+T]{
+  def size: Int
+
+}
+
+case class BinaryNode[T](tag: T, left: BinaryTree[T], right: BinaryTree[T]) extends BinaryTree[T]{
+  def size: Int = 1 + left.size + right.size
+}
+
+case object BinaryLeaf extends BinaryTree[Nothing]{
+  def size: Int = 0
+}
+
+
+/** Binary tree */
+case class ValueTree(value: BinaryTree[TermValue]) extends TermValue{
+  override def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = ???
+
+  override def show: String = {
+    def aux(t: BinaryTree[TermValue]): String = t match {
+      case BinaryNode(v, left, right) =>
+        s"(${v.show}: ${aux(left)}, ${aux(right)})"
+      case BinaryLeaf => "L"
+    }
+    aux(value)
+  }
+
+  def valueSize: Int = value.size
 }
 
 object TermValue{
   def matchTApply(ty: Type, target: TApply): Option[TypeSubst] = ty match {
     case TVar(id) => Some(TypeSubst(Map(id -> target)))
+    case TFixedVar(id) => None
     case TApply(_, _) =>
       if(ty == target) Some(TypeSubst.empty)
       else None
@@ -83,25 +127,31 @@ trait TypeConstructor{
 }
 
 trait BasicType extends TypeConstructor{
-  def arity = 0
+  val arity = 0
 }
 
 case object TBool extends BasicType{
-  override def name: String = "Bool"
+  val name: String = "Bool"
 }
 
 case object TInt extends BasicType {
-  override def name: String = "Int"
+  val name: String = "Int"
 }
 
 case object TList extends TypeConstructor{
-  def arity: Int = 1
+  val arity: Int = 1
 
-  override def name: String = "List"
+  val name: String = "List"
+}
+
+case object TTree extends TypeConstructor{
+  val arity: Int = 1
+
+  val name: String = "Tree"
 }
 
 case object TMap extends TypeConstructor{
-  override def name: String = "Map"
+  val name: String = "Map"
 
-  override def arity: Int = 2
+  val arity: Int = 2
 }

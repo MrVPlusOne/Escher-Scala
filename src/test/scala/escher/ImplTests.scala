@@ -1,6 +1,6 @@
 package escher
 
-import escher.CommonlyUsedComponents.{allMap, recursiveImpl}
+import escher.CommonlyUsedComponents.{noTree, recursiveImpl}
 import escher.DSL._
 import org.scalatest.WordSpec
 
@@ -21,7 +21,7 @@ class ImplTests extends WordSpec {
       argNames = IS("xs"),
       inputTypes = IS(TList of tyVar(0)),
       outputType = tyInt,
-      compMap = allMap,
+      compMap = noTree,
       body =
         `if`("isEmpty" $ v("xs")) {
           "zero" $ ()
@@ -46,7 +46,7 @@ class ImplTests extends WordSpec {
       argNames = IS("n"),
       inputTypes = IS(tyInt),
       outputType = tyInt,
-      compMap = allMap,
+      compMap = noTree,
       body =
         `if`("or"$ ("isZero" $ v("n"), "isZero" $ ("dec"$ v("n")))) {
           "inc"$("zero"$())

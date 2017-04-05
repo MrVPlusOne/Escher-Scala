@@ -27,6 +27,7 @@ object DSL {
 
   implicit def intConversion(i: Int): ValueInt = ValueInt(i)
   implicit def boolConversion(b: Boolean): ValueBool = ValueBool(b)
+  implicit def binaryTreeConversion(t: BinaryTree[TermValue]): ValueTree = ValueTree(t)
 
   def listValue(terms: TermValue*) = ValueList(terms.toList)
 
@@ -34,5 +35,6 @@ object DSL {
   val tyBool: TApply = TBool.of()
   def tyList(param: Type): TApply = TList.of(param)
   def tyMap(kt: Type, vt: Type): TApply = TMap.of(kt,vt)
+  def tyTree(param: Type): TApply = TTree.of(param)
 
 }
