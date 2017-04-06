@@ -43,7 +43,46 @@ case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
   }
 }
 
-object CommonlyUsedComponents {
+object ComponentImpl{
+  def recursiveImpl(name: String, argNames: IS[String],
+                    inputTypes: IS[Type], outputType: Type,
+                    compMap: Map[String, ComponentImpl],
+                    body: Term, debug: Boolean = false
+                   ): ComponentImpl = {
+
+    lazy val impl: ComponentImpl = {
+      lazy val newCompMap = compMap.updated(name, impl)
+      if(debug)
+        ComponentImpl(inputTypes, outputType,
+          { case args =>
+            println(s"[Call $name]")
+            val varMap = argNames.zip(args).toMap
+            val t = Term.executeTermDebug(
+              varMap = varMap,
+              compMap = newCompMap
+            )(body)
+            println(s"[$name Called]")
+            t
+          }
+        )
+      else
+        ComponentImpl(inputTypes, outputType,
+          { case args =>
+            val varMap = argNames.zip(args).toMap
+            val t = Term.executeTerm(
+              varMap = varMap,
+              compMap = newCompMap
+            )(body)
+            t
+          }
+        )
+    }
+    impl
+  }
+}
+
+/** Commonly used components */
+object CommonComps {
   import DSL._
 
   val length = ComponentImpl(IS(TList of tyVar(0)), tyInt,
@@ -194,42 +233,30 @@ object CommonlyUsedComponents {
     "treeRight" -> treeRight
   )
 
+  val createPair = ComponentImpl(
+    IS(tyVar(0), tyVar(1)),
+    tyPair(tyVar(0), tyVar(1)),
+    { case IS(v1, v2) => (v1, v2) }
+  )
 
-  def recursiveImpl(name: String, argNames: IS[String],
-                  inputTypes: IS[Type], outputType: Type,
-                  compMap: Map[String, ComponentImpl],
-                  body: Term, debug: Boolean = false
-                 ): ComponentImpl = {
+  val fst = ComponentImpl(
+    IS(tyPair(tyVar(0), tyVar(1))),
+    tyVar(0),
+    { case IS(ValuePair(v)) => v._1 }
+  )
 
-    lazy val impl: ComponentImpl = {
-      lazy val newCompMap = compMap.updated(name, impl)
-      if(debug)
-        ComponentImpl(inputTypes, outputType,
-          { case args =>
-            println(s"[Call $name]")
-            val varMap = argNames.zip(args).toMap
-            val t = Term.executeTermDebug(
-              varMap = varMap,
-              compMap = newCompMap
-            )(body)
-            println(s"[$name Called]")
-            t
-          }
-        )
-      else
-        ComponentImpl(inputTypes, outputType,
-          { case args =>
-            val varMap = argNames.zip(args).toMap
-            val t = Term.executeTerm(
-              varMap = varMap,
-              compMap = newCompMap
-            )(body)
-            t
-          }
-        )
-    }
-    impl
-  }
+  val snd = ComponentImpl(
+    IS(tyPair(tyVar(0), tyVar(1))),
+    tyVar(1),
+    { case IS(ValuePair(v)) => v._2 }
+  )
+
+  val pairComps = Map(
+    "createPair" -> createPair,
+    "fst" -> fst,
+    "snd" -> snd
+  )
+
 
 
 }

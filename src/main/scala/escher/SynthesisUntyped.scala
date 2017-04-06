@@ -62,7 +62,7 @@ object SynthesisUntyped {
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
     def argDecrease(arg: Input, exampleId: Int) = {
-      arg(decreasingArgId).valueSize < inputs(exampleId)(decreasingArgId).valueSize
+      arg(decreasingArgId) smallerThan inputs(exampleId)(decreasingArgId)
     }
 
     val exampleCount = outputs.length

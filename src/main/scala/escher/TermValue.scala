@@ -17,14 +17,21 @@ trait TermValue {
     matchTypeAux(ty, counter).map{ s => (s, id)}
   }
 
-  def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst]
+  def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] //todo: consider removing this method
 
   def show: String
 
-  /** A non-negative number indicating the "size" of this value, by requiring
-    * one argument's size must decrease during recursive calls, we can ensure
+  def smallerThan(tv: TermValue): Boolean = {
+    if(sizeCompare.isDefinedAt(tv))
+      sizeCompare(tv)
+    else false
+  }
+
+  /** Should return true only if the other value has the same type and the "size" of this value is smaller
+    * than the other, by requiring one argument's size must decrease during recursive calls, we can ensure
     * the synthesized functions' termination */
-  def valueSize: Int
+  protected def sizeCompare: PartialFunction[TermValue, Boolean]
+
 }
 
 case object ValueError extends TermValue{
@@ -32,7 +39,7 @@ case object ValueError extends TermValue{
 
   def show = "Err"
 
-  val valueSize = 0
+  val sizeCompare: PartialFunction[TermValue, Boolean] = { case _ => false}
 }
 
 case class ValueBool(value: Boolean) extends TermValue{
@@ -40,7 +47,7 @@ case class ValueBool(value: Boolean) extends TermValue{
 
   def show: String = value.toString
 
-  def valueSize: Int = if(value) 1 else 0
+  val sizeCompare: PartialFunction[TermValue, Boolean] = { case ValueBool(v1) => !value && v1 }
 }
 
 case class ValueInt(value: Int) extends TermValue{
@@ -48,7 +55,9 @@ case class ValueInt(value: Int) extends TermValue{
 
   def show: String = value.toString
 
-  def valueSize: Int = math.abs(value)
+  val sizeCompare: PartialFunction[TermValue, Boolean] = {
+    case ValueInt(v1) => math.abs(value) < math.abs(v1)
+  }
 }
 
 case class ValueList(elems: List[TermValue]) extends TermValue{
@@ -72,7 +81,9 @@ case class ValueList(elems: List[TermValue]) extends TermValue{
 
   def show: String = elems.map(_.show).mkString("[", ", ", "]")
 
-  def valueSize: Int = elems.length
+  val sizeCompare: PartialFunction[TermValue, Boolean] = {
+    case ValueList(v1) => elems.length < v1.length
+  }
 }
 
 sealed trait BinaryTree[+T]{
@@ -102,7 +113,22 @@ case class ValueTree(value: BinaryTree[TermValue]) extends TermValue{
     aux(value)
   }
 
-  def valueSize: Int = value.size
+  val sizeCompare: PartialFunction[TermValue, Boolean] = {
+    case ValueTree(v1) => value.size < v1.size
+  }
+}
+
+case class ValuePair(value: (TermValue, TermValue)) extends TermValue{
+  override def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = ???
+
+  override def show: String = value match {
+    case (l,r) => s"(${l.show}, ${r.show})"
+  }
+
+  val sizeCompare: PartialFunction[TermValue, Boolean] = {
+    case ValuePair(v1) =>
+      (value._1 smallerThan v1._1) || (value._1 == v1._1 && value._2.smallerThan(v1._2))
+  }
 }
 
 object TermValue{
@@ -144,13 +170,19 @@ case object TList extends TypeConstructor{
   val name: String = "List"
 }
 
-case object TTree extends TypeConstructor{
+case object TTree extends TypeConstructor {
   val arity: Int = 1
 
   val name: String = "Tree"
 }
 
-case object TMap extends TypeConstructor{
+case object TPair extends TypeConstructor {
+  val name: String = "Pair"
+
+  val arity: Int = 2
+}
+
+case object TMap extends TypeConstructor {
   val name: String = "Map"
 
   val arity: Int = 2

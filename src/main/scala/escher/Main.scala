@@ -31,8 +31,8 @@ object Main {
 
     synthesize("length", IS(tyList(tyInt)),
       IS("xs"), tyInt
-    )(compMap = CommonlyUsedComponents.noTree,
-      compCostFunction = (_ => 1),
+    )(compMap = CommonComps.noTree,
+      compCostFunction = _ => 1,
       IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))),
       IS(0,1,2)
     )
@@ -47,11 +47,11 @@ object Main {
 
     synthesize("length", IS(tyList(tyInt)),
       IS("xs"), tyInt
-    )(envCompMap = CommonlyUsedComponents.noTree ++ CommonlyUsedComponents.treeComps,
-      compCostFunction = (_ => 1),
+    )(envCompMap = CommonComps.noTree ++ CommonComps.treeComps,
+      compCostFunction = _ => 1,
       IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))),
       IS(0,1,2)
-    )(decreasingArgId = 0, oracle = CommonlyUsedComponents.length.impl)
+    )(decreasingArgId = 0, oracle = CommonComps.length.impl)
   }
 
   def main(args: Array[String]): Unit = {
