@@ -1,18 +1,24 @@
 package escher
 
 import escher.Term.Component
-
 import scala.collection.mutable
+import SynthesisUntyped._
+
+object SynthesisUntyped{
+  case class Config(
+                     maxCost: Int,
+                     printComponents: Boolean = true
+                   )
+}
 
 
-object SynthesisUntyped {
-  import Synthesis.{ValueVector, Input, ValueMap, GoalGraph, divideNumberAsSum, cartesianProduct}
 
-  type ValueTermMap = mutable.Map[ValueVector, Term]
+class SynthesisUntyped(config: Config, logger: String => Unit) {
+  import Synthesis.{ValueVector, Input, GoalGraph, divideNumberAsSum, cartesianProduct, ValueTermMap, showValueTermMap }
 
-  def showValueTermMap(valueTermMap: ValueTermMap): String = {
-    val compList = valueTermMap.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
-    compList.mkString("{", ", ", "}")
+  def logLn(msg: String): Unit = {
+    logger(msg)
+    logger("\n")
   }
 
   class SynthesisState(val goalGraph: GoalGraph, var levelMaps: IndexedSeq[ValueTermMap], val totalMap: ValueTermMap) {
@@ -33,14 +39,20 @@ object SynthesisUntyped {
     }
 
     def print(exampleCount: Int): Unit = {
-      println(s"Goal: ${goalGraph.show(exampleCount)}")
-      println(s"TotalMap: ${showValueTermMap(totalMap)}")
-      println(s"LevelMaps:")
+      logLn(s"Goal: ${goalGraph.show(exampleCount)}")
+      logLn(s"TotalMap: (${totalMap.size} components in total)")
+      if(config.printComponents) {
+        logLn("  " + showValueTermMap(totalMap))
+      }
+      logLn(s"LevelMaps:")
       levelMaps.indices.foreach{i =>
         val valueTermMap = levelMaps(i)
-        val valueTermMapS = showValueTermMap(valueTermMap)
         val size = valueTermMap.size
-        println(s"  $i: ($size components)\t$valueTermMapS")
+        logLn(s"  $i: ($size components)")
+        if(config.printComponents) {
+          val valueTermMapS = showValueTermMap(valueTermMap)
+          logLn(s"      $valueTermMapS")
+        }
       }
     }
   }
@@ -50,10 +62,13 @@ object SynthesisUntyped {
     def empty: ValueTermMap = mutable.Map()
   }
 
+
+
   def synthesize(name: String, inputTypes: IndexedSeq[Type], inputNames: IndexedSeq[String], returnType: Type)
                 (envCompMap: Map[String, ComponentImpl], compCostFunction: ComponentImpl => Int,
                  inputs: IndexedSeq[Input], outputs: IndexedSeq[TermValue])
-                (decreasingArgId: Int, oracle: PartialFunction[IS[TermValue], TermValue]): Unit = {
+                (decreasingArgId: Int, oracle: PartialFunction[IS[TermValue], TermValue])
+                (config: Config): Unit = {
     import DSL._
 
     require(inputTypes.length == inputNames.length)
@@ -82,7 +97,7 @@ object SynthesisUntyped {
       state.registerTermAtLevel(1, v(inputNames(argId)), valueMap)
     })
 
-    def synthesizeTypeAtLevel(level: Int): Unit = {
+    def synthesizeAtLevel(level: Int): Unit = {
       for(
         (compName, impl) <- compMap;
         compCost = compCostFunction(impl) if compCost <= level
@@ -117,9 +132,9 @@ object SynthesisUntyped {
       }
     }
 
-    (1 to 6).foreach(level => {
-      synthesizeTypeAtLevel(level)
-      println(s"State at level: $level")
+    (1 to config.maxCost).foreach(level => {
+      synthesizeAtLevel(level)
+      logLn(s"State at level: $level")
 //      println("total components number: " + state.totalMap.size)
       state.print(exampleCount)
       state.openNextLevel()

@@ -76,11 +76,11 @@ class TypeCheckingTests extends WordSpec {
 
   "alpha-normalization" should{
     def normalizeThenEqual(t1: Type, t2: Type): Unit ={
-      assert{ Type.alphaNormalize(t1) === Type.alphaNormalize(t2)}
+      assert{ Type.alphaNormalForm(t1) === Type.alphaNormalForm(t2)}
     }
 
     def normalizeThenDiffer(t1: Type, t2: Type): Unit ={
-      assert{ Type.alphaNormalize(t1) !== Type.alphaNormalize(t2)}
+      assert{ Type.alphaNormalForm(t1) !== Type.alphaNormalForm(t2)}
     }
 
     "pass examples" in {
@@ -107,6 +107,7 @@ class TypeCheckingTests extends WordSpec {
       assert{ !tyMap(tyVar(0), tyVar(1)).instanceOf(tyMap(tyVar(1),tyVar(1)))}
       assert { tyMap(tyList(tyVar(1)), tyVar(0)) instanceOf tyVar(0) }
       assert{ tyList(tyInt).instanceOf(tyList(tyVar(1))) }
+      assert { tyList(tyList(tyInt)) instanceOf tyList(tyVar(1))}
     }
 
   }

@@ -58,18 +58,26 @@ object Type {
     }
   }
 
-  /** Two types that are alpha-equivalence are guaranteed to have same alpha-normalization form,
+  /** Two alpha-equivalent types are guaranteed to have same alpha-normalization form,
     * good for being used as Map keys */
-  def alphaNormalize(t: Type): Type = {
-    import collection.mutable
+  def alphaNormalForm(t: Type): Type = {
+    val map = alphaNormalRenaming(t)
+    t.renameIndices(map.apply)
+  }
 
+  /** Two alpha-equivalent types are guaranteed to have same alpha-normalization form,
+    * good for being used as Map keys
+    *
+    * @return an indices renaming map
+    */
+  def alphaNormalRenaming(t: Type): Map[Int, Int] = {
     var nextIndex = 0
-    val map = mutable.Map[Int,Int]()
+    var map = Map[Int,Int]()
 
     def rec(t: Type): Unit = t match {
       case TVar(id) =>
         map.getOrElse(id, {
-          map(id) = nextIndex
+          map = map.updated(id, nextIndex)
           nextIndex += 1
         })
       case TFixedVar(id) => // nothing
@@ -78,7 +86,7 @@ object Type {
     }
 
     rec(t)
-    t.renameIndices(map.apply)
+    map
   }
 
   /** return the most general unifier of two types (if exist),
@@ -106,14 +114,17 @@ object Type {
     }
   }
 
-  def instanceOf(t: Type, parent: Type): Boolean = {
+  def instanceOf(t: Type, parent: Type): Boolean = instanceOfWithMap(t, parent).nonEmpty
+
+  def instanceOfWithMap(t: Type, parent: Type): Option[TypeSubst] = {
     val pFreeId = parent.nextFreeId
     val t1 = t.shiftId(pFreeId)
 
     Type.unify(parent, t1) match {
       case Some(unifier) =>
-        unifier(t1) == t1
-      case None => false
+        if(unifier(t1) == t1) Some(unifier)
+        else None
+      case None => None
     }
   }
 

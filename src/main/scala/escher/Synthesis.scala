@@ -12,6 +12,16 @@ object Synthesis {
   type ValueVector = IndexedSeq[TermValue]
   type Input = IndexedSeq[TermValue]
   type ValueMap = Map[Int, TermValue]
+  type ValueTermMap = mutable.Map[ValueVector, Term]
+
+  def notAllErr(valueVector: ValueVector): Boolean = {
+    ! valueVector.forall(_ == ValueError)
+  }
+
+  def showValueTermMap(valueTermMap: ValueTermMap): String = {
+    val compList = valueTermMap.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+    compList.mkString("{", ", ", "}")
+  }
 
   object ValueMap{
     def show(valueMap: ValueMap, exampleCount: Int): String = {

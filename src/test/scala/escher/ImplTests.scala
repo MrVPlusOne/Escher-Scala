@@ -1,6 +1,6 @@
 package escher
 
-import escher.CommonComps.noTree
+import escher.CommonComps.{noTree, isZero}
 import escher.ComponentImpl.recursiveImpl
 import escher.DSL._
 import org.scalatest.WordSpec
@@ -47,7 +47,7 @@ class ImplTests extends WordSpec {
       argNames = IS("n"),
       inputTypes = IS(tyInt),
       outputType = tyInt,
-      compMap = noTree,
+      compMap = noTree.updated("isZero",isZero),
       body =
         `if`("or"$ ("isZero" $ v("n"), "isZero" $ ("dec"$ v("n")))) {
           "inc"$("zero"$())
