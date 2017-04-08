@@ -8,7 +8,7 @@ import org.scalatest.WordSpec
 class SynthesisTest extends WordSpec{
   import DSL._
   import SynthesisTyped._
-  import Synthesis.{GoalGraph}
+
   import escher.Term.Component
 
   "typesForCosts check" in {
@@ -16,7 +16,7 @@ class SynthesisTest extends WordSpec{
     import st._
 
     val state = new SynthesisState(
-      new GoalGraph(Map()),
+      IS(),
       TypeMap.empty()
     )
 
@@ -60,6 +60,15 @@ class SynthesisTest extends WordSpec{
       typesForCosts(state, IS(2,2), IS(tyVar(0), tyList(tyVar(0))), tyList(tyVar(0))).toSet ===
         Set(IS(tyList(tyInt), tyList(tyVar(0))) -> tyList(tyList(tyInt)),
           IS(tyList(tyVar(0)), tyList(tyVar(0))) -> tyList(tyList(tyVar(0))))
+    }
+  }
+
+  "ValueMap" should {
+    import escher.Synthesis.ValueMap._
+
+    "split correctly" in {
+      splitValueMap(Map(1 -> 1, 2->2, 3 ->0, 4->0), IS(0,1,2,3,4,5,6)) ===
+        (Map(1 -> true, 2 -> true, 3 -> false, 4 -> false), Map(1->1, 2->2), Map(3->0, 4->0))
     }
   }
 }

@@ -22,7 +22,7 @@ object SynthesisTyped{
 }
 
 class SynthesisTyped(config: Config, logger: String => Unit) {
-  import Synthesis.{ValueVector, Input, GoalGraph, divideNumberAsSum, cartesianProduct, ValueTermMap, notAllErr}
+  import Synthesis.{ValueVector, Input, divideNumberAsSum, cartesianProduct, ValueTermMap, notAllErr}
 
   def log(condition: Boolean)(msg: =>String): Unit = {
     if(condition)
@@ -75,7 +75,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def empty() = new TypeMap(mutable.Map())
   }
 
-  class SynthesisState(val goalGraph: GoalGraph, val totalMap: TypeMap) {
+  class SynthesisState(initGoal: ValueVector, val totalMap: TypeMap) {
     private var levelMaps: IS[TypeMap] = IS()
 
     def getLevelOfCost(cost: Int): TypeMap = levelMaps(cost-1)
@@ -102,7 +102,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     }
 
     def print(exampleCount: Int): Unit = {
-      logLn(config.logGoal)(s"Goal: ${goalGraph.show(exampleCount)}")
+//      logLn(config.logGoal)(s"Goal: ${goalGraph.show(exampleCount)}")
       logLn(config.logTotalMap)(s"TotalMap: (${totalMap.statString})")
       if(config.logTotalMap && config.logComponents){
         totalMap.print(4)
@@ -142,7 +142,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     val exampleCount = outputs.length
     val state = new SynthesisState(
-      new GoalGraph(outputs.zipWithIndex.map(_.swap).toMap),
+      outputs,
       TypeMap.empty()
     )
 

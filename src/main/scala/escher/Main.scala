@@ -1,5 +1,7 @@
 package escher
 
+import escher.Synthesis.{ValueMap, ValueVector}
+
 
 /**
   * Created by weijiayi on 04/04/2017.
@@ -47,15 +49,34 @@ object Main {
     val syn = new SynthesisUntyped(Config(maxCost = 20, printComponents = false), print)
     import syn._
 
+    val inputs = IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2)), IS(listValue(0,1,2)))
+    val outputs: IS[TermValue] = IS(0,1,2,3)
+
     synthesize("length", IS(tyList(tyInt)),
       IS("xs"), tyInt
     )(envCompMap = CommonComps.noTree ++ CommonComps.treeComps,
       compCostFunction = _ => 1,
-      IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))),
-      IS(0,1,2)
+      inputs ,
+      outputs
     )(decreasingArgId = 0,
       oracle = CommonComps.length.impl
-    )(Config(maxCost = 10))
+    )(Config(maxCost = 10)) match {
+      case Some((program, state)) =>
+        println(s"------ Synthesis Succeeded! ------")
+        println(s"Input-output examples:")
+        inputs.indices.foreach(i =>{
+          print(inputs(i).map(_.show).mkString("(",", ",")"))
+          print(" -> ")
+          println(outputs(i).show)
+        })
+        state.print(exampleCount = inputs.length)
+        println(s"\nProgram found:")
+        println{
+          program.show
+        }
+      case _ =>
+        println("------- Synthesis Failed. -------")
+    }
   }
 
   def testTypeTree(): Unit = {
@@ -89,8 +110,28 @@ object Main {
     val l = doubleList(List(any()))
   }
 
+  def testImmutableGoal(): Unit ={
+    import ImmutableGoalGraph._
+    import DSL._
+
+    val manager = new GoalManager(
+      initGoal = Map(0->0,1->1,2->2),
+      _ => None, _ => None,
+      3,
+      printer = (n, msg) => print("  " * n + msg)
+    )
+
+    manager.insertNewTerm(IS(0, 0, 0), "zero"$())
+    manager.insertNewTerm(IS(1,1,1), "inc"$("zero"$()))
+    manager.insertNewTerm(IS(true,false,false), "isEmpty"$())
+    manager.insertNewTerm(IS(ValueError,1,2), "inc"$("P6"$()))
+
+    manager.printState()
+  }
+
   def main(args: Array[String]): Unit = {
-    testSynthesis()
-//    testSynthesisUntyped()
+//    testSynthesis()
+    testSynthesisUntyped()
+//    testImmutableGoal()
   }
 }

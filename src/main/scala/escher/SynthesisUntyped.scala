@@ -1,8 +1,11 @@
 package escher
 
 import escher.Term.Component
+
 import scala.collection.mutable
 import SynthesisUntyped._
+import escher.ImmutableGoalGraph.GoalManager
+import escher.Synthesis.{SynthesizedComponent, ValueMap}
 
 object SynthesisUntyped{
   case class Config(
@@ -14,32 +17,54 @@ object SynthesisUntyped{
 
 
 class SynthesisUntyped(config: Config, logger: String => Unit) {
-  import Synthesis.{ValueVector, Input, GoalGraph, divideNumberAsSum, cartesianProduct, ValueTermMap, showValueTermMap }
+  import Synthesis.{ValueVector, Input, divideNumberAsSum, cartesianProduct, ValueTermMap, showValueTermMap }
 
   def logLn(msg: String): Unit = {
     logger(msg)
     logger("\n")
   }
 
-  class SynthesisState(val goalGraph: GoalGraph, var levelMaps: IndexedSeq[ValueTermMap], val totalMap: ValueTermMap) {
+  class SynthesisState(initGoal: ValueVector, var levelMaps: IndexedSeq[ValueTermMap], val totalMap: ValueTermMap) {
+    def library(vm: ValueMap): Option[Term] = {
+      for((vec,term) <- totalMap){
+        if(ValueMap.matchVector(vm, vec))
+          return Some(term)
+      }
+      None
+    }
+
+    val manager = new GoalManager(
+      initGoal = initGoal.zipWithIndex.map(_.swap).toMap,
+      boolLibrary = library,
+      valueLibrary = library,
+      exampleCount = initGoal.length,
+      printer = (n, s) => logger("  "*n + s)
+    )
+
     def openNextLevel(): Int ={
       levelMaps = levelMaps :+ ValueTermMap.empty
       levelMaps.length
     }
 
+    /**
+      * Register a new term into this state, then update the goal graph accordingly
+      *
+      * @return Whether the root goal has been solved
+      */
     def registerTermAtLevel(level: Int, term: Term, valueVector: ValueVector): Boolean = {
       totalMap.get(valueVector) match {
         case None =>
+          manager.insertNewTerm(valueVector, term)
           totalMap(valueVector) = term
           levelMaps(level)(valueVector) = term
-          true
+          manager.root.isSolved
         case Some(_) =>
           false
       }
     }
 
     def print(exampleCount: Int): Unit = {
-      logLn(s"Goal: ${goalGraph.show(exampleCount)}")
+      manager.printState()
       logLn(s"TotalMap: (${totalMap.size} components in total)")
       if(config.printComponents) {
         logLn("  " + showValueTermMap(totalMap))
@@ -68,8 +93,10 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
                 (envCompMap: Map[String, ComponentImpl], compCostFunction: ComponentImpl => Int,
                  inputs: IndexedSeq[Input], outputs: IndexedSeq[TermValue])
                 (decreasingArgId: Int, oracle: PartialFunction[IS[TermValue], TermValue])
-                (config: Config): Unit = {
+                (config: Config): Option[(SynthesizedComponent, SynthesisState)] = {
     import DSL._
+
+
 
     require(inputTypes.length == inputNames.length)
 
@@ -82,10 +109,15 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
     val exampleCount = outputs.length
     val state = new SynthesisState(
-      new GoalGraph(outputs.zipWithIndex.map(_.swap).toMap),
+      outputs,
       IndexedSeq(),
       ValueTermMap.empty
     )
+
+    def resultFromState(): Option[(SynthesizedComponent, SynthesisState)] = {
+      val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, state.manager.synthesizedProgram)
+      Some((comp, state))
+    }
 
     val goalArity = inputTypes.length
     state.openNextLevel()
@@ -94,10 +126,15 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
       val valueMap = inputs.indices.map(exId => {
         inputs(exId)(argId)
       })
-      state.registerTermAtLevel(1, v(inputNames(argId)), valueMap)
+      if(state.registerTermAtLevel(1, v(inputNames(argId)), valueMap)){
+        return resultFromState()
+      }
     })
 
-    def synthesizeAtLevel(level: Int): Unit = {
+    /**
+      * @return Whether the goal has been solved
+      */
+    def synthesizeAtLevel(level: Int): Boolean = {
       for(
         (compName, impl) <- compMap;
         compCost = compCostFunction(impl) if compCost <= level
@@ -109,7 +146,8 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
             val result = impl.execute(IS(), debug = false)
             val valueVector = (0 until exampleCount).map(_ => result)
             val term = Component(compName, IS())
-            state.registerTermAtLevel(level, term, valueVector)
+            if(state.registerTermAtLevel(level, term, valueVector))
+              return true
           }
         } else for(costs <- divideNumberAsSum(costLeft, arity, minNumber = 1)) {
           val candidatesForArgs = for (argIdx <- 0 until arity) yield {
@@ -126,19 +164,23 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
                 impl.execute(arguments, debug = false)
             })
             val term = Component(compName, product.map(_._2))
-            state.registerTermAtLevel(level, term, valueVector)
+            if(state.registerTermAtLevel(level, term, valueVector))
+              return true
           })
         }
       }
+      false
     }
 
     (1 to config.maxCost).foreach(level => {
-      synthesizeAtLevel(level)
+      if(synthesizeAtLevel(level))
+        return resultFromState()
       logLn(s"State at level: $level")
 //      println("total components number: " + state.totalMap.size)
       state.print(exampleCount)
       state.openNextLevel()
     })
+    None
   }
 
 

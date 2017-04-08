@@ -24,6 +24,32 @@ object Synthesis {
   }
 
   object ValueMap{
+    def matchVector(valueMap: ValueMap, valueVector: ValueVector): Boolean = {
+      valueMap.forall{
+        case (k, v) => valueVector(k) == v
+      }
+    }
+
+    def splitValueMap(valueMap: ValueMap, valueVector: ValueVector): Option[(ValueMap, ValueMap, ValueMap)] = {
+      var thenMap: ValueMap = Map()
+      var elseMap: ValueMap = Map()
+
+      val condMap = valueMap.map{
+        case (i, v) =>
+        val `match` = valueVector(i) == v
+        if(`match`)
+          thenMap = thenMap.updated(i, v)
+        else
+          elseMap = elseMap.updated(i, v)
+        i -> ValueBool(`match`)
+      }
+
+      if(thenMap.nonEmpty && elseMap.nonEmpty)
+        Some((condMap, thenMap, elseMap))
+      else
+        None
+    }
+
     def show(valueMap: ValueMap, exampleCount: Int): String = {
       (0 until exampleCount).map(i => valueMap.get(i).map(_.show).getOrElse("?")).mkString("<", ", ", ">")
     }
@@ -36,14 +62,6 @@ object Synthesis {
   }
 
 
-  class GoalGraph(valueMap: ValueMap){
-    def show(exampleCount: Int): String = {
-      s"[[${ValueMap.show(valueMap, exampleCount)}]]"
-    }
-  }
-
-
-
   def divideNumberAsSum(number: Int, pieces: Int, minNumber: Int): Iterator[IndexedSeq[Int]] = {
     if(number<minNumber) return Iterator()
     if(pieces == 1) return Iterator(IndexedSeq(number))
@@ -54,6 +72,17 @@ object Synthesis {
   def cartesianProduct[A](listOfSets: IndexedSeq[Iterable[A]]): Iterator[IndexedSeq[A]] = {
     if(listOfSets.isEmpty) return Iterator(IndexedSeq())
     listOfSets.head.toIterator.flatMap(v => cartesianProduct(listOfSets.tail).map(v +: _))
+  }
+
+  case class SynthesizedComponent(name: String, argNames: IS[String],
+                                  inputTypes: IS[Type], returnType: Type,
+                                  body: Term){
+    def show: String = {
+      val paramList = argNames.zip(inputTypes).map{
+        case (argName, ty) => s"@$argName: $ty"
+      }
+      s"$name(${paramList.mkString(", ")}): $returnType =\n  ${body.show}"
+    }
   }
 
 }

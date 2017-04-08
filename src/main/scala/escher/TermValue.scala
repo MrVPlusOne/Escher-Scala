@@ -45,7 +45,7 @@ case object ValueError extends TermValue{
 case class ValueBool(value: Boolean) extends TermValue{
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = matchTApply(ty,TBool.of())
 
-  def show: String = value.toString
+  def show: String = if(value) "T" else "F"
 
   val sizeCompare: PartialFunction[TermValue, Boolean] = { case ValueBool(v1) => !value && v1 }
 }

@@ -21,7 +21,7 @@ class ImplTests extends WordSpec {
       name = "length",
       argNames = IS("xs"),
       inputTypes = IS(TList of tyVar(0)),
-      outputType = tyInt,
+      returnType = tyInt,
       compMap = noTree,
       body =
         `if`("isEmpty" $ v("xs")) {
@@ -46,7 +46,7 @@ class ImplTests extends WordSpec {
       name = "fib",
       argNames = IS("n"),
       inputTypes = IS(tyInt),
-      outputType = tyInt,
+      returnType = tyInt,
       compMap = noTree.updated("isZero",isZero),
       body =
         `if`("or"$ ("isZero" $ v("n"), "isZero" $ ("dec"$ v("n")))) {

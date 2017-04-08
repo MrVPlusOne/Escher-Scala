@@ -7,6 +7,7 @@ case class ExecutionError(msg: String) extends Exception {
   override def getLocalizedMessage: String = msg
 }
 
+
 case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
                          impl: PartialFunction[IS[TermValue],TermValue]){
 
@@ -45,7 +46,7 @@ case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
 
 object ComponentImpl{
   def recursiveImpl(name: String, argNames: IS[String],
-                    inputTypes: IS[Type], outputType: Type,
+                    inputTypes: IS[Type], returnType: Type,
                     compMap: Map[String, ComponentImpl],
                     body: Term, debug: Boolean = false
                    ): ComponentImpl = {
@@ -53,7 +54,7 @@ object ComponentImpl{
     lazy val impl: ComponentImpl = {
       lazy val newCompMap = compMap.updated(name, impl)
       if(debug)
-        ComponentImpl(inputTypes, outputType,
+        ComponentImpl(inputTypes, returnType,
           { case args =>
             println(s"[Call $name]")
             val varMap = argNames.zip(args).toMap
@@ -66,7 +67,7 @@ object ComponentImpl{
           }
         )
       else
-        ComponentImpl(inputTypes, outputType,
+        ComponentImpl(inputTypes, returnType,
           { case args =>
             val varMap = argNames.zip(args).toMap
             val t = Term.executeTerm(
