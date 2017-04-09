@@ -1,6 +1,5 @@
 package escher
 
-import escher.MutableGoalGraph.GoalGraph
 import escher.Synthesis.{ValueMap, ValueVector}
 
 
@@ -156,7 +155,7 @@ object ImmutableGoalGraph {
       printGraphNode(root, indent= 1)
     }
 
-    def synthesizedProgram = {
+    def synthesizedProgram: Term = {
       root.toTerm
     }
 

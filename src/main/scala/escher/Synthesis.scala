@@ -10,7 +10,7 @@ import scala.collection.mutable
   */
 object Synthesis {
   type ValueVector = IndexedSeq[TermValue]
-  type Input = IndexedSeq[TermValue]
+  type ArgList = IndexedSeq[TermValue]
   type ValueMap = Map[Int, TermValue]
   type ValueTermMap = mutable.Map[ValueVector, Term]
 
@@ -52,6 +52,19 @@ object Synthesis {
 
     def show(valueMap: ValueMap, exampleCount: Int): String = {
       (0 until exampleCount).map(i => valueMap.get(i).map(_.show).getOrElse("?")).mkString("<", ", ", ">")
+    }
+  }
+
+  object ArgList{
+    def alphabeticSmallerThan(args1: ArgList, args2: ArgList): Boolean = {
+      require(args1.length == args2.length)
+      args1.indices.foreach{ i =>
+        if(args1(i) greaterThan args2(i))
+          return false
+        else if(args1(i) smallerThan args2(i))
+          return true
+      }
+      false
     }
   }
 

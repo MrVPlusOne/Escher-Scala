@@ -27,6 +27,8 @@ trait TermValue {
     else false
   }
 
+  def greaterThan(tv: TermValue): Boolean = tv smallerThan this
+
   /** Should return true only if the other value has the same type and the "size" of this value is smaller
     * than the other, by requiring one argument's size must decrease during recursive calls, we can ensure
     * the synthesized functions' termination */

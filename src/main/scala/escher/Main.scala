@@ -1,6 +1,5 @@
 package escher
 
-import escher.Synthesis.{ValueMap, ValueVector}
 
 
 /**
@@ -29,14 +28,7 @@ object Main {
     import escher.SynthesisTyped._
     import DSL._
 
-    new SynthesisTyped(Config(maxCost = 20, logComponents = false), Console.print).synthesize(
-      "length", IS(tyList(tyFixVar(0))), IS("xs"), tyInt)(
-      decreasingArgId = 0, oracle = CommonComps.length.impl)(
-      envCompMap = CommonComps.noTree ++ CommonComps.treeComps,
-      compCostFunction = _ => 1,
-      IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))),
-      IS(0,1,2)
-      )
+    new SynthesisTyped(Config(maxCost = 20, logComponents = false), Console.print).synthesize("length", IS(tyList(tyFixVar(0))), IS("xs"), tyInt)(envCompMap = CommonComps.noTree ++ CommonComps.treeComps, compCostFunction = _ => 1, IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))), IS(0,1,2), oracle = CommonComps.length.impl)
   }
 
   def testSynthesisUntyped(): Unit ={
@@ -46,21 +38,16 @@ object Main {
     import SynthesisUntyped._
     val IS = IndexedSeq
 
-    val syn = new SynthesisUntyped(Config(maxCost = 20, printComponents = false), print)
+    val syn = new SynthesisUntyped(Config(maxCost = 10, printComponents = false, printLevels = false), print)
     import syn._
 
-    val inputs = IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2)), IS(listValue(0,1,2)))
-    val outputs: IS[TermValue] = IS(0,1,2,3)
+    val inputs = IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2)))//, IS(listValue(0,1,2)))
+    val outputs: IS[TermValue] = IS(0,1,2)//,3)
 
-    synthesize("length", IS(tyList(tyInt)),
-      IS("xs"), tyInt
-    )(envCompMap = CommonComps.noTree ++ CommonComps.treeComps,
-      compCostFunction = _ => 1,
-      inputs ,
-      outputs
-    )(decreasingArgId = 0,
-      oracle = CommonComps.length.impl
-    )(Config(maxCost = 10)) match {
+    synthesize("length", IS(tyList(tyInt)), IS("xs"), tyInt)(
+      envCompMap = CommonComps.noTree ++ CommonComps.treeComps,
+      compCostFunction = _ => 1, inputs, outputs,
+      oracle = CommonComps.length.impl) match {
       case Some((program, state)) =>
         println(s"------ Synthesis Succeeded! ------")
         println(s"Input-output examples:")
@@ -103,11 +90,6 @@ object Main {
     insertType(tyPair(tyBool,tyBool))
 
     node.printTree()
-
-    def doubleList[A](xs: List[A]): List[A] = ???
-    def any[A](): A = ???
-
-    val l = doubleList(List(any()))
   }
 
   def testImmutableGoal(): Unit ={

@@ -22,7 +22,7 @@ object SynthesisTyped{
 }
 
 class SynthesisTyped(config: Config, logger: String => Unit) {
-  import Synthesis.{ValueVector, Input, divideNumberAsSum, cartesianProduct, ValueTermMap, notAllErr}
+  import Synthesis.{ValueVector, ArgList, divideNumberAsSum, cartesianProduct, ValueTermMap, notAllErr}
 
   def log(condition: Boolean)(msg: =>String): Unit = {
     if(condition)
@@ -126,9 +126,9 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
 
   def synthesize(name: String, inputTypes: IndexedSeq[Type], inputNames: IndexedSeq[String], returnType: Type)
-                (decreasingArgId: Int, oracle: PartialFunction[IS[TermValue], TermValue])
-                (envCompMap: Map[String, ComponentImpl], compCostFunction: ComponentImpl => Int,
-                 inputs: IndexedSeq[Input], outputs: IndexedSeq[TermValue]): Unit = {
+                (envCompMap: Map[String, ComponentImpl], compCostFunction: (ComponentImpl) => Int,
+                 inputs: IndexedSeq[ArgList], outputs: IndexedSeq[TermValue],
+                 oracle: PartialFunction[IS[TermValue], TermValue]): Unit = {
     import DSL._
 
     require(inputTypes.length == inputNames.length)
@@ -136,8 +136,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val recursiveComp = ComponentImpl(inputTypes, returnType, oracle)
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
-    def argDecrease(arg: Input, exampleId: Int) = {
-      arg(decreasingArgId) smallerThan inputs(exampleId)(decreasingArgId)
+    def argDecrease(arg: ArgList, exampleId: Int) = {
+      ArgList.alphabeticSmallerThan(arg, inputs(exampleId))
     }
 
     val exampleCount = outputs.length
@@ -210,7 +210,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
                     inputTypes: IS[Type], returnType: Type): Iterator[(IS[Type], Type)] = {
     val signatureNextFreeId =  (returnType.nextFreeId +: inputTypes.map(_.nextFreeId)).max
 
-    //fixme to past tests
     def aux(argId: Int, nextFreeId: Int, subst: TypeSubst): Iterator[(IS[Type], Type)] = {
       if(argId == costs.length) return Iterator((IS(), Type.alphaNormalForm(subst(returnType))))
 

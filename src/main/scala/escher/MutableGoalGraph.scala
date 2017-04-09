@@ -4,7 +4,7 @@ import escher.Synthesis.{ValueMap, ValueVector}
 
 import scala.collection.mutable
 
-
+// todo: remove it?
 object MutableGoalGraph {
   sealed trait GoalGraphState
 
@@ -18,6 +18,7 @@ object MutableGoalGraph {
     }
   }
 
+  //noinspection AccessorLikeMethodIsEmptyParen
   class GoalGraph(val valueMap: ValueMap,
                   val parents: mutable.Set[Resolver] = mutable.Set(),
                   val children: mutable.Set[Resolver] = mutable.Set(),
@@ -34,6 +35,7 @@ object MutableGoalGraph {
   }
 
 
+  //noinspection AccessorLikeMethodIsEmptyParen
   case class Resolver(cond: GoalGraph, thenBranch: GoalGraph, elseBranch: GoalGraph,
                       parent: GoalGraph){
     def isSolved(): Boolean = cond.isSolved() && thenBranch.isSolved() && elseBranch.isSolved()

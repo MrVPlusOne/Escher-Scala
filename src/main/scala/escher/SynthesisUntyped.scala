@@ -10,14 +10,15 @@ import escher.Synthesis.{SynthesizedComponent, ValueMap}
 object SynthesisUntyped{
   case class Config(
                      maxCost: Int,
-                     printComponents: Boolean = true
+                     printComponents: Boolean = true,
+                     printLevels: Boolean = true
                    )
 }
 
 
 
 class SynthesisUntyped(config: Config, logger: String => Unit) {
-  import Synthesis.{ValueVector, Input, divideNumberAsSum, cartesianProduct, ValueTermMap, showValueTermMap }
+  import Synthesis.{ValueVector, ArgList, divideNumberAsSum, cartesianProduct, ValueTermMap, showValueTermMap }
 
   def logLn(msg: String): Unit = {
     logger(msg)
@@ -69,14 +70,16 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
       if(config.printComponents) {
         logLn("  " + showValueTermMap(totalMap))
       }
-      logLn(s"LevelMaps:")
-      levelMaps.indices.foreach{i =>
-        val valueTermMap = levelMaps(i)
-        val size = valueTermMap.size
-        logLn(s"  $i: ($size components)")
-        if(config.printComponents) {
-          val valueTermMapS = showValueTermMap(valueTermMap)
-          logLn(s"      $valueTermMapS")
+      if(config.printLevels) {
+        logLn(s"LevelMaps:")
+        levelMaps.indices.foreach { i =>
+          val valueTermMap = levelMaps(i)
+          val size = valueTermMap.size
+          logLn(s"  $i: ($size components)")
+          if (config.printComponents) {
+            val valueTermMapS = showValueTermMap(valueTermMap)
+            logLn(s"      $valueTermMapS")
+          }
         }
       }
     }
@@ -90,10 +93,10 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
 
   def synthesize(name: String, inputTypes: IndexedSeq[Type], inputNames: IndexedSeq[String], returnType: Type)
-                (envCompMap: Map[String, ComponentImpl], compCostFunction: ComponentImpl => Int,
-                 inputs: IndexedSeq[Input], outputs: IndexedSeq[TermValue])
-                (decreasingArgId: Int, oracle: PartialFunction[IS[TermValue], TermValue])
-                (config: Config): Option[(SynthesizedComponent, SynthesisState)] = {
+                (envCompMap: Map[String, ComponentImpl],
+                 compCostFunction: (ComponentImpl) => Int,
+                 inputs: IndexedSeq[ArgList], outputs: IndexedSeq[TermValue],
+                 oracle: PartialFunction[IS[TermValue], TermValue]): Option[(SynthesizedComponent, SynthesisState)] = {
     import DSL._
 
 
@@ -103,8 +106,8 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     val recursiveComp = ComponentImpl(inputTypes, returnType, oracle)
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
-    def argDecrease(arg: Input, exampleId: Int) = {
-      arg(decreasingArgId) smallerThan inputs(exampleId)(decreasingArgId)
+    def argDecrease(arg: ArgList, exampleId: Int) = {
+      ArgList.alphabeticSmallerThan(arg, inputs(exampleId))
     }
 
     val exampleCount = outputs.length
