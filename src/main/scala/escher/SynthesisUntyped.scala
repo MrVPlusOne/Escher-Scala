@@ -5,20 +5,21 @@ import escher.Term.Component
 import scala.collection.mutable
 import SynthesisUntyped._
 import escher.ImmutableGoalGraph.GoalManager
-import escher.Synthesis.{SynthesizedComponent, ValueMap}
+import escher.Synthesis._
 
-object SynthesisUntyped{
+
+object SynthesisUntyped {
   case class Config(
                      maxCost: Int,
                      printComponents: Boolean = true,
-                     printLevels: Boolean = true
+                     printLevels: Boolean = true,
+                     printAtReboot: Boolean = true
                    )
 }
 
 
 
 class SynthesisUntyped(config: Config, logger: String => Unit) {
-  import Synthesis.{ValueVector, ArgList, divideNumberAsSum, cartesianProduct, ValueTermMap, showValueTermMap }
 
   def logLn(msg: String): Unit = {
     logger(msg)
@@ -76,7 +77,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
       }
       if(config.printLevels) {
         logLn(s"LevelMaps:")
-        (0 until levelMaps.length).foreach { i =>
+        levelMaps.indices.foreach { i =>
           val valueTermMap = levelMaps(i)
           val size = valueTermMap.size
           logLn(s"  ${i+1}: ($size components)")
@@ -96,18 +97,21 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
 
 
-  def synthesize(name: String, inputTypes: IndexedSeq[Type], inputNames: IndexedSeq[String], returnType: Type)
+  def synthesize(name: String, inputTypes: IS[Type], inputNames: IS[String], returnType: Type)
                 (envCompMap: Map[String, ComponentImpl],
                  compCostFunction: (ComponentImpl) => Int,
-                 inputs: IndexedSeq[ArgList], outputs: IndexedSeq[TermValue],
+                 examples: IS[(ArgList, TermValue)],
                  oracle: PartialFunction[IS[TermValue], TermValue]): Option[(SynthesizedComponent, SynthesisState)] = {
     import DSL._
 
+    val inputs: IS[ArgList] = examples.map(_._1)
+    val outputs: IS[TermValue] = examples.map(_._2)
 
 
     require(inputTypes.length == inputNames.length)
 
-    val recursiveComp = ComponentImpl(inputTypes, returnType, oracle)
+    val bufferedOracle = new BufferedOracle(inputs.zip(outputs).toMap, oracle)
+    val recursiveComp = ComponentImpl(inputTypes, returnType, PartialFunction(bufferedOracle.evaluate))
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
     def argDecrease(arg: ArgList, exampleId: Int) = {
@@ -121,13 +125,39 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     )
 
     def resultFromState(): Option[(SynthesizedComponent, SynthesisState)] = {
-      val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, state.manager.synthesizedProgram)
-      Some((comp, state))
+      val body = state.manager.synthesizedProgram
+      val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType, envCompMap, body)
+      var passed, failed = IS[(ArgList, TermValue)]()
+      bufferedOracle.buffer.foreach{
+        case (a,r) =>
+          if(impl.execute(a, debug = false) == r)
+            passed = passed :+ (a -> r)
+          else
+            failed = failed :+ (a -> r)
+      }
+      val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, body)
+      if(failed.isEmpty){
+        Some((comp, state))
+      }else {
+        //todo: add more reboot strategy
+        if(config.printAtReboot){
+          logLn("--- Reboot ---")
+          logLn(s"Program Found:")
+          logLn(comp.show)
+          logLn(s"which failed at ${failed.map{
+            case (a,r) => s"${ArgList.showArgList(a)} -> ${r.show}"
+          }.mkString("; ")}")
+          logLn("Now Reboot...")
+        }
+        val newExamples = examples ++ failed ++ passed
+        synthesize(name, inputTypes, inputNames, returnType)(
+          envCompMap, compCostFunction, newExamples, oracle
+        )
+      }
     }
 
-    val goalArity = inputTypes.length
     state.openNextLevel()
-    (0 until goalArity).foreach(argId =>{
+    inputTypes.indices.foreach(argId =>{
       val valueMap = inputs.indices.map(exId => {
         inputs(exId)(argId)
       })

@@ -29,6 +29,7 @@ object DSL {
   implicit def boolConversion(b: Boolean): ValueBool = ValueBool(b)
   implicit def binaryTreeConversion(t: BinaryTree[TermValue]): ValueTree = ValueTree(t)
   implicit def pairConversion(pair: (TermValue, TermValue)): ValuePair = ValuePair(pair._1, pair._2)
+  implicit def listConversion(list: List[TermValue]): ValueList = ValueList(list)
 
   def listValue(terms: TermValue*) = ValueList(terms.toList)
 
@@ -39,4 +40,5 @@ object DSL {
   def tyTree(param: Type): TApply = TTree.of(param)
   def tyPair(t1: Type, t2: Type): TApply = TPair.of(t1,t2)
 
+  def argList(termValues: TermValue*) = termValues.toIndexedSeq
 }

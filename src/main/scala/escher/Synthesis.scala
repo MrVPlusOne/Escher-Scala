@@ -66,6 +66,10 @@ object Synthesis {
       }
       false
     }
+
+    def showArgList(argList: ArgList): String = {
+      argList.map(_.show).mkString("(",", ",")")
+    }
   }
 
   object ValueVector{
@@ -97,6 +101,27 @@ object Synthesis {
       s"$name(${paramList.mkString(", ")}): $returnType =\n  ${body.show}"
     }
   }
+
+  class BufferedOracle(knownMap: Map[ArgList, TermValue] , oracle: PartialFunction[ArgList, TermValue]){
+    private val _buffer = mutable.Map[ArgList, TermValue]()
+
+    def buffer: Map[IS[TermValue], TermValue] = _buffer.toMap
+
+    def evaluate(argList: ArgList): TermValue = {
+      knownMap.getOrElse(argList,
+        buffer.getOrElse(argList, {
+          val result = oracle(argList)
+          _buffer(argList) = result
+          result
+        })
+      )
+    }
+
+  }
+
+
+
+
 
 }
 

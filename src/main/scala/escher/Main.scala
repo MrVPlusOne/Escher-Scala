@@ -1,5 +1,6 @@
 package escher
 
+import escher.Synthesis.ArgList
 
 
 /**
@@ -41,22 +42,39 @@ object Main {
     val syn = new SynthesisUntyped(Config(maxCost = 10, printComponents = false, printLevels = false), print)
     import syn._
 
-    val inputs = IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2)))//, IS(listValue(0,1,2)))
-    val outputs: IS[TermValue] = IS(0,1,2)//,3)
+//    val examples: IS[(ArgList, TermValue)] = IS(
+//      IS(listValue()) -> 0,
+//      IS(listValue(1)) -> 1,
+//      IS(listValue(1,2,3)) -> 3
+//    )
+//    val examples: IS[(ArgList, TermValue)] = IS(
+//      IS[TermValue](listValue(), 0, 5) -> listValue(5),
+//      IS[TermValue](listValue(1,2,3), 0, 7) -> listValue(7,1,2,3),
+//      IS[TermValue](listValue(1,2,3), 1, 8) -> listValue(1,8,2,3),
+//      IS[TermValue](listValue(1,2,3), 2, 8) -> listValue(1,2,8,3),
+//      IS[TermValue](listValue(1,2,3), 3, 9) -> listValue(1,2,3,9)
+//    )
 
-    synthesize("length", IS(tyList(tyInt)), IS("xs"), tyInt)(
-      envCompMap = CommonComps.noTree ++ CommonComps.treeComps,
-      compCostFunction = _ => 1, inputs, outputs,
-      oracle = CommonComps.length.impl) match {
+    val examples: IS[(ArgList, TermValue)] = IS(
+      argList(listValue()) -> listValue(),
+      argList(listValue(1,2,3,4)) -> listValue(4,3,2,1)
+    )
+
+    val refComp = CommonComps.reverse
+
+    synthesize("reverse", refComp.inputTypes, IS("xs"), refComp.returnType)(
+      envCompMap = CommonComps.noTree,
+      compCostFunction = _ => 1, examples,
+      oracle = refComp.impl) match {
       case Some((program, state)) =>
         println(s"------ Synthesis Succeeded! ------")
         println(s"Input-output examples:")
-        inputs.indices.foreach(i =>{
-          print(inputs(i).map(_.show).mkString("(",", ",")"))
+        examples.foreach{case(a,r) =>
+          print(ArgList.showArgList(a))
           print(" -> ")
-          println(outputs(i).show)
-        })
-        state.print(exampleCount = inputs.length)
+          println(r.show)
+        }
+        state.print(exampleCount = examples.length)
         println(s"\nProgram found:")
         println{
           program.show

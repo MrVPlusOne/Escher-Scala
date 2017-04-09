@@ -258,6 +258,20 @@ object CommonComps {
     "snd" -> snd
   )
 
+  val insert = ComponentImpl(
+    IS(tyList(tyVar(0)), tyInt, tyVar(0)), tyList(tyVar(0)),
+    impl = {
+      case IS(ValueList(xs), ValueInt(i), v) =>
+        val (l,r) = xs.splitAt(i)
+        l ++ (v::r)
+    }
+  )
 
+  val reverse = ComponentImpl(
+    IS(tyList(tyVar(0))), tyList(tyVar(0)),
+    impl = {
+      case IS(ValueList(xs)) => xs.reverse
+    }
+  )
 
 }
