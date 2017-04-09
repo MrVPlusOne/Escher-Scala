@@ -25,7 +25,11 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     logger("\n")
   }
 
-  class SynthesisState(initGoal: ValueVector, var levelMaps: IndexedSeq[ValueTermMap], val totalMap: ValueTermMap) {
+  class SynthesisState(initGoal: ValueVector, val totalMap: ValueTermMap) {
+    private var levelMaps: IS[ValueTermMap] = IS()
+
+    def getLevelOfCost(cost: Int): ValueTermMap = levelMaps(cost-1)
+
     def library(vm: ValueMap): Option[Term] = {
       for((vec,term) <- totalMap){
         if(ValueMap.matchVector(vm, vec))
@@ -52,12 +56,12 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
       *
       * @return Whether the root goal has been solved
       */
-    def registerTermAtLevel(level: Int, term: Term, valueVector: ValueVector): Boolean = {
+    def registerTermAtLevel(cost: Int, term: Term, valueVector: ValueVector): Boolean = {
       totalMap.get(valueVector) match {
         case None =>
           manager.insertNewTerm(valueVector, term)
           totalMap(valueVector) = term
-          levelMaps(level)(valueVector) = term
+          getLevelOfCost(cost)(valueVector) = term
           manager.root.isSolved
         case Some(_) =>
           false
@@ -72,10 +76,10 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
       }
       if(config.printLevels) {
         logLn(s"LevelMaps:")
-        levelMaps.indices.foreach { i =>
+        (0 until levelMaps.length).foreach { i =>
           val valueTermMap = levelMaps(i)
           val size = valueTermMap.size
-          logLn(s"  $i: ($size components)")
+          logLn(s"  ${i+1}: ($size components)")
           if (config.printComponents) {
             val valueTermMapS = showValueTermMap(valueTermMap)
             logLn(s"      $valueTermMapS")
@@ -113,7 +117,6 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     val exampleCount = outputs.length
     val state = new SynthesisState(
       outputs,
-      IndexedSeq(),
       ValueTermMap.empty
     )
 
@@ -123,7 +126,6 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     }
 
     val goalArity = inputTypes.length
-    state.openNextLevel()
     state.openNextLevel()
     (0 until goalArity).foreach(argId =>{
       val valueMap = inputs.indices.map(exId => {
@@ -155,7 +157,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
         } else for(costs <- divideNumberAsSum(costLeft, arity, minNumber = 1)) {
           val candidatesForArgs = for (argIdx <- 0 until arity) yield {
             val c = costs(argIdx)
-            state.levelMaps(c)
+            state.getLevelOfCost(c)
           }
           val isRecCall = compName == name
           cartesianProduct(candidatesForArgs).foreach(product => {
