@@ -29,6 +29,12 @@ sealed trait Type{
   }
 
   def instanceOf(that: Type): Boolean = Type.instanceOf(this, that)
+
+  def fixVars: Type = this match {
+    case TVar(id) => TFixedVar(id)
+    case TFixedVar(id) => TFixedVar(id)
+    case TApply(contr, params) => TApply(contr, params.map(_.fixVars))
+  }
 }
 
 object Type {

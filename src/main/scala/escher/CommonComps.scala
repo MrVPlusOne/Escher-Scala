@@ -274,4 +274,17 @@ object CommonComps {
     }
   )
 
+  val stutter = {
+    def stutterF[A](xs: List[A]): List[A] = {
+      if(xs.isEmpty) List()
+      else xs.head :: xs.head :: stutterF(xs.tail)
+    }
+    ComponentImpl(
+      IS(tyList(tyVar(0))), tyList(tyVar(0)),
+      impl = {
+        case IS(ValueList(xs)) => stutterF(xs)
+      }
+    )
+  }
+
 }

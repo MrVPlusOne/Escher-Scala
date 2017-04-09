@@ -15,6 +15,7 @@ sealed trait Term{
     case If(condition, thenBranch, elseBranch) =>
       s"if ${condition.show} then ${thenBranch.show} else ${elseBranch.show}"
   }
+
 }
 
 object Term {
@@ -59,6 +60,25 @@ object Term {
     println("  " * depth + s"--> $v")
     v
   }
+
+  def printTerm(term: Term, depth: Int = 0): Unit = {
+    def printTermAux(term: Term, depth: Int): Unit = term match {
+      case If(condition, thenBranch, elseBranch) =>
+        val prefix = " " * depth
+        println(s"if ${condition.show}")
+        print(s"${prefix}then ")
+        printTermAux(thenBranch, depth+5)
+        print(s"${prefix}else ")
+        printTermAux(elseBranch, depth+5)
+      case other =>
+        println(other.show)
+    }
+
+    print(" "*depth)
+    printTermAux(term, depth)
+  }
+
+
 }
 
 

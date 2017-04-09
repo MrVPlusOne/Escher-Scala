@@ -100,9 +100,18 @@ object Synthesis {
       }
       s"$name(${paramList.mkString(", ")}): $returnType =\n  ${body.show}"
     }
+
+    def print(): Unit = {
+      val paramList = argNames.zip(inputTypes).map{
+        case (argName, ty) => s"@$argName: $ty"
+      }
+      println(s"$name(${paramList.mkString(", ")}): $returnType =")
+      Term.printTerm(body, 2)
+    }
   }
 
-  class BufferedOracle(knownMap: Map[ArgList, TermValue] , oracle: PartialFunction[ArgList, TermValue]){
+  class BufferedOracle(val examples: IS[(ArgList, TermValue)] , oracle: PartialFunction[ArgList, TermValue]){
+    val knownMap: Map[ArgList, TermValue] = examples.toMap
     private val _buffer = mutable.Map[ArgList, TermValue]()
 
     def buffer: Map[IS[TermValue], TermValue] = _buffer.toMap
@@ -118,6 +127,33 @@ object Synthesis {
     }
 
   }
+
+  def printTypedSynthesisResult(syn: SynthesisTyped)
+                               (result: Option[(SynthesizedComponent, syn.SynthesisState, BufferedOracle)]): Unit = {
+    result match {
+      case Some((program, state, bufferedOracle)) =>
+        val examples = state.examples
+        println(s"------ Synthesis Succeeded! ------")
+        println(s"Input-output examples:")
+        examples.foreach { case (a, r) =>
+          print(ArgList.showArgList(a))
+          print(" -> ")
+          println(r.show)
+        }
+        println(s"Additional examples passed:")
+        bufferedOracle.buffer.foreach { case (a, r) =>
+          print(ArgList.showArgList(a))
+          print(" -> ")
+          println(r.show)
+        }
+        state.print(exampleCount = examples.length)
+        println(s"\nProgram found:")
+        program.print()
+      case _ =>
+        println("------- Synthesis Failed. -------")
+    }
+  }
+
 
 
 

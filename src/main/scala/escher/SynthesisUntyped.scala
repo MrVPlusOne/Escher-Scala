@@ -26,7 +26,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     logger("\n")
   }
 
-  class SynthesisState(initGoal: ValueVector, val totalMap: ValueTermMap) {
+  class SynthesisState(val bufferedOracle: BufferedOracle, val totalMap: ValueTermMap) {
     private var levelMaps: IS[ValueTermMap] = IS()
 
     def getLevelOfCost(cost: Int): ValueTermMap = levelMaps(cost-1)
@@ -39,13 +39,16 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
       None
     }
 
-    val manager = new GoalManager(
-      initGoal = initGoal.zipWithIndex.map(_.swap).toMap,
-      boolLibrary = library,
-      valueLibrary = library,
-      exampleCount = initGoal.length,
-      printer = (n, s) => logger("  "*n + s)
-    )
+    val manager: GoalManager = {
+      val initGoal = bufferedOracle.examples.map(_._2)
+      new GoalManager(
+        initGoal = initGoal.zipWithIndex.map(_.swap).toMap,
+        boolLibrary = library,
+        valueLibrary = library,
+        exampleCount = initGoal.length,
+        printer = (n, s) => logger("  " * n + s)
+      )
+    }
 
     def openNextLevel(): Int ={
       levelMaps = levelMaps :+ ValueTermMap.empty
@@ -110,7 +113,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
     require(inputTypes.length == inputNames.length)
 
-    val bufferedOracle = new BufferedOracle(inputs.zip(outputs).toMap, oracle)
+    val bufferedOracle = new BufferedOracle(examples, oracle)
     val recursiveComp = ComponentImpl(inputTypes, returnType, PartialFunction(bufferedOracle.evaluate))
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
@@ -120,7 +123,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
     val exampleCount = outputs.length
     val state = new SynthesisState(
-      outputs,
+      bufferedOracle,
       ValueTermMap.empty
     )
 

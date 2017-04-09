@@ -25,19 +25,58 @@ object Main {
     )
   }
 
-  def testSynthesis(): Unit ={
+
+  def reverseTypedSynthesis(): Unit ={
     import escher.SynthesisTyped._
     import DSL._
 
-    new SynthesisTyped(Config(maxCost = 20, logComponents = false), Console.print).synthesize("length", IS(tyList(tyFixVar(0))), IS("xs"), tyInt)(envCompMap = CommonComps.noTree ++ CommonComps.treeComps, compCostFunction = _ => 1, IS(IS(listValue()), IS(listValue(2)), IS(listValue(1,2))), IS(0,1,2), oracle = CommonComps.length.impl)
+    val syn = new SynthesisTyped(Config(maxCost = 8, logComponents = false), Console.print)
+    import syn._
+
+    val examples: IS[(ArgList, TermValue)] = IS(
+      argList(listValue()) -> listValue(),
+      argList(listValue(2,3,4)) -> listValue(4,3,2)
+    )
+
+    val refComp = CommonComps.reverse
+
+    val r = synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+      envCompMap = CommonComps.noTree,
+      compCostFunction = _ => 1,
+      examples, oracle = refComp.impl)
+
+    Synthesis.printTypedSynthesisResult(syn)(r)
   }
+
+  def stutterTypedSynthesis(): Unit ={
+    import escher.SynthesisTyped._
+    import DSL._
+
+    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false, logGoal = false, logLevels = false), Console.print)
+    import syn._
+
+    val examples: IS[(ArgList, TermValue)] = IS(
+      argList(listValue()) -> listValue(),
+      argList(listValue(5,6,3)) -> listValue(5,5,6,6,3,3),
+      argList(listValue(3)) -> listValue(3,3)
+    )
+
+    val refComp = CommonComps.stutter
+
+    val r = synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+      envCompMap = CommonComps.noTree,
+      compCostFunction = _ => 1,
+      examples, oracle = refComp.impl)
+
+    Synthesis.printTypedSynthesisResult(syn)(r)
+  }
+
+
 
   def testSynthesisUntyped(): Unit ={
     import escher._
     import DSL._
-
     import SynthesisUntyped._
-    val IS = IndexedSeq
 
     val syn = new SynthesisUntyped(Config(maxCost = 10, printComponents = false, printLevels = false), print)
     import syn._
@@ -130,8 +169,8 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-//    testSynthesis()
-    testSynthesisUntyped()
+    stutterTypedSynthesis()
+//    testSynthesisUntyped()
 //    testImmutableGoal()
   }
 }

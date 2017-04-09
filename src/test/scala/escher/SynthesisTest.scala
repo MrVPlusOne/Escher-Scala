@@ -1,7 +1,7 @@
 package escher
 
 import escher.DSL._
-
+import escher.Synthesis.BufferedOracle
 import org.scalatest.WordSpec
 
 
@@ -17,7 +17,8 @@ class SynthesisTest extends WordSpec{
 
     val state = new SynthesisState(
       IS(),
-      TypeMap.empty()
+      TypeMap.empty(),
+      tyVar(0)
     )
 
     state.openToLevel(2)
