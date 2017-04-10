@@ -7,5 +7,7 @@ A Scala implementation of the algorithm described in this paper [Recursive Progr
 
 Example Run:
 
-![Stutter](documentation/Stutter.png)
+  <!-- ![Stutter](documentation/Stutter.png) -->
+
+<img src="documentation/Stutter.png" style="width: 300px;" alt="stutter"/>
 
