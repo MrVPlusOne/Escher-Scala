@@ -1,5 +1,7 @@
 package escher
 
+import escher.Synthesis.ArgList
+
 /** An Exception which will not be caught by ComponentImpl.execute */
 case class ExecutionError(msg: String) extends Exception {
   override def getMessage: String = msg
@@ -51,34 +53,33 @@ object ComponentImpl{
                     body: Term, debug: Boolean = false
                    ): ComponentImpl = {
 
-    lazy val impl: ComponentImpl = {
-      lazy val newCompMap = compMap.updated(name, impl)
-      if(debug)
-        ComponentImpl(inputTypes, returnType,
-          { case args =>
-            println(s"[Call $name]")
+    def impl(lastArg: Option[ArgList]): ComponentImpl = {
+      ComponentImpl(inputTypes, returnType, {
+        case args => lastArg match {
+          case Some(la) if !ArgList.alphabeticSmallerThan(args, la) =>
+            ValueError
+          case _ =>
+            val newCompMap = compMap.updated(name, impl(Some(args)))
             val varMap = argNames.zip(args).toMap
-            val t = Term.executeTermDebug(
-              varMap = varMap,
-              compMap = newCompMap
-            )(body)
-            println(s"[$name Called]")
-            t
-          }
-        )
-      else
-        ComponentImpl(inputTypes, returnType,
-          { case args =>
-            val varMap = argNames.zip(args).toMap
-            val t = Term.executeTerm(
-              varMap = varMap,
-              compMap = newCompMap
-            )(body)
-            t
-          }
-        )
+
+            if (debug) {
+              println(s"[Call $name]")
+              val t = Term.executeTermDebug(
+                varMap = varMap,
+                compMap = newCompMap
+              )(body)
+              println(s"[$name Called]")
+              t
+            } else {
+              Term.executeTerm(
+                varMap = varMap,
+                compMap = newCompMap
+              )(body)
+            }
+        }
+      })
     }
-    impl
+    impl(None)
   }
 }
 

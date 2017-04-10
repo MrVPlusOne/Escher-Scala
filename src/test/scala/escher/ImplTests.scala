@@ -41,6 +41,25 @@ class ImplTests extends WordSpec {
     }
   }
 
+  "a non-terminating implementation" should {
+    val forever = recursiveImpl(
+      name = "forever",
+      argNames = IS("x"),
+      inputTypes = IS(tyVar(0)),
+      returnType = tyVar(0),
+      compMap = noTree,
+      body = "forever" $ v("x"),
+      debug = false
+    )
+    "return Err" in {
+      checkImpl(forever)(
+        List(listValue()) -> ValueError,
+        List(ValueError) -> ValueError
+      )
+    }
+  }
+
+
   "a simple fib implementation" should {
     val fibImpl = recursiveImpl(
       name = "fib",

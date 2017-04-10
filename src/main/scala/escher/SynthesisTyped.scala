@@ -189,6 +189,10 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     def resultFromState(): Option[(SynthesizedComponent, SynthesisState, BufferedOracle)] = {
       val body = state.manager.synthesizedProgram
+      val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, body)
+      logLn(config.logReboot){
+        s"Program Found:\n${comp.show}"
+      }
       val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType, envCompMap, body)
       var passed, failed = IS[(ArgList, TermValue)]()
       bufferedOracle.buffer.foreach{
@@ -198,7 +202,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           else
             failed = failed :+ (a -> r)
       }
-      val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, body)
       if(failed.isEmpty){
         Some((comp, state, bufferedOracle))
       }else {
@@ -209,8 +212,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         }
         logLn(config.logReboot){
           s"""
-            |Program Found:
-            |  ${comp.show}
             |  which failed at ${failed.map{ case (a,r) => s"${ArgList.showArgList(a)} -> ${r.show}" }.mkString("; ")}
             |Now Reboot...
           """.stripMargin

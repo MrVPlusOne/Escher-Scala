@@ -43,7 +43,7 @@ object Term {
   }
 
   def executeTermDebug(varMap: Map[String, TermValue], compMap: Map[String, ComponentImpl], depth: Int = 0)(term: Term): TermValue = {
-    println("  "*depth + ">> " + term)
+    println("  "*depth + ">> " + term.show)
     val v = term match {
       case Var(name) => varMap.getOrElse(name, throw ExecutionError(s"variable '$name' not in scope!"))
       case Component(name, terms) =>
@@ -57,7 +57,7 @@ object Term {
           case ValueBool(false) => executeTermDebug(varMap, compMap, depth + 1)(e)
         }
     }
-    println("  " * depth + s"--> $v")
+    println("  " * depth + s"--> ${v.show}")
     v
   }
 
