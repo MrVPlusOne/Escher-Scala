@@ -35,6 +35,12 @@ sealed trait Type{
     case TFixedVar(id) => TFixedVar(id)
     case TApply(contr, params) => TApply(contr, params.map(_.fixVars))
   }
+
+  def containsVar(id: Int): Boolean = this match {
+    case TVar(id1) => id == id1
+    case TFixedVar(_) => false
+    case TApply(_, params) => !params.forall(t => !t.containsVar(id))
+  }
 }
 
 object Type {
@@ -97,25 +103,29 @@ object Type {
 
   /** return the most general unifier of two types (if exist),
     * prefer to rename vars in the first argument over the second */
-  def unify(ty1: Type, ty2: Type): Option[TypeSubst] = ty1 match {
-    case TVar(id) => Some(TypeSubst(Map(id -> ty2)))
-    case _ => ty2 match {
-      case TVar(id) => Some(TypeSubst(Map(id -> ty1)))
-      case _ => ty1 match {
-        case TFixedVar(_) => if(ty2 == ty1) Some(TypeSubst.empty) else None
-        case TApply(contr, params) => ty2 match{
-          case TApply(contr2, params2) if contr == contr2 =>
-            val r = params.zip(params2).foldLeft(TypeSubst.empty){
-              case (subst, (t1,t2)) =>
-                unify(subst(t1), subst(t2)) match {
-                  case None => return None
-                  case Some(ts) => subst compose ts
-                }
-            }
-            Some(r)
-          case _ => None
+  def unify(ty1: Type, ty2: Type): Option[TypeSubst] = {
+    if(ty1 == ty2) return Some(TypeSubst.empty)
+    ty1 match {
+      case TVar(id) => if(ty2 containsVar id) None else Some(TypeSubst(Map(id -> ty2)))
+      case _ => ty2 match {
+        case TVar(id) => if(ty1 containsVar id) None else Some(TypeSubst(Map(id -> ty1)))
+        case TFixedVar(_) => None
+        case _ => ty1 match {
+          case TFixedVar(_) => None
+          case TApply(contr, params) => ty2 match{
+            case TApply(contr2, params2) if contr == contr2 =>
+              val r = params.zip(params2).foldLeft(TypeSubst.empty){
+                case (subst, (t1,t2)) =>
+                  unify(subst(t1), subst(t2)) match {
+                    case None => return None
+                    case Some(ts) => subst compose ts
+                  }
+              }
+              Some(r)
+            case _ => None
+          }
+          case _ => throw new Exception("Not possible")
         }
-        case _ => throw new Exception("Not possible")
       }
     }
   }

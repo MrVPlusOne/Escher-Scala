@@ -44,6 +44,13 @@ class TypeCheckingTests extends WordSpec {
       }
     }
 
+    "return empty subst for two equivalent types" in {
+      checkUnify(
+        (tyVar(1), tyVar(1)) -> Map(),
+        (tyList(tyVar(0)), tyList(tyVar(0))) -> Map()
+      )
+    }
+
     "unify vars to any type" in {
       checkUnify(
         (tyVar(1), tyInt) -> Map(1 -> tyInt),
@@ -71,6 +78,7 @@ class TypeCheckingTests extends WordSpec {
 
       assert { unify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyInt, tyBool)) === None }
       assert { unify(TMap.of(tyVar(0), tyVar(0)), TMap.of(tyFixVar(0), tyBool)) === None }
+      assert { unify(tyMap(tyList(tyVar(1)), tyVar(1)), tyMap(tyVar(0), tyList(tyVar(0)))) === None }
     }
   }
 
