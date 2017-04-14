@@ -78,7 +78,7 @@ object Main {
         examples, oracle = refComp.impl)
     }
 
-    Synthesis.printTypedSynthesisResult(syn){
+    SynthesisTyped.printResult(syn){
       cartesianSynthesis()
     }
   }

@@ -23,6 +23,43 @@ object SynthesisTyped{
                      logReboot: Boolean = true,
                      rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample
                    )
+
+  object ValueTermMap{
+    def empty: ValueTermMap = mutable.Map()
+  }
+
+  case class SynthesisData(oracleBuffer: IS[(ArgList, TermValue)], reboots: Int)
+
+  object SynthesisData{
+    def init: SynthesisData = SynthesisData(oracleBuffer = IS(), reboots = 0)
+  }
+
+  def printResult(syn: SynthesisTyped)
+                 (result: Option[(SynthesizedComponent, syn.SynthesisState, SynthesisData)]): Unit = {
+    result match {
+      case Some((program, state, synData)) =>
+        val examples = state.examples
+        println(s"------ Synthesis for ${program.name} Succeeded! (${synData.reboots} reboots) ------")
+        println(s"Initial examples (${examples.length}):")
+        examples.foreach { case (a, r) =>
+          print(ArgList.showArgList(a))
+          print(" -> ")
+          println(r.show)
+        }
+        println(s"Additional examples provided (${synData.oracleBuffer.length}):")
+        synData.oracleBuffer.foreach { case (a, r) =>
+          print(ArgList.showArgList(a))
+          print(" -> ")
+          println(r.show)
+        }
+        state.print(exampleCount = examples.length)
+        println(s"\nProgram found:\n")
+        program.print()
+      case _ =>
+        println(s"------- Synthesis Failed. -------")
+    }
+  }
+
 }
 
 class SynthesisTyped(config: Config, logger: String => Unit) {
@@ -93,10 +130,13 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     }
 
     def library(ty: Type)(vm: ValueMap): Option[Term] = {
-      for((vec,term) <- totalMap(ty)){
-        if(ValueMap.matchVector(vm, vec))
-          return Some(term)
-      }
+      levelMaps.foreach(map =>{
+        for((vec,term) <- map(ty)){
+          if(ValueMap.matchVector(vm, vec))
+            return Some(term)
+        }
+      })
+
       None
     }
 
@@ -156,16 +196,11 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
   }
 
 
-  object ValueTermMap{
-    def empty: ValueTermMap = mutable.Map()
-  }
-
-
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
                 (envCompMap: Map[String, ComponentImpl], compCostFunction: (ComponentImpl) => Int,
                  examples: IS[(ArgList, TermValue)],
                  oracle: PartialFunction[IS[TermValue], TermValue],
-                 oracleBuffer: IS[(ArgList, TermValue)] = IS()): Option[(SynthesizedComponent, SynthesisState, BufferedOracle)] = {
+                 synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
     import DSL._
 
     val inputs: IS[ArgList] = examples.map(_._1)
@@ -175,7 +210,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     require(inputTypes.length == inputNames.length)
 
-    val bufferedOracle = new BufferedOracle(inputs.zip(outputs), oracle, initBuffer = oracleBuffer)
+    val bufferedOracle = new BufferedOracle(inputs.zip(outputs), oracle, initBuffer = synData.oracleBuffer)
     val recursiveComp = ComponentImpl(inputTypes, returnType, PartialFunction(bufferedOracle.evaluate))
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
@@ -190,7 +225,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       returnType
     )
 
-    def resultFromState(): Option[(SynthesizedComponent, SynthesisState, BufferedOracle)] = {
+    def resultFromState(): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
       val body = state.manager.synthesizedProgram
       val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, body)
       logLn(config.logReboot){
@@ -206,7 +241,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
             failed = failed :+ (a -> r)
       }
       if(failed.isEmpty){
-        Some((comp, state, bufferedOracle))
+        Some((comp, state, synData))
       }else {
         if(config.logReboot){
           println("--- Reboot ---")
@@ -221,8 +256,9 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
         val (newExamples, newBuffer) = config.rebootStrategy.newExamplesAndOracleBuffer(examples, failed, passed)
         println(s"New examples: ${showExamples(newExamples)}")
+        val newSynData = SynthesisData(newBuffer, synData.reboots+1)
         synthesize(name, inputTypes, inputNames, returnType)(
-          envCompMap, compCostFunction, newExamples, oracle, newBuffer
+          envCompMap, compCostFunction, newExamples, oracle, newSynData
         )
       }
     }
@@ -323,13 +359,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
   }
 
 
-
-
-
-
-
-
-
-
 }
+
 

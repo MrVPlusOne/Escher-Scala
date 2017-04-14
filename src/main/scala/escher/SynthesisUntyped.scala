@@ -33,10 +33,13 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     def getLevelOfCost(cost: Int): ValueTermMap = levelMaps(cost-1)
 
     def library(vm: ValueMap): Option[Term] = {
-      for((vec,term) <- totalMap){
-        if(ValueMap.matchVector(vm, vec))
-          return Some(term)
-      }
+      levelMaps.foreach(map => {
+        for((vec,term) <- map){
+          if(ValueMap.matchVector(vm, vec))
+            return Some(term)
+        }
+      })
+
       None
     }
 

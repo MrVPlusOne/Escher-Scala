@@ -133,31 +133,6 @@ object Synthesis {
 
   }
 
-  def printTypedSynthesisResult(syn: SynthesisTyped)
-                               (result: Option[(SynthesizedComponent, syn.SynthesisState, BufferedOracle)]): Unit = {
-    result match {
-      case Some((program, state, bufferedOracle)) =>
-        val examples = state.examples
-        println(s"------ Synthesis for ${program.name} Succeeded! ------")
-        println(s"Initial examples:")
-        examples.foreach { case (a, r) =>
-          print(ArgList.showArgList(a))
-          print(" -> ")
-          println(r.show)
-        }
-        println(s"Additional examples passed:")
-        bufferedOracle.buffer.foreach { case (a, r) =>
-          print(ArgList.showArgList(a))
-          print(" -> ")
-          println(r.show)
-        }
-        state.print(exampleCount = examples.length)
-        println(s"\nProgram found:\n")
-        program.print()
-      case _ =>
-        println(s"------- Synthesis Failed. -------")
-    }
-  }
 
   def exampleLE(ex1: (ArgList, TermValue), ex2: (ArgList, TermValue)): Boolean = {
     ex1._1 == ex2._2 || ArgList.alphabeticSmallerThan(ex1._1, ex2._1)
