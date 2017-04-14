@@ -32,7 +32,7 @@ object DSL {
   implicit def pairConversion2[A,B](pair: (A, B))(implicit convA: A => TermValue, convB: B => TermValue): ValuePair = {
     ValuePair(pair._1, pair._2)
   }
-  implicit def listConversion(list: List[TermValue]): ValueList = ValueList(list)
+  implicit def listConversion[A](list: List[A])(implicit convA: A => TermValue): ValueList = ValueList(list.map(convA))
 
   def listValue(terms: TermValue*) = ValueList(terms.toList)
 

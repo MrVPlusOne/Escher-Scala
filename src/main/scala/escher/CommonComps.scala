@@ -86,6 +86,7 @@ object ComponentImpl{
 /** Commonly used components */
 //noinspection TypeAnnotation
 object CommonComps {
+
   import DSL._
 
   val length = ComponentImpl(IS(TList of tyVar(0)), tyInt,
@@ -303,4 +304,41 @@ object CommonComps {
     )
   }
 
+  val squareList = ComponentImpl(
+    IS(tyInt), tyList(tyInt),
+    impl = {
+      case IS(ValueInt(n)) =>
+        (0 to n).map(x => x* x).toList
+    }
+  )
+
+  val times = ComponentImpl(IS(tyInt, tyInt), tyInt,
+    impl = { case IS(ValueInt(x), ValueInt(y)) => ValueInt(x * y)}
+  )
+
+  val div = ComponentImpl(IS(tyInt, tyInt), tyInt,
+    impl = { case IS(ValueInt(x), ValueInt(y)) => if(y == 0) ValueError else ValueInt(x / y)}
+  )
+
+  val timesAndDiv = Map(
+    "times" -> CommonComps.times,
+    "div" -> CommonComps.div
+  )
+
+  /** 1,1,2,3,5,8,... */
+  val fib = {
+    def fibF(n: Int): Int = {
+      var a,b = 1
+      (0 until n).foreach{_ =>
+        val c = a + b
+        a = b
+        b = c
+      }
+      a
+    }
+
+    ComponentImpl(IS(tyInt), tyInt,
+      impl = { case IS(ValueInt(n)) => fibF(n)}
+    )
+  }
 }
