@@ -13,7 +13,8 @@ object SynthesisUntyped {
                      maxCost: Int,
                      printComponents: Boolean = true,
                      printLevels: Boolean = true,
-                     printAtReboot: Boolean = true
+                     printAtReboot: Boolean = true,
+                     rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample
                    )
 }
 
@@ -104,7 +105,8 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
                 (envCompMap: Map[String, ComponentImpl],
                  compCostFunction: (ComponentImpl) => Int,
                  examples: IS[(ArgList, TermValue)],
-                 oracle: PartialFunction[IS[TermValue], TermValue]): Option[(SynthesizedComponent, SynthesisState)] = {
+                 oracle: PartialFunction[IS[TermValue], TermValue],
+                 oracleBuffer: IS[(ArgList, TermValue)] = IS()): Option[(SynthesizedComponent, SynthesisState)] = {
     import DSL._
 
     val inputs: IS[ArgList] = examples.map(_._1)
@@ -113,7 +115,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
     require(inputTypes.length == inputNames.length)
 
-    val bufferedOracle = new BufferedOracle(examples, oracle)
+    val bufferedOracle = new BufferedOracle(examples, oracle, oracleBuffer)
     val recursiveComp = ComponentImpl(inputTypes, returnType, PartialFunction(bufferedOracle.evaluate))
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
@@ -142,7 +144,6 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
       if(failed.isEmpty){
         Some((comp, state))
       }else {
-        //todo: add more reboot strategy
         if(config.printAtReboot){
           logLn("--- Reboot ---")
           logLn(s"Program Found:")
@@ -152,9 +153,10 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
           }.mkString("; ")}")
           logLn("Now Reboot...")
         }
-        val newExamples = examples ++ failed ++ passed
+
+        val (newExamples, newBuffer) = config.rebootStrategy.newExamplesAndOracleBuffer(examples, failed, passed)
         synthesize(name, inputTypes, inputNames, returnType)(
-          envCompMap, compCostFunction, newExamples, oracle
+          envCompMap, compCostFunction, newExamples, oracle, newBuffer
         )
       }
     }

@@ -20,7 +20,8 @@ object SynthesisTyped{
                      logLevels: Boolean = true,
                      logComponents: Boolean = true,
                      logTotalMap: Boolean = true,
-                     logReboot: Boolean = true
+                     logReboot: Boolean = true,
+                     rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample
                    )
 }
 
@@ -128,7 +129,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           return false
       })
 
-      if(ty1 == tyBool || ty1 == targetType) //todo: deal with tyBool specially
+      if(tyBool.instanceOf(ty1) || targetType.instanceOf(ty1)) //todo: deal with tyBool specially
         manager.insertNewTerm(valueVector, term)
       totalMap(ty1)(valueVector) = term
       getLevelOfCost(cost)(ty1)(valueVector) = term
@@ -163,7 +164,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
                 (envCompMap: Map[String, ComponentImpl], compCostFunction: (ComponentImpl) => Int,
                  examples: IS[(ArgList, TermValue)],
-                 oracle: PartialFunction[IS[TermValue], TermValue]): Option[(SynthesizedComponent, SynthesisState, BufferedOracle)] = {
+                 oracle: PartialFunction[IS[TermValue], TermValue],
+                 oracleBuffer: IS[(ArgList, TermValue)] = IS()): Option[(SynthesizedComponent, SynthesisState, BufferedOracle)] = {
     import DSL._
 
     val inputs: IS[ArgList] = examples.map(_._1)
@@ -173,7 +175,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     require(inputTypes.length == inputNames.length)
 
-    val bufferedOracle = new BufferedOracle(inputs.zip(outputs), oracle)
+    val bufferedOracle = new BufferedOracle(inputs.zip(outputs), oracle, initBuffer = oracleBuffer)
     val recursiveComp = ComponentImpl(inputTypes, returnType, PartialFunction(bufferedOracle.evaluate))
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
@@ -206,21 +208,21 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       if(failed.isEmpty){
         Some((comp, state, bufferedOracle))
       }else {
-        //todo: add more reboot strategy
         if(config.logReboot){
           println("--- Reboot ---")
           state.manager.printState()
         }
         logLn(config.logReboot){
           s"""
-            |  which failed at ${failed.map{ case (a,r) => s"${ArgList.showArgList(a)} -> ${r.show}" }.mkString("; ")}
+            |  which failed at ${showExamples(failed)}
             |Now Reboot...
           """.stripMargin
         }
 
-        val newExamples = examples ++ failed ++ passed
+        val (newExamples, newBuffer) = config.rebootStrategy.newExamplesAndOracleBuffer(examples, failed, passed)
+        println(s"New examples: ${showExamples(newExamples)}")
         synthesize(name, inputTypes, inputNames, returnType)(
-          envCompMap, compCostFunction, newExamples, oracle
+          envCompMap, compCostFunction, newExamples, oracle, newBuffer
         )
       }
     }

@@ -67,9 +67,18 @@ class SynthesisTest extends WordSpec{
   "ValueMap" should {
     import escher.Synthesis.ValueMap._
 
+    def map(xs: (Int, TermValue)*) = Map[Int, TermValue](xs :_*)
+
     "split correctly" in {
-      splitValueMap(Map(1 -> 1, 2->2, 3 ->0, 4->0), IS(0,1,2,3,4,5,6)) ===
-        (Map(1 -> true, 2 -> true, 3 -> false, 4 -> false), Map(1->1, 2->2), Map(3->0, 4->0))
+      assert {
+        splitValueMap(Map(1 -> 1, 2 -> 2, 3 -> 0, 4 -> 0), IS(0, 1, 2, 3, 4, 5, 6)).get ===
+          (map(1 -> true, 2 -> true, 3 -> false, 4 -> false), map(1 -> 1, 2 -> 2), map(3 -> 0, 4 -> 0))
+      }
+
+      assert {
+        splitValueMap(Map(1 -> 1, 2->0, 3 ->0, 4->4), IS(0,1,2,3,4,5,6)).get ===
+          (map(1 -> true, 2 -> false, 3 -> false, 4 -> true), map(1->1, 4->4), map(2->0, 3->0))
+      }
     }
   }
 }

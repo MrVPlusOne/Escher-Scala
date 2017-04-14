@@ -78,6 +78,10 @@ object Synthesis {
     }
   }
 
+  def showExamples(examples: Seq[(ArgList, TermValue)]): String = {
+    examples.map{ case (a,r) => s"${ArgList.showArgList(a)} -> ${r.show}" }.mkString("; ")
+  }
+
 
   def divideNumberAsSum(number: Int, pieces: Int, minNumber: Int): Iterator[IndexedSeq[Int]] = {
     if(number<minNumber) return Iterator()
@@ -110,9 +114,10 @@ object Synthesis {
     }
   }
 
-  class BufferedOracle(val examples: IS[(ArgList, TermValue)] , oracle: PartialFunction[ArgList, TermValue]){
+  class BufferedOracle(val examples: IS[(ArgList, TermValue)] , oracle: PartialFunction[ArgList, TermValue],
+                       initBuffer: IS[(ArgList, TermValue)]){
     val knownMap: Map[ArgList, TermValue] = examples.toMap
-    private val _buffer = mutable.Map[ArgList, TermValue]()
+    private val _buffer = mutable.Map[ArgList, TermValue](initBuffer :_*)
 
     def buffer: Map[IS[TermValue], TermValue] = _buffer.toMap
 
@@ -133,8 +138,8 @@ object Synthesis {
     result match {
       case Some((program, state, bufferedOracle)) =>
         val examples = state.examples
-        println(s"------ Synthesis Succeeded! ------")
-        println(s"Input-output examples:")
+        println(s"------ Synthesis for ${program.name} Succeeded! ------")
+        println(s"Initial examples:")
         examples.foreach { case (a, r) =>
           print(ArgList.showArgList(a))
           print(" -> ")
@@ -147,14 +152,40 @@ object Synthesis {
           println(r.show)
         }
         state.print(exampleCount = examples.length)
-        println(s"\nProgram found:")
+        println(s"\nProgram found:\n")
         program.print()
       case _ =>
-        println("------- Synthesis Failed. -------")
+        println(s"------- Synthesis Failed. -------")
     }
   }
 
+  def exampleLE(ex1: (ArgList, TermValue), ex2: (ArgList, TermValue)): Boolean = {
+    ex1._1 == ex2._2 || ArgList.alphabeticSmallerThan(ex1._1, ex2._1)
+  }
 
+  trait RebootStrategy{
+    /** @return (newExamples, newOracleBuffer)
+      */
+    def newExamplesAndOracleBuffer(examples: IS[(ArgList, TermValue)],
+                                   failed: IS[(ArgList, TermValue)],
+                                   passed: IS[(ArgList, TermValue)]):
+    (IS[(ArgList, TermValue)], IS[(ArgList, TermValue)])
+  }
+
+  object RebootStrategy{
+    val addSimplestFailedExample = new RebootStrategy {
+
+      /** @return (newExamples, newOracleBuffer)
+        */
+      override def newExamplesAndOracleBuffer(examples: IS[(ArgList, TermValue)],
+                                              failed: IS[(ArgList, TermValue)],
+                                              passed: IS[(ArgList, TermValue)]):
+      (IS[(ArgList, TermValue)], IS[(ArgList, TermValue)]) = {
+        val failSorted = failed.sortWith(exampleLE)
+        (examples :+ failSorted.head, failSorted.tail ++ passed)
+      }
+    }
+  }
 
 
 
