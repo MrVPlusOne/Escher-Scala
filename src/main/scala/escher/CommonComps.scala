@@ -84,6 +84,7 @@ object ComponentImpl{
 }
 
 /** Commonly used components */
+//noinspection TypeAnnotation
 object CommonComps {
   import DSL._
 
@@ -235,9 +236,9 @@ object CommonComps {
     "treeRight" -> treeRight
   )
 
-  val createPair = ComponentImpl(
-    IS(tyVar(0), tyVar(1)),
-    tyPair(tyVar(0), tyVar(1)),
+  def createPair(t1: Type, t2: Type) = ComponentImpl(
+    IS(t1, t2),
+    tyPair(t1, t2),
     { case IS(v1, v2) => (v1, v2) }
   )
 
@@ -253,8 +254,8 @@ object CommonComps {
     { case IS(ValuePair(v)) => v._2 }
   )
 
-  val pairComps = Map(
-    "createPair" -> createPair,
+  def pairComps(t1: Type, t2: Type) = Map(
+    "createPair" -> createPair(t1,t2),
     "fst" -> fst,
     "snd" -> snd
   )
@@ -284,6 +285,20 @@ object CommonComps {
       IS(tyList(tyVar(0))), tyList(tyVar(0)),
       impl = {
         case IS(ValueList(xs)) => stutterF(xs)
+      }
+    )
+  }
+
+  /** cartesian product of two lists */
+  val cartesian = {
+    def cardF[A,B](xs: List[A], ys: List[B]): List[(A,B)] = {
+      xs.flatMap(x => ys.map(y => (x,y)))
+    }
+    ComponentImpl(
+      IS(tyList(tyVar(0)), tyList(tyVar(1))), tyList(tyPair(tyVar(0), tyVar(1))),
+      impl = {
+        case IS(ValueList(xs), ValueList(ys)) =>
+          ValueList(cardF(xs,ys).map(ValuePair))
       }
     )
   }

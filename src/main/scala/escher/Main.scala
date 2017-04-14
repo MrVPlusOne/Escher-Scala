@@ -25,52 +25,63 @@ object Main {
     )
   }
 
-
-  def reverseTypedSynthesis(): Unit ={
+  def testSynthesisTyped(): Unit ={
     import escher.SynthesisTyped._
     import DSL._
 
-    val syn = new SynthesisTyped(Config(maxCost = 8, logComponents = false), Console.print)
+    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false), Console.print)
     import syn._
 
-    val examples: IS[(ArgList, TermValue)] = IS(
-      argList(listValue()) -> listValue(),
-      argList(listValue(2,3,4)) -> listValue(4,3,2)
-    )
+    def reverseSynthesis() ={
+      val examples: IS[(ArgList, TermValue)] = IS(
+        argList(listValue()) -> listValue(),
+        argList(listValue(2,3,4)) -> listValue(4,3,2)
+      )
 
-    val refComp = CommonComps.reverse
+      val refComp = CommonComps.reverse
 
-    val r = synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-      envCompMap = CommonComps.noTree,
-      compCostFunction = _ => 1,
-      examples, oracle = refComp.impl)
+      synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+        envCompMap = CommonComps.noTree,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
 
-    Synthesis.printTypedSynthesisResult(syn)(r)
+    def stutterSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        argList(listValue()) -> listValue(),
+        //      argList(listValue(true,false)) -> listValue(true,true,false,false),
+        argList(listValue(5)) -> listValue(5,5),
+        argList(listValue(5,6,3)) -> listValue(5,5,6,6,3,3)
+      )
+
+      val refComp = CommonComps.stutter
+
+      synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+        envCompMap = CommonComps.noTree,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def cartesianSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+//        argList(listValue(), listValue()) -> listValue(),
+        argList(listValue(), listValue(2,3,4)) -> listValue(),
+        argList(listValue(5), listValue(7,8,9)) -> listValue((5,7),(5,8),(5,9)),
+        argList(listValue(2,3), listValue(4,5)) -> listValue((2,4),(2,5),(3,4),(3,5))
+      )
+
+      val refComp = CommonComps.cartesian
+
+      synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs","ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
+        envCompMap = CommonComps.noTree.updated("createPair", CommonComps.createPair(tyFixVar(0),tyFixVar(1))),
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    Synthesis.printTypedSynthesisResult(syn){
+      cartesianSynthesis()
+    }
   }
-
-  def stutterTypedSynthesis(): Unit ={
-    import escher.SynthesisTyped._
-    import DSL._
-
-    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false, logGoal = false, logLevels = false), Console.print)
-    import syn._
-
-    val examples: IS[(ArgList, TermValue)] = IS(
-      argList(listValue()) -> listValue(),
-      argList(listValue(5,6,3)) -> listValue(5,5,6,6,3,3),
-      argList(listValue(3)) -> listValue(3,3)
-    )
-
-    val refComp = CommonComps.stutter
-
-    val r = synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-      envCompMap = CommonComps.noTree,
-      compCostFunction = _ => 1,
-      examples, oracle = refComp.impl)
-
-    Synthesis.printTypedSynthesisResult(syn)(r)
-  }
-
 
 
   def testSynthesisUntyped(): Unit ={
@@ -169,7 +180,7 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    stutterTypedSynthesis()
+    testSynthesisTyped()
 //    testSynthesisUntyped()
 //    testImmutableGoal()
   }
