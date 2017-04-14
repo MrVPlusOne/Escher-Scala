@@ -122,16 +122,17 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       */
     def registerTermAtLevel(cost: Int, ty: Type, term: Term, valueVector: ValueVector): Boolean = {
       val ty1 = Type.alphaNormalForm(ty)
-      totalMap(ty1).get(valueVector) match {
-        case None =>
-          if(ty1 == tyBool || ty1 == targetType) //todo: deal with tyBool specially
-            manager.insertNewTerm(valueVector, term)
-          totalMap(ty1)(valueVector) = term
-          getLevelOfCost(cost)(ty1)(valueVector) = term
-          manager.root.isSolved
-        case Some(_) =>
-          false
-      }
+
+      totalMap.typesIterator.foreach(t => {
+        if((ty1 instanceOf t) && totalMap(t).contains(valueVector))
+          return false
+      })
+
+      if(ty1 == tyBool || ty1 == targetType) //todo: deal with tyBool specially
+        manager.insertNewTerm(valueVector, term)
+      totalMap(ty1)(valueVector) = term
+      getLevelOfCost(cost)(ty1)(valueVector) = term
+      manager.root.isSolved
     }
 
     def print(exampleCount: Int): Unit = {
