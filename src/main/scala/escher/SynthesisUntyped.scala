@@ -191,7 +191,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
         } else for(costs <- divideNumberAsSum(costLeft, arity, minNumber = 1)) {
           val candidatesForArgs = for (argIdx <- 0 until arity) yield {
             val c = costs(argIdx)
-            state.getLevelOfCost(c).root.toIterable
+            state.getLevelOfCost(c).root.toIndexedSeq
           }
           val isRecCall = compName == name
           cartesianProduct(candidatesForArgs).foreach(product => {

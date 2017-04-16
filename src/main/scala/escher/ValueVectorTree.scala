@@ -11,12 +11,12 @@ import escher.Synthesis.{ValueMap, ValueVector}
 object ValueVectorTree {
 
   sealed trait TreeNode[A]{
-    def toIterable: Iterable[(ValueVector, A)] = this match {
-      case LeafNode(term) => Iterable(IS() -> term)
+    def toIndexedSeq: IS[(ValueVector, A)] = this match {
+      case LeafNode(term) => IS(IS() -> term)
       case in: InternalNode[A] =>
-        in.children.flatMap{
+        in.children.toIndexedSeq.flatMap{
           case (tv, tree) =>
-            tree.toIterable.map(p => (tv +: p._1) -> p._2)
+            tree.toIndexedSeq.map(p => (tv +: p._1) -> p._2)
         }
     }
   }

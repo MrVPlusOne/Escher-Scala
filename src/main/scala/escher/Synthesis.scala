@@ -19,7 +19,7 @@ object Synthesis {
   }
 
   def showValueTermMap(valueTermMap: ValueTermMap): String = {
-    val compList = valueTermMap.root.toIterable.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+    val compList = valueTermMap.root.toIndexedSeq.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
     compList.mkString("{", ", ", "}")
   }
 

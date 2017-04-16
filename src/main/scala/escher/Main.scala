@@ -116,9 +116,12 @@ object Main {
         examples, oracle = refComp.impl)
     }
 
+    val t1 = System.currentTimeMillis()
     SynthesisTyped.printResult(syn){
       cartesianSynthesis()
     }
+    val time = System.currentTimeMillis() - t1
+    println(s"Time used: ${time}ms")
   }
 
 

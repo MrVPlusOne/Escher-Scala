@@ -90,7 +90,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     def show: String = {
       map.mapValues{map =>
-        val compList = map.root.toIterable.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+        val compList = map.root.toIndexedSeq.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
         compList.mkString("{", ", ", "}")
       }.toString
     }
@@ -98,7 +98,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def print(indentation: Int): Unit = {
       val whiteSpace = " " * indentation
       map.mapValues{map =>
-        val compList = map.root.toIterable.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+        val compList = map.root.toIndexedSeq.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
         compList.mkString("{", ", ", "}")
       }.foreach{
         case (k, v) =>
@@ -296,7 +296,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           val candidatesForArgs =
             for (argIdx <- 0 until arity) yield {
               val c = costs(argIdx)
-              state.getLevelOfCost(c)(argTypes(argIdx)).root.toIterable
+              state.getLevelOfCost(c)(argTypes(argIdx)).root.toIndexedSeq
             }
 
           val isRecCall = compName == name
