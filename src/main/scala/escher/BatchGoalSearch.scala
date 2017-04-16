@@ -10,26 +10,31 @@ object BatchGoalSearch{
   case class NotFoundUnderCost(cost: Int) extends SearchResult
 
   case class FoundAtCost(cost: Int, term: Term) extends SearchResult
+
+  def emptyBuffer(): mutable.Map[Set[Int], SearchResult] = mutable.Map[Set[Int], SearchResult]()
 }
 
 
 class BatchGoalSearch(
+                      val buffer: mutable.Map[Set[Int], SearchResult],
                       termOfCostAndVM: (Int, ValueMap) => Option[Term],
                       termsOfCost: Int => Iterable[(ValueVector,Term)],
                       boolOfVM: ValueMap => Option[Term]) {
 
-  private val buffer = mutable.Map[ValueMap, SearchResult]()
 
   def search(cost: Int, currentGoal: ValueMap): Option[Term] = {
-    buffer.get(currentGoal).foreach{
-      case FoundAtCost(c, term) if c <= cost => return Some(term)
-      case NotFoundUnderCost(c) if c >= cost => return None
+    val keySet = currentGoal.keySet
+    buffer.get(keySet).foreach{
+      case FoundAtCost(c, term) if c <= cost =>
+        return Some(term)
+      case NotFoundUnderCost(c) if c >= cost =>
+        return None
       case _ =>
     }
 
     termOfCostAndVM(cost, currentGoal) match {
       case Some(term) =>
-        buffer(currentGoal) = FoundAtCost(cost, term)
+        buffer(keySet) = FoundAtCost(cost, term)
         Some(term)
       case None =>
         for(
@@ -41,10 +46,10 @@ class BatchGoalSearch(
         ){
           import DSL._
           val t = `if`(tCond)(tThen)(tElse)
-          buffer(currentGoal) = FoundAtCost(cost, t)
+          buffer(keySet) = FoundAtCost(cost, t)
           return Some(t)
         }
-        buffer(currentGoal) = NotFoundUnderCost(cost)
+        buffer(keySet) = NotFoundUnderCost(cost)
         None
     }
   }

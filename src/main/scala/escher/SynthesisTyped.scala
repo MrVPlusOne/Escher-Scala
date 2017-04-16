@@ -334,11 +334,13 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
 
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
+    val batchBuffer = BatchGoalSearch.emptyBuffer()
     (1 to config.maxCost).foreach(level => {
       synthesizeAtLevel(level)
       val matchReturnType = state.typesMatch(returnType)
       val matchBool = state.typesMatch(tyBool)
       val search = new BatchGoalSearch(
+        batchBuffer,
         termOfCostAndVM = state.libraryOfCost(matchReturnType),
         termsOfCost = state.termsOfCost,
         boolOfVM = state.library(matchBool)
