@@ -141,17 +141,14 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       None
     }
 
-    val manager: GoalManager = {
-      val initGoal = examples.map(_._2)
-      new GoalManager(
-        initGoal = initGoal.zipWithIndex.map(_.swap).toMap,
-        boolLibrary = library(tyBool),
-        valueLibrary = library(targetType),
-        exampleCount = initGoal.length,
-        printer = (n, s) => logger("  "*n + s)
-      )
+    def libraryOfCost(ty: Type)(cost: Int, vm: ValueMap): Option[Term] = {
+      val map = getLevelOfCost(cost)
+      for((vec,term) <- map(ty)) {
+        if (ValueMap.matchVector(vm, vec))
+          return Some(term)
+      }
+      None
     }
-
 
     def openToLevel(n: Int): Unit ={
       (0 to n - levelMaps.length).foreach(_ => openNextLevel())
@@ -170,16 +167,12 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           return false
       })
 
-      if(tyBool.instanceOf(ty1) || targetType.instanceOf(ty1)) //todo: deal with tyBool specially
-        manager.insertNewTerm(valueVector, term)
       totalMap(ty1)(valueVector) = term
       getLevelOfCost(cost)(ty1)(valueVector) = term
-      manager.root.isSolved
+      false
     }
 
     def print(exampleCount: Int): Unit = {
-      if(config.logGoal)
-        manager.printState()
       logLn(config.logTotalMap)(s"TotalMap: (${totalMap.statString})")
       if(config.logTotalMap && config.logComponents){
         totalMap.print(4)
@@ -226,8 +219,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       returnType
     )
 
-    def resultFromState(): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
-      val body = state.manager.synthesizedProgram
+    def resultFromState(term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
+      val body = term
       val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, body)
       logLn(config.logReboot){
         s"Program Found:\n${comp.show}"
@@ -247,7 +240,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       }else {
         if(config.logReboot){
           println("--- Reboot ---")
-          state.manager.printState()
         }
         logLn(config.logReboot){
           s"""
@@ -270,8 +262,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       val valueMap = inputs.indices.map(exId => {
         inputs(exId)(argId)
       })
-      if(state.registerTermAtLevel(1, inputTypes(argId), v(inputNames(argId)), valueMap))
-        return resultFromState()
+      state.registerTermAtLevel(1, inputTypes(argId), v(inputNames(argId)), valueMap)
     })
 
     /**
@@ -322,11 +313,19 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       false
     }
 
+    val goalVM = outputs.zipWithIndex.map(_.swap).toMap
     (1 to config.maxCost).foreach(level => {
-      if(synthesizeAtLevel(level))
-        return resultFromState()
+      synthesizeAtLevel(level)
+      val search = new BatchGoalSearch(
+        termOfCostAndVM = state.libraryOfCost(returnType),
+        termsOfCost = cost => state.getLevelOfCost(cost)(returnType).toIterator,
+        boolOfVM = state.library(tyBool)
+      )
+      search.search(level, goalVM).foreach{term =>
+        return resultFromState(term)
+      }
+
       logger(s"State at level: $level\n")
-      //      println("total components number: " + state.totalMap.size)
       state.print(exampleCount)
       state.openNextLevel()
     })
