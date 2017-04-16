@@ -119,7 +119,7 @@ object Main {
     val t1 = System.currentTimeMillis()
     SynthesisTyped.printResult(syn){
 
-      reverseSynthesis()
+      cartesianSynthesis()
 
     }
     val time = System.currentTimeMillis() - t1
