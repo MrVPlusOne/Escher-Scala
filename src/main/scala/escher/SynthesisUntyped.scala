@@ -5,7 +5,7 @@ import escher.Term.Component
 import scala.collection.mutable
 import SynthesisUntyped._
 import escher.ImmutableGoalGraph.GoalManager
-import escher.Synthesis._
+import Synthesis._
 
 
 object SynthesisUntyped {
@@ -28,17 +28,14 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     logger("\n")
   }
 
-  class SynthesisState(val bufferedOracle: BufferedOracle, val totalMap: ValueTermMap) {
+  class SynthesisState(val examples: IS[(ArgList,TermValue)], val bufferedOracle: BufferedOracle, val totalMap: ValueTermMap) {
     private var levelMaps: IS[ValueTermMap] = IS()
 
     def getLevelOfCost(cost: Int): ValueTermMap = levelMaps(cost-1)
 
     def library(vm: ValueMap): Option[Term] = {
       levelMaps.foreach(map => {
-        for((vec,term) <- map){
-          if(ValueMap.matchVector(vm, vec))
-            return Some(term)
-        }
+        map.searchATerm(vm).foreach(t => return Some(t))
       })
 
       None
@@ -56,7 +53,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     }
 
     def openNextLevel(): Int ={
-      levelMaps = levelMaps :+ ValueTermMap.empty
+      levelMaps = levelMaps :+ new ValueVectorTree(examples.length)
       levelMaps.length
     }
 
@@ -99,9 +96,9 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
   }
 
 
-  object ValueTermMap{
-    def empty: ValueTermMap = mutable.Map()
-  }
+//  object ValueTermMap{
+//    def empty: ValueTermMap = mutable.Map()
+//  }
 
 
 
@@ -129,8 +126,9 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
     val exampleCount = outputs.length
     val state = new SynthesisState(
+      examples,
       bufferedOracle,
-      ValueTermMap.empty
+      new ValueVectorTree(exampleCount)
     )
 
     def resultFromState(): Option[(SynthesizedComponent, SynthesisState)] = {
@@ -197,7 +195,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
         } else for(costs <- divideNumberAsSum(costLeft, arity, minNumber = 1)) {
           val candidatesForArgs = for (argIdx <- 0 until arity) yield {
             val c = costs(argIdx)
-            state.getLevelOfCost(c)
+            state.getLevelOfCost(c).elements
           }
           val isRecCall = compName == name
           cartesianProduct(candidatesForArgs).foreach(product => {

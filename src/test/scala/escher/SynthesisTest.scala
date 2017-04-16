@@ -17,7 +17,7 @@ class SynthesisTest extends WordSpec{
 
     val state = new SynthesisState(
       IS(),
-      TypeMap.empty(),
+      TypeMap.empty(1),
       tyVar(0)
     )
 

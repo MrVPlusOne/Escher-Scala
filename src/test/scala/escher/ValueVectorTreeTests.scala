@@ -45,7 +45,7 @@ class ValueVectorTreeTests extends WordSpec{
     }
 
     "correctly turns into List" in {
-      tree.root.toIterable.toSet === Set(IS(1,2,6,8) -> "B", IS(1,2,3,4) -> "A")
+      tree.elements.toSet === Set(IS(1,2,6,8) -> "B", IS(1,2,3,4) -> "A")
     }
   }
 }

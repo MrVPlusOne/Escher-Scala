@@ -5,7 +5,7 @@ import escher.Synthesis.{ValueMap, ValueVector}
 
 class BatchGoalSearch(
                       termOfCostAndVM: (Int, ValueMap) => Option[Term],
-                      termsOfCost: Int => Iterator[(ValueVector,Term)],
+                      termsOfCost: Int => Iterable[(ValueVector,Term)],
                       boolOfVM: ValueMap => Option[Term]) {
 
   def search(cost: Int, currentGoal: ValueMap): Option[Term] = {
