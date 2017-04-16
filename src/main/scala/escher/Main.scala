@@ -29,7 +29,7 @@ object Main {
     import escher.SynthesisTyped._
     import DSL._
 
-    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false, logGoal = true), Console.print)
+    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false), Console.print)
     import syn._
 
     def reverseSynthesis() ={
@@ -118,7 +118,9 @@ object Main {
 
     val t1 = System.currentTimeMillis()
     SynthesisTyped.printResult(syn){
-      squareListSynthesis()
+
+      reverseSynthesis()
+
     }
     val time = System.currentTimeMillis() - t1
     println(s"Time used: ${time}ms")

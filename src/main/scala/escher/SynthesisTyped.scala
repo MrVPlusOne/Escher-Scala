@@ -84,6 +84,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       v
     }
 
+    def get(ty: Type): Option[ValueTermMap] = map.get(ty)
+
     def registerTerm(term: Term, ty: Type, valueVector: ValueVector): Unit = {
       apply(ty).addTerm(term, valueVector)
     }
@@ -130,17 +132,31 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       levelMaps.length
     }
 
-    def library(ty: Type)(vm: ValueMap): Option[Term] = {
-      levelMaps.foreach(map => {
-        map(ty).searchATerm(vm).foreach(t => return Some(t))
-      })
+    def typesMatch(ty: Type): List[Type] = {
+      totalMap.typesIterator.collect{
+        case t if ty instanceOf t =>
+          Type.alphaNormalForm(t)
+      }.toList
+    }
 
+    def library(types: Seq[Type])(vm: ValueMap): Option[Term] = {
+      for(map <- levelMaps;
+          ty <- types;
+          vt <- map.get(ty);
+          term <- vt.searchATerm(vm)
+      ){
+        return Some(term)
+      }
       None
     }
 
-    def libraryOfCost(ty: Type)(cost: Int, vm: ValueMap): Option[Term] = {
+    def libraryOfCost(types: Seq[Type])(cost: Int, vm: ValueMap): Option[Term] = {
       val map = getLevelOfCost(cost)
-      map(ty).searchATerm(vm)
+      for(ty <- types;
+          vt <- map.get(ty);
+          term <- vt.searchATerm(vm)
+      ) return Some(term)
+      None
     }
 
     private val termsOfCostBuffer = mutable.Map[Int, IS[(ValueVector, Term)]]()
@@ -238,7 +254,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
             failed = failed :+ (a -> r)
       }
       if(failed.isEmpty){
-        Some((comp, state, synData))
+        Some((comp, state, synData.copy(oracleBuffer = passed)))
       }else {
         if(config.logReboot){
           println("--- Reboot ---")
@@ -320,10 +336,12 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
     (1 to config.maxCost).foreach(level => {
       synthesizeAtLevel(level)
+      val matchReturnType = state.typesMatch(returnType)
+      val matchBool = state.typesMatch(tyBool)
       val search = new BatchGoalSearch(
-        termOfCostAndVM = state.libraryOfCost(returnType),
+        termOfCostAndVM = state.libraryOfCost(matchReturnType),
         termsOfCost = state.termsOfCost,
-        boolOfVM = state.library(tyBool)
+        boolOfVM = state.library(matchBool)
       )
       search.search(level, goalVM).foreach{term =>
         return resultFromState(term)
