@@ -21,7 +21,8 @@ object SynthesisTyped{
                      logComponents: Boolean = true,
                      logTotalMap: Boolean = true,
                      logReboot: Boolean = true,
-                     rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample
+                     rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample,
+                     argListCompare: (ArgList, ArgList) => Boolean = ArgList.anyArgSmaller
                    )
 
   object ValueTermMap{
@@ -215,7 +216,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
     def argDecrease(arg: ArgList, exampleId: Int) = {
-      ArgList.alphabeticSmallerThan(arg, inputs(exampleId))
+      config.argListCompare(arg, inputs(exampleId))
     }
 
     val exampleCount = outputs.length
@@ -231,7 +232,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       logLn(config.logReboot){
         s"Program Found:\n${comp.show}"
       }
-      val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType, envCompMap, body)
+      val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType,
+        envCompMap, config.argListCompare, body)
       var passed, failed = IS[(ArgList, TermValue)]()
       bufferedOracle.buffer.foreach{
         case (a,r) =>

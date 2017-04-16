@@ -1,8 +1,9 @@
 package escher
 
-import escher.CommonComps.{noTree, isZero}
+import escher.CommonComps.{isZero, noTree}
 import escher.ComponentImpl.recursiveImpl
 import escher.DSL._
+import escher.Synthesis.ArgList
 import org.scalatest.WordSpec
 
 
@@ -29,6 +30,7 @@ class ImplTests extends WordSpec {
         } {
           "inc" $ ("length" $ ("tail" $ v("xs")))
         },
+      argListCompare = ArgList.alphabeticSmaller,
       debug = false
     )
 
@@ -49,6 +51,7 @@ class ImplTests extends WordSpec {
       returnType = tyVar(0),
       compMap = noTree,
       body = "forever" $ v("x"),
+      argListCompare = ArgList.alphabeticSmaller,
       debug = false
     )
     "return Err" in {
@@ -73,6 +76,7 @@ class ImplTests extends WordSpec {
         } {
           "plus"$("fib"$("dec" $ v("n")), "fib"$("dec"$("dec"$ v("n"))))
         },
+      argListCompare = ArgList.alphabeticSmaller,
       debug = false
     )
     "behave correctly" in {

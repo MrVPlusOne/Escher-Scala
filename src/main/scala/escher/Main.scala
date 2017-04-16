@@ -29,7 +29,7 @@ object Main {
     import escher.SynthesisTyped._
     import DSL._
 
-    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false), Console.print)
+    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false, logGoal = true), Console.print)
     import syn._
 
     def reverseSynthesis() ={
@@ -74,6 +74,44 @@ object Main {
 
       synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs","ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
         envCompMap = CommonComps.noTree.updated("createPair", CommonComps.createPair(tyFixVar(0),tyFixVar(1))),
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def squareListSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        //        argList(listValue(), listValue()) -> listValue(),
+        argList(0) -> listValue(),
+        argList(1) -> listValue(1),
+        argList(2) -> listValue(1,4),
+        argList(3) -> listValue(1,4,9),
+        argList(4) -> listValue(1,4,9,16)
+      )
+
+      val refComp = CommonComps.squareList
+
+      synthesize("squareList", IS(tyInt), IS("n"), tyList(tyInt))(
+        envCompMap = CommonComps.noTree ++ CommonComps.timesAndDiv,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def fibSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        //        argList(listValue(), listValue()) -> listValue(),
+        argList(0) -> 1,
+        argList(1) -> 1,
+        argList(2) -> 2,
+        argList(3) -> 3,
+        argList(4) -> 5,
+        argList(5) -> 8,
+        argList(6) -> 13
+      )
+
+      val refComp = CommonComps.fib
+
+      synthesize("fib", IS(tyInt), IS("n"), tyInt)(
+        envCompMap = CommonComps.noTree,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
     }

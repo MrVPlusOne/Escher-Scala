@@ -14,7 +14,8 @@ object SynthesisUntyped {
                      printComponents: Boolean = true,
                      printLevels: Boolean = true,
                      printAtReboot: Boolean = true,
-                     rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample
+                     rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample,
+                     argListCompare: (ArgList, ArgList) => Boolean = ArgList.anyArgSmaller
                    )
 }
 
@@ -123,7 +124,7 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
     def argDecrease(arg: ArgList, exampleId: Int) = {
-      ArgList.alphabeticSmallerThan(arg, inputs(exampleId))
+      config.argListCompare(arg, inputs(exampleId))
     }
 
     val exampleCount = outputs.length
@@ -134,7 +135,8 @@ class SynthesisUntyped(config: Config, logger: String => Unit) {
 
     def resultFromState(): Option[(SynthesizedComponent, SynthesisState)] = {
       val body = state.manager.synthesizedProgram
-      val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType, envCompMap, body)
+      val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType,
+        envCompMap, config.argListCompare, body)
       var passed, failed = IS[(ArgList, TermValue)]()
       bufferedOracle.buffer.foreach{
         case (a,r) =>

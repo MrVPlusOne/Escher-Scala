@@ -56,7 +56,8 @@ object Synthesis {
   }
 
   object ArgList{
-    def alphabeticSmallerThan(args1: ArgList, args2: ArgList): Boolean = {
+    /** @return true if and only if arg list 1 is alphabetically smaller than arg list 2 */
+    def alphabeticSmaller(args1: ArgList, args2: ArgList): Boolean = {
       require(args1.length == args2.length)
       args1.indices.foreach{ i =>
         if(args1(i) greaterThan args2(i))
@@ -65,6 +66,20 @@ object Synthesis {
           return true
       }
       false
+    }
+
+    /** @return true if and only if every arg in arg list 1 is not bigger than corresponding args in list 2
+      *         and at least one of them is strictly smaller */
+    def anyArgSmaller(args1: ArgList, args2: ArgList): Boolean = {
+      require(args1.length == args2.length)
+      var smaller = false
+      args1.indices.foreach{ i =>
+        if(args1(i) greaterThan args2(i))
+          return false
+        else if(args1(i) smallerThan args2(i))
+          smaller = true
+      }
+      smaller
     }
 
     def showArgList(argList: ArgList): String = {
@@ -135,7 +150,7 @@ object Synthesis {
 
 
   def exampleLE(ex1: (ArgList, TermValue), ex2: (ArgList, TermValue)): Boolean = {
-    ex1._1 == ex2._2 || ArgList.alphabeticSmallerThan(ex1._1, ex2._1)
+    ex1._1 == ex2._2 || ArgList.alphabeticSmaller(ex1._1, ex2._1)
   }
 
   trait RebootStrategy{

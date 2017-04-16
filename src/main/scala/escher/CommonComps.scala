@@ -50,13 +50,14 @@ object ComponentImpl{
   def recursiveImpl(name: String, argNames: IS[String],
                     inputTypes: IS[Type], returnType: Type,
                     compMap: Map[String, ComponentImpl],
+                    argListCompare: (ArgList,ArgList) => Boolean,
                     body: Term, debug: Boolean = false
                    ): ComponentImpl = {
 
     def impl(lastArg: Option[ArgList]): ComponentImpl = {
       ComponentImpl(inputTypes, returnType, {
         case args => lastArg match {
-          case Some(la) if !ArgList.alphabeticSmallerThan(args, la) =>
+          case Some(la) if !argListCompare(args, la) =>
             ValueError
           case _ =>
             val newCompMap = compMap.updated(name, impl(Some(args)))
