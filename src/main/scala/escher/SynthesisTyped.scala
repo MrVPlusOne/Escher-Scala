@@ -26,7 +26,7 @@ object SynthesisTyped{
                    )
 
   object ValueTermMap{
-    def empty: ValueTermMap = mutable.Map()
+    def empty(depth: Int): ValueTermMap = new ValueVectorTree(depth)
   }
 
   case class SynthesisData(oracleBuffer: IS[(ArgList, TermValue)], reboots: Int)
@@ -76,21 +76,21 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     }
   }
 
-  class TypeMap private(private val map: mutable.Map[Type, ValueTermMap]){
+  class TypeMap private(private val map: mutable.Map[Type, ValueTermMap], examples: Int){
 
     def apply(ty: Type): ValueTermMap = {
-      val v = map.getOrElse(ty, mutable.Map())
+      val v = map.getOrElse(ty, ValueTermMap.empty(examples))
       map(ty) = v
       v
     }
 
-    def registerTerm(term: Term, ty: Type, valueMap: ValueVector): Unit = {
-      apply(ty).update(valueMap, term)
+    def registerTerm(term: Term, ty: Type, valueVector: ValueVector): Unit = {
+      apply(ty).addTerm(term, valueVector)
     }
 
     def show: String = {
       map.mapValues{map =>
-        val compList = map.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+        val compList = map.root.toIterable.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
         compList.mkString("{", ", ", "}")
       }.toString
     }
@@ -98,7 +98,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def print(indentation: Int): Unit = {
       val whiteSpace = " " * indentation
       map.mapValues{map =>
-        val compList = map.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+        val compList = map.root.toIterable.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
         compList.mkString("{", ", ", "}")
       }.foreach{
         case (k, v) =>
@@ -113,7 +113,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def statString: String = s"${map.values.map(_.size).sum} components, ${map.keys.size} types"
   }
   object TypeMap{
-    def empty() = new TypeMap(mutable.Map())
+    def empty(depth: Int) = new TypeMap(mutable.Map(), depth)
   }
 
   class SynthesisState(val examples: IS[(ArgList,TermValue)], val totalMap: TypeMap, returnType: Type) {
@@ -126,16 +126,13 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def getLevelOfCost(cost: Int): TypeMap = levelMaps(cost-1)
 
     def openNextLevel(): Int ={
-      levelMaps = levelMaps :+ TypeMap.empty
+      levelMaps = levelMaps :+ TypeMap.empty(examples.length)
       levelMaps.length
     }
 
     def library(ty: Type)(vm: ValueMap): Option[Term] = {
-      levelMaps.foreach(map =>{
-        for((vec,term) <- map(ty)){
-          if(ValueMap.matchVector(vm, vec))
-            return Some(term)
-        }
+      levelMaps.foreach(map => {
+        map(ty).searchATerm(vm).foreach(t => return Some(t))
       })
 
       None
@@ -166,7 +163,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       val ty1 = Type.alphaNormalForm(ty)
 
       totalMap.typesIterator.foreach(t => {
-        if((ty1 instanceOf t) && totalMap(t).contains(valueVector))
+        if((ty1 instanceOf t) && totalMap(t).get(valueVector).nonEmpty)
           return false
       })
 
@@ -222,7 +219,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val exampleCount = outputs.length
     val state = new SynthesisState(
       examples,
-      TypeMap.empty(),
+      TypeMap.empty(exampleCount),
       returnType
     )
 
@@ -299,7 +296,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           val candidatesForArgs =
             for (argIdx <- 0 until arity) yield {
               val c = costs(argIdx)
-              state.getLevelOfCost(c)(argTypes(argIdx))
+              state.getLevelOfCost(c)(argTypes(argIdx)).root.toIterable
             }
 
           val isRecCall = compName == name
