@@ -43,5 +43,9 @@ class ValueVectorTreeTests extends WordSpec{
         Set("A","B") contains tree.searchATerm(Map(0 -> 1, 1 -> 2)).get
       }
     }
+
+    "correctly turns into List" in {
+      tree.root.toIterable.toSet === Set(IS(1,2,6,8) -> "B", IS(1,2,3,4) -> "A")
+    }
   }
 }

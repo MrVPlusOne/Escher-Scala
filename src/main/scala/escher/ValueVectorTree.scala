@@ -10,7 +10,16 @@ import escher.Synthesis.{ValueMap, ValueVector}
   */
 object ValueVectorTree {
 
-  sealed trait TreeNode[A]
+  sealed trait TreeNode[A]{
+    def toIterable: Iterable[(ValueVector, A)] = this match {
+      case LeafNode(term) => Iterable(IS() -> term)
+      case in: InternalNode[A] =>
+        in.children.flatMap{
+          case (tv, tree) =>
+            tree.toIterable.map(p => (tv +: p._1) -> p._2)
+        }
+    }
+  }
 
   case class LeafNode[A](term: A) extends TreeNode[A]
 
@@ -126,6 +135,8 @@ class ValueVectorTree[A](depth: Int){
     added
   }
 
+  def update(valueVector: ValueVector, term: A): Boolean = addTerm(term, valueVector)
+
   private def valueMapToVector(valueMap: ValueMap): List[Either[Unit, TermValue]] ={
     (0 until depth).toList.map{ i =>
       valueMap.get(i) match{
@@ -143,6 +154,10 @@ class ValueVectorTree[A](depth: Int){
   def searchATerm(valueMap: ValueMap): Option[A] = {
     val vv = valueMapToVector(valueMap)
     root.searchATerm(vv)
+  }
+
+  def get(valueVector: ValueVector): Option[A] = {
+    root.searchATerm(valueVector.toList.map(tv => Right(tv)))
   }
 
   def printRoot(show: A => String): Unit ={
