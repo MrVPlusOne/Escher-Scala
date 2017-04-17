@@ -25,107 +25,6 @@ object Main {
     )
   }
 
-  def testSynthesisTyped(): Unit ={
-    import escher.SynthesisTyped._
-    import DSL._
-
-    val syn = new SynthesisTyped(Config(maxCost = 20, logComponents = false), Console.print)
-    import syn._
-
-    def reverseSynthesis() ={
-      val examples: IS[(ArgList, TermValue)] = IS(
-        argList(listValue()) -> listValue(),
-        argList(listValue(2,3,4)) -> listValue(4,3,2)
-      )
-
-      val refComp = CommonComps.reverse
-
-      synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.noTree,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
-    }
-
-    def stutterSynthesis() = {
-      val examples: IS[(ArgList, TermValue)] = IS(
-        argList(listValue()) -> listValue(),
-        //      argList(listValue(true,false)) -> listValue(true,true,false,false),
-        argList(listValue(5)) -> listValue(5,5),
-        argList(listValue(5,6,3)) -> listValue(5,5,6,6,3,3)
-      )
-
-      val refComp = CommonComps.stutter
-
-      synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.noTree,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
-    }
-
-    def cartesianSynthesis() = {
-      val examples: IS[(ArgList, TermValue)] = IS(
-//        argList(listValue(), listValue()) -> listValue(),
-        argList(listValue(), listValue(2,3,4)) -> listValue(),
-        argList(listValue(5), listValue(7,8,9)) -> listValue((5,7),(5,8),(5,9)),
-        argList(listValue(2,3), listValue(4,5)) -> listValue((2,4),(2,5),(3,4),(3,5))
-      )
-
-      val refComp = CommonComps.cartesian
-
-      synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs","ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
-        envCompMap = CommonComps.noTree.updated("createPair", CommonComps.createPair(tyFixVar(0),tyFixVar(1))),
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
-    }
-
-    def squareListSynthesis() = {
-      val examples: IS[(ArgList, TermValue)] = IS(
-        //        argList(listValue(), listValue()) -> listValue(),
-        argList(0) -> listValue(),
-        argList(1) -> listValue(1),
-        argList(2) -> listValue(1,4),
-        argList(3) -> listValue(1,4,9),
-        argList(4) -> listValue(1,4,9,16)
-      )
-
-      val refComp = CommonComps.squareList
-
-      synthesize("squareList", IS(tyInt), IS("n"), tyList(tyInt))(
-        envCompMap = CommonComps.noTree ++ CommonComps.timesAndDiv,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
-    }
-
-    def fibSynthesis() = {
-      val examples: IS[(ArgList, TermValue)] = IS(
-        //        argList(listValue(), listValue()) -> listValue(),
-        argList(0) -> 1,
-        argList(1) -> 1,
-        argList(2) -> 2,
-        argList(3) -> 3,
-        argList(4) -> 5,
-        argList(5) -> 8,
-        argList(6) -> 13
-      )
-
-      val refComp = CommonComps.fib
-
-      synthesize("fib", IS(tyInt), IS("n"), tyInt)(
-        envCompMap = CommonComps.noTree,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
-    }
-
-    val t1 = System.currentTimeMillis()
-    SynthesisTyped.printResult(syn){
-
-      reverseSynthesis()
-
-    }
-    val time = System.currentTimeMillis() - t1
-    println(s"Time used: ${time}ms")
-  }
-
 
   def testSynthesisUntyped(): Unit ={
     import escher._
@@ -177,50 +76,111 @@ object Main {
     }
   }
 
-  def testTypeTree(): Unit = {
-    import TypeHierarchy._
+  def testSynthesisTyped(): Unit ={
+    import escher.SynthesisTyped._
     import DSL._
 
-    val node = new RootNode()
-    def insertType(ty: Type) = insertTypeNode(node, new TypeNode(ty))
+    val syn = new SynthesisTyped(Config(maxCost = 20, logLevels = false, logReboot = false, logComponents = false), Console.print)
+    import syn._
 
-    insertType(tyInt)
-    insertType(tyBool)
-    insertType(tyList(tyInt))
-    insertType(tyList(tyList(tyInt)))
-    insertType(tyList(tyList(tyVar(0))))
-    insertType(tyList(tyVar(0)))
+    def reverseSynthesis() ={
+      val examples: IS[(ArgList, TermValue)] = IS(
+        argList(listValue()) -> listValue(),
+        argList(listValue(2,3,4)) -> listValue(4,3,2)
+      )
 
-    insertType(tyPair(tyVar(0), tyInt))
-    insertType(tyPair(tyInt, tyVar(0)))
-    insertType(tyPair(tyInt, tyInt))
+      val refComp = CommonComps.reverse
 
-    node.printTree()
+      synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+        envCompMap = CommonComps.noTree,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
 
-    insertType(tyPair(tyVar(0), tyVar(0)))
-    insertType(tyPair(tyBool,tyBool))
+    def stutterSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        argList(listValue()) -> listValue(),
+        //      argList(listValue(true,false)) -> listValue(true,true,false,false),
+        argList(listValue(5)) -> listValue(5,5),
+        argList(listValue(5,6,3)) -> listValue(5,5,6,6,3,3)
+      )
 
-    node.printTree()
+      val refComp = CommonComps.stutter
+
+      synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+        envCompMap = CommonComps.noTree,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def cartesianSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        //        argList(listValue(), listValue()) -> listValue(),
+        argList(listValue(), listValue(2,3,4)) -> listValue(),
+        argList(listValue(5), listValue(7,8,9)) -> listValue((5,7),(5,8),(5,9)),
+        argList(listValue(2,3), listValue(4,5)) -> listValue((2,4),(2,5),(3,4),(3,5))
+      )
+
+      val refComp = CommonComps.cartesian
+
+      synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs","ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
+        envCompMap = CommonComps.noTree.updated("createPair", CommonComps.createPair(tyFixVar(0),tyFixVar(1))),
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def squareListSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        //        argList(listValue(), listValue()) -> listValue(),
+        argList(0) -> listValue(),
+        argList(1) -> listValue(1),
+        argList(2) -> listValue(1,4),
+        argList(3) -> listValue(1,4,9),
+        argList(4) -> listValue(1,4,9,16)
+      )
+
+      val refComp = CommonComps.squareList
+
+      synthesize("squareList", IS(tyInt), IS("n"), tyList(tyInt))(
+        envCompMap = CommonComps.noTree ++ CommonComps.timesAndDiv,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def fibSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        //        argList(listValue(), listValue()) -> listValue(),
+        argList(0) -> 1,
+        argList(1) -> 1,
+        argList(2) -> 2,
+        argList(3) -> 3,
+        argList(4) -> 5,
+        argList(5) -> 8,
+        argList(6) -> 13
+      )
+
+      val refComp = CommonComps.fib
+
+      synthesize("fib", IS(tyInt), IS("n"), tyInt)(
+        envCompMap = CommonComps.noTree,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    val tasks: Seq[() => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]] =
+      Seq(reverseSynthesis, stutterSynthesis, cartesianSynthesis, squareListSynthesis, fibSynthesis)
+
+    TimeTools.printTimeUsed(s"benchmark total time for ${tasks.length} tasks") {
+      for (task <- tasks) {
+        TimeTools.printTimeUsed("single synthesis") {
+          SynthesisTyped.printResult(syn) {
+            task()
+          }
+        }
+      }
+    }
   }
 
-  def testImmutableGoal(): Unit ={
-    import ImmutableGoalGraph._
-    import DSL._
-
-    val manager = new GoalManager(
-      initGoal = Map(0->0,1->1,2->2),
-      _ => None, _ => None,
-      3,
-      printer = (n, msg) => print("  " * n + msg)
-    )
-
-    manager.insertNewTerm(IS(0, 0, 0), "zero"$())
-    manager.insertNewTerm(IS(1,1,1), "inc"$("zero"$()))
-    manager.insertNewTerm(IS(true,false,false), "isEmpty"$())
-    manager.insertNewTerm(IS(ValueError,1,2), "inc"$("P6"$()))
-
-    manager.printState()
-  }
 
   def main(args: Array[String]): Unit = {
     testSynthesisTyped()
