@@ -139,13 +139,14 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       }.toList
     }
 
-    def library(types: Seq[Type])(vm: ValueMap): Option[Term] = {
-      for(map <- levelMaps;
+    def library(types: Seq[Type])(vm: ValueMap): Option[(Int, Term)] = {
+      for(cost <- levelMaps.indices;
+          map = levelMaps(cost);
           ty <- types;
           vt <- map.get(ty);
           term <- vt.searchATerm(vm)
       ){
-        return Some(term)
+        return Some(cost -> term)
       }
       None
     }
@@ -160,9 +161,9 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     }
 
     private val termsOfCostBuffer = mutable.Map[Int, IS[(ValueVector, Term)]]()
-    def termsOfCost(cost: Int): IS[(ValueVector, Term)] = {
+    def termsOfCost(types: Seq[Type])(cost: Int): IS[(ValueVector, Term)] = {
       termsOfCostBuffer.getOrElse(cost, {
-        val is = getLevelOfCost(cost)(returnType).elements.toIndexedSeq
+        val is = types.toIndexedSeq.flatMap(termType => getLevelOfCost(cost)(termType).elements.toIndexedSeq)
         termsOfCostBuffer(cost) = is
         is
       })
@@ -334,18 +335,19 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
 
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
-    val batchBuffer = BatchGoalSearch.emptyBuffer()
+//    val batchBuffer = BatchGoalSearch.emptyBuffer()
     (1 to config.maxCost).foreach(level => {
       synthesizeAtLevel(level)
       val matchReturnType = state.typesMatch(returnType)
       val matchBool = state.typesMatch(tyBool)
-      val search = new BatchGoalSearch(
-        batchBuffer,
+      val search = new BatchGoalSearchLoose(
+        level,
         termOfCostAndVM = state.libraryOfCost(matchReturnType),
-        termsOfCost = state.termsOfCost,
+        termsOfCost = state.termsOfCost(matchReturnType),
         boolOfVM = state.library(matchBool)
       )
-      search.search(level, goalVM).foreach{term =>
+      val searchingCost = 3 * level
+      search.search(searchingCost, goalVM).foreach{ case (c,term) =>
         return resultFromState(term)
       }
 
