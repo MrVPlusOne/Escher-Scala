@@ -9,5 +9,12 @@ Example Run:
 
    <!-- ![Stutter](documentation/Stutter.png | with=48) -->
 
-<img src="documentation/stutter.png" width="300" alt="stutter"/>
+- Stutter
+<img src="documentation/Stutter.png" width="600px" alt="stutter"/>
+
+- Catesian product of two lists
+<img src="documentation/cartesian.png" width="600px" alt="cartesian product"/>
+
+- Square of naturals
+<img src="documentation/squareList.png" width="600px" alt="square list"/>
 
