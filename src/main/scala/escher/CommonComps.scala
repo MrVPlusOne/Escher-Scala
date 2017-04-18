@@ -175,7 +175,7 @@ object CommonComps {
     "not" -> not,
     "equal" -> equal,
     "isEmpty" -> isEmpty,
-    "isNN" -> isNonNeg,
+    "isNonNeg" -> isNonNeg,
 
     // list
     "head" -> head,
@@ -237,6 +237,9 @@ object CommonComps {
     "treeLeft" -> treeLeft,
     "treeRight" -> treeRight
   )
+
+  val standardComps = noTree ++ treeComps
+
 
   def createPair(t1: Type, t2: Type) = ComponentImpl(
     IS(t1, t2),
@@ -340,6 +343,25 @@ object CommonComps {
 
     ComponentImpl(IS(tyInt), tyInt,
       impl = { case IS(ValueInt(n)) => fibF(n)}
+    )
+  }
+
+  val modulo = {
+    ComponentImpl(IS(tyInt, tyInt), tyInt, impl = {
+      case IS(ValueInt(a), ValueInt(b)) =>
+        if(b == 0) ValueError else a % b
+    })
+  }
+
+  val gcd = {
+    def gcdF(a: Int, b: Int): Int = {
+      if(b == 0) a
+      else gcdF(b, a % b)
+    }
+
+    ComponentImpl(IS(tyInt, tyInt), tyInt,
+      impl = { case IS(ValueInt(a), ValueInt(b)) => gcdF(a,b)
+      }
     )
   }
 }

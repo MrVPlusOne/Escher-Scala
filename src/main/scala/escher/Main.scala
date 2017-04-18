@@ -55,7 +55,7 @@ object Main {
     val refComp = CommonComps.reverse
 
     synthesize("reverse", refComp.inputTypes, IS("xs"), refComp.returnType)(
-      envCompMap = CommonComps.noTree,
+      envCompMap = CommonComps.standardComps,
       compCostFunction = _ => 1, examples,
       oracle = refComp.impl) match {
       case Some((program, state)) =>
@@ -80,7 +80,7 @@ object Main {
     import escher.SynthesisTyped._
     import DSL._
 
-    val syn = new SynthesisTyped(Config(maxCost = 20, logLevels = false, logReboot = false, logComponents = false), Console.print)
+    val syn = new SynthesisTyped(Config(maxCost = 20, logLevels = false, logReboot = true, logComponents = false), Console.print)
     import syn._
 
     def reverseSynthesis() ={
@@ -92,7 +92,7 @@ object Main {
       val refComp = CommonComps.reverse
 
       synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.noTree,
+        envCompMap = CommonComps.standardComps,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
     }
@@ -108,7 +108,7 @@ object Main {
       val refComp = CommonComps.stutter
 
       synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.noTree,
+        envCompMap = CommonComps.standardComps,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
     }
@@ -124,7 +124,7 @@ object Main {
       val refComp = CommonComps.cartesian
 
       synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs","ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
-        envCompMap = CommonComps.noTree.updated("createPair", CommonComps.createPair(tyFixVar(0),tyFixVar(1))),
+        envCompMap = CommonComps.standardComps.updated("createPair", CommonComps.createPair(tyFixVar(0),tyFixVar(1))),
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
     }
@@ -142,7 +142,7 @@ object Main {
       val refComp = CommonComps.squareList
 
       synthesize("squareList", IS(tyInt), IS("n"), tyList(tyInt))(
-        envCompMap = CommonComps.noTree ++ CommonComps.timesAndDiv,
+        envCompMap = CommonComps.standardComps ++ CommonComps.timesAndDiv,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
     }
@@ -162,21 +162,91 @@ object Main {
       val refComp = CommonComps.fib
 
       synthesize("fib", IS(tyInt), IS("n"), tyInt)(
-        envCompMap = CommonComps.noTree,
+        envCompMap = CommonComps.standardComps,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
     }
 
-    val tasks: Seq[() => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]] =
-      Seq(reverseSynthesis, stutterSynthesis, cartesianSynthesis, squareListSynthesis, fibSynthesis)
+    def gcdSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        //        argList(listValue(), listValue()) -> listValue(),
+        argList(3,7) -> 1,
+        argList(12,8) -> 4,
+        argList(9,12) -> 3,
+        argList(9,3) -> 3,
+        argList(8,4) -> 4,
+        argList(2,3) -> 1,
+        argList(7,3) -> 1
+      )
+
+      val refComp = CommonComps.gcd
+
+      synthesize("gcd", IS(tyInt, tyInt), IS("a","b"), tyInt)(
+        envCompMap = CommonComps.standardComps ++ Map("mod" -> CommonComps.modulo),
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def modSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] =
+        for(a <- -3 to 4; b <- -2 to 2) yield {
+          argList(a,b) -> CommonComps.modulo.execute(IS(a,b), debug = false)
+        }
+
+      val refComp = CommonComps.modulo
+
+      synthesize("mod", IS(tyInt, tyInt), IS("a","b"), tyInt)(
+        envCompMap = CommonComps.standardComps ++ CommonComps.timesAndDiv,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def insertSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        //        argList(listValue(), listValue()) -> listValue(),
+        argList(listValue(), 0, 5) -> listValue(5),
+        argList(listValue(), 3, 5) -> listValue(5),
+        argList(listValue(1,2,3), 0, 8) -> listValue(8,1,2,3),
+        argList(listValue(1,2,3), 1, 8) -> listValue(1,8,2,3),
+        argList(listValue(1,2,3), 2, 8) -> listValue(1,2,8,3),
+        argList(listValue(1,2,3), 3, 8) -> listValue(1,2,3,8),
+        argList(listValue(1,2,3), 4, 8) -> listValue(1,2,3,8)
+      )
+
+      val refComp = CommonComps.insert
+
+      synthesize("insert", IS(tyList(tyVar(0)), tyInt, tyVar(0)), IS("xs", "i", "x"), tyList(tyVar(0)))(
+        envCompMap = CommonComps.standardComps,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
+    val tasks: Seq[TestCase] =
+      Seq(
+        reverseSynthesis,
+        stutterSynthesis,
+        cartesianSynthesis,
+        squareListSynthesis,
+        fibSynthesis,
+        insertSynthesis
+      )
+    val modTasks = Seq[TestCase](modSynthesis)
 
     TimeTools.printTimeUsed(s"benchmark total time for ${tasks.length} tasks") {
-      for (task <- tasks) {
-        TimeTools.printTimeUsed("single synthesis") {
-          SynthesisTyped.printResult(syn) {
-            task()
-          }
+      val records = for (task <- tasks) yield {
+        val (time, result) = TimeTools.printTimeUsed("single synthesis") {
+          TimeTools.measureTime(task())
         }
+        SynthesisTyped.printResult(syn)(result)
+
+        result.get._1.name -> time
+      }
+
+      println("Summery: ")
+      records.foreach{
+        case (taskName, time) =>
+          println(s"  $taskName: %.1fms".format(time/1e6))
       }
     }
   }

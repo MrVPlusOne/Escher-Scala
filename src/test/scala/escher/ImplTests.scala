@@ -1,6 +1,6 @@
 package escher
 
-import escher.CommonComps.{isZero, noTree}
+import escher.CommonComps.{isZero, standardComps}
 import escher.ComponentImpl.recursiveImpl
 import escher.DSL._
 import escher.Synthesis.ArgList
@@ -23,7 +23,7 @@ class ImplTests extends WordSpec {
       argNames = IS("xs"),
       inputTypes = IS(TList of tyVar(0)),
       returnType = tyInt,
-      compMap = noTree,
+      compMap = standardComps,
       body =
         `if`("isEmpty" $ v("xs")) {
           "zero" $ ()
@@ -49,7 +49,7 @@ class ImplTests extends WordSpec {
       argNames = IS("x"),
       inputTypes = IS(tyVar(0)),
       returnType = tyVar(0),
-      compMap = noTree,
+      compMap = standardComps,
       body = "forever" $ v("x"),
       argListCompare = ArgList.alphabeticSmaller,
       debug = false
@@ -69,7 +69,7 @@ class ImplTests extends WordSpec {
       argNames = IS("n"),
       inputTypes = IS(tyInt),
       returnType = tyInt,
-      compMap = noTree.updated("isZero",isZero),
+      compMap = standardComps.updated("isZero",isZero),
       body =
         `if`("or"$ ("isZero" $ v("n"), "isZero" $ ("dec"$ v("n")))) {
           "inc"$("zero"$())
