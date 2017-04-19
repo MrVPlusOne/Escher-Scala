@@ -11,28 +11,28 @@ import scala.collection.mutable
 object Synthesis {
   type ValueVector = IndexedSeq[TermValue]
   type ArgList = IndexedSeq[TermValue]
-  type ValueMap = Map[Int, TermValue]
-  type ValueTermMap = ValueVectorTree[Term]
+  type IndexValueMap = Map[Int, TermValue]
+  type ValueTermMap = mutable.Map[ValueVector, Term]
 
   def notAllErr(valueVector: ValueVector): Boolean = {
     ! valueVector.forall(_ == ValueError)
   }
 
   def showValueTermMap(valueTermMap: ValueTermMap): String = {
-    val compList = valueTermMap.elements.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+    val compList = valueTermMap.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
     compList.mkString("{", ", ", "}")
   }
 
-  object ValueMap{
-    def matchVector(valueMap: ValueMap, valueVector: ValueVector): Boolean = {
+  object IndexValueMap{
+    def matchVector(valueMap: IndexValueMap, valueVector: ValueVector): Boolean = {
       valueMap.forall{
         case (k, v) => valueVector(k) == v
       }
     }
 
-    def splitValueMap(valueMap: ValueMap, valueVector: ValueVector): Option[(ValueMap, ValueMap, ValueMap)] = {
-      var thenMap: ValueMap = Map()
-      var elseMap: ValueMap = Map()
+    def splitValueMap(valueMap: IndexValueMap, valueVector: ValueVector): Option[(IndexValueMap, IndexValueMap, IndexValueMap)] = {
+      var thenMap: IndexValueMap = Map()
+      var elseMap: IndexValueMap = Map()
 
       val condMap = valueMap.map{
         case (i, v) =>
@@ -50,7 +50,7 @@ object Synthesis {
         None
     }
 
-    def show(valueMap: ValueMap, exampleCount: Int): String = {
+    def show(valueMap: IndexValueMap, exampleCount: Int): String = {
       (0 until exampleCount).map(i => valueMap.get(i).map(_.show).getOrElse("?")).mkString("<", ", ", ">")
     }
   }

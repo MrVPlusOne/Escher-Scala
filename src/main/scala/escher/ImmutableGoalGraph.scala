@@ -1,6 +1,6 @@
 package escher
 
-import escher.Synthesis.{ValueMap, ValueVector}
+import escher.Synthesis.{IndexValueMap, ValueVector}
 
 
 object ImmutableGoalGraph {
@@ -8,7 +8,7 @@ object ImmutableGoalGraph {
   sealed trait GraphNode{
     def show(exampleCount: Int): String = this match {
       case Unsolved(valueMap, _) =>
-        s"Unsolved(${ValueMap.show(valueMap, exampleCount)})"
+        s"Unsolved(${IndexValueMap.show(valueMap, exampleCount)})"
       case SolvedByTerm(term) =>
         s"SolvedByTerm(${term.show})"
       case SolvedByResolver(resolver) =>
@@ -32,13 +32,13 @@ object ImmutableGoalGraph {
 
   sealed trait SolvedNode extends GraphNode
 
-  case class Unsolved(valueMap: ValueMap, children: Set[Resolver]) extends GraphNode
+  case class Unsolved(valueMap: IndexValueMap, children: Set[Resolver]) extends GraphNode
 
   case class SolvedByTerm(term: Term) extends SolvedNode
 
   case class SolvedByResolver(resolver: Resolver) extends SolvedNode
 
-  case class Resolver(condMap: ValueMap, cond: GraphNode, thenBranch: SolvedNode, elseBranch: GraphNode){
+  case class Resolver(condMap: IndexValueMap, cond: GraphNode, thenBranch: SolvedNode, elseBranch: GraphNode){
     val isSolved: Boolean = cond.isSolved && elseBranch.isSolved
 
     def condAndElse: List[GraphNode] = {
@@ -50,14 +50,14 @@ object ImmutableGoalGraph {
     }
   }
 
-  class GoalManager(initGoal: ValueMap, boolLibrary: ValueMap => Option[Term], valueLibrary: ValueMap => Option[Term],
+  class GoalManager(initGoal: IndexValueMap, boolLibrary: IndexValueMap => Option[Term], valueLibrary: IndexValueMap => Option[Term],
                     exampleCount: Int, printer: (Int, String) => Unit){
     var root: GraphNode = Unsolved(initGoal, Set())
 
     def insertNewTerm(valueVector: ValueVector, term: Term): Unit = {
 
       def closeGoals(unsolved: Unsolved): GraphNode = {
-        if (ValueMap.matchVector(unsolved.valueMap, valueVector)) {
+        if (IndexValueMap.matchVector(unsolved.valueMap, valueVector)) {
           SolvedByTerm(term)
         } else {
           val newChildren = unsolved.children.map { r =>
@@ -76,7 +76,7 @@ object ImmutableGoalGraph {
 
 
       def splitGoal(unsolved: Unsolved): GraphNode = {
-        ValueMap.splitValueMap(unsolved.valueMap, valueVector) match {
+        IndexValueMap.splitValueMap(unsolved.valueMap, valueVector) match {
           case None =>
             unsolved
           case Some((cond, _, b2)) =>
@@ -134,14 +134,14 @@ object ImmutableGoalGraph {
 
     def printResolver(resolver: Resolver, indent: Int): Unit = {
       import resolver._
-      printer(indent, s"Resolver(condition = ${ValueMap.show(condMap, exampleCount)})\n")
+      printer(indent, s"Resolver(condition = ${IndexValueMap.show(condMap, exampleCount)})\n")
 
       List(cond, thenBranch, elseBranch).foreach(g => printGraphNode(g, indent+1))
     }
 
     def printGraphNode(g: GraphNode, indent: Int): Unit = g match {
       case g: Unsolved =>
-        printer(indent, s"Unsolved: ${ValueMap.show(g.valueMap, exampleCount)}\n")
+        printer(indent, s"Unsolved: ${IndexValueMap.show(g.valueMap, exampleCount)}\n")
         g.children.foreach(r => printResolver(r, indent+1))
       case SolvedByTerm(term) =>
         printer(indent, s"SolvedByTerm(${term.show})\n")

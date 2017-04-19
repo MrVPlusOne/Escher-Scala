@@ -2,7 +2,7 @@ package escher
 
 import collection.mutable
 import ValueVectorTree._
-import escher.Synthesis.{ValueMap, ValueVector}
+import escher.Synthesis.{IndexValueMap, ValueVector}
 
 /**
   * A tree with fixed depth, each path from root to leaf represents a ValueVector,
@@ -150,7 +150,7 @@ class ValueVectorTree[A](depth: Int, thresholdToUseTree: Double = Double.Positiv
 
   def update(valueVector: ValueVector, term: A): Boolean = addTerm(term, valueVector)
 
-  private def valueMapToVector(valueMap: ValueMap): List[Either[Unit, TermValue]] ={
+  private def valueMapToVector(valueMap: IndexValueMap): List[Either[Unit, TermValue]] ={
     (0 until depth).toList.map{ i =>
       valueMap.get(i) match{
         case Some(tv) => Right(tv)
@@ -159,26 +159,26 @@ class ValueVectorTree[A](depth: Int, thresholdToUseTree: Double = Double.Positiv
     }
   }
 
-  def searchTerms(valueMap: ValueMap): Iterator[A] = {
+  def searchTerms(valueMap: IndexValueMap): Iterator[A] = {
     if(shouldUseTree()) {
       val vv = valueMapToVector(valueMap)
       root.searchTerms(vv)
     }else{
       valueTermMap.toIterator.collect {
-        case (vv, term) if ValueMap.matchVector(valueMap, vv) =>
+        case (vv, term) if IndexValueMap.matchVector(valueMap, vv) =>
           term
       }
     }
   }
 
-  def searchATerm(valueMap: ValueMap): Option[A] = {
+  def searchATerm(valueMap: IndexValueMap): Option[A] = {
     if(shouldUseTree()) {
       val vv = valueMapToVector(valueMap)
       root.searchATerm(vv)
     }else{
       valueTermMap.foreach{
         case (vv, term) =>
-          if(ValueMap.matchVector(valueMap, vv))
+          if(IndexValueMap.matchVector(valueMap, vv))
             return Some(term)
       }
       None

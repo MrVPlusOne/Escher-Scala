@@ -1,6 +1,6 @@
 package escher
 
-import escher.Synthesis.{ValueMap, ValueVector}
+import escher.Synthesis.{IndexValueMap, ValueVector}
 import collection.mutable
 import BatchGoalSearch._
 
@@ -21,13 +21,13 @@ object BatchGoalSearch{
 
 
 class BatchGoalSearch(
-                      val buffer: mutable.Map[Set[Int], SearchResult],
-                      termOfCostAndVM: (Int, ValueMap) => Option[Term],
-                      termsOfCost: Int => Iterable[(ValueVector,Term)],
-                      boolOfVM: ValueMap => Option[Term]) {
+                       val buffer: mutable.Map[Set[Int], SearchResult],
+                       termOfCostAndVM: (Int, IndexValueMap) => Option[Term],
+                       termsOfCost: Int => Iterable[(ValueVector,Term)],
+                       boolOfVM: IndexValueMap => Option[Term]) {
 
 
-  def search(cost: Int, currentGoal: ValueMap): Option[Term] = {
+  def search(cost: Int, currentGoal: IndexValueMap): Option[Term] = {
     val keySet = currentGoal.keySet
     buffer.get(keySet).foreach{
       case FoundAtCost(c, term) if c <= cost =>
@@ -45,7 +45,7 @@ class BatchGoalSearch(
         for(
           c <- 1 until cost;
           (thenVec ,tThen) <- termsOfCost(c);
-          (vm1,_,vm3) <- ValueMap.splitValueMap(currentGoal, thenVec);
+          (vm1,_,vm3) <- IndexValueMap.splitValueMap(currentGoal, thenVec);
           tCond <- boolOfVM(vm1);
           tElse <- search(cost-c, vm3)
         ){
@@ -61,13 +61,13 @@ class BatchGoalSearch(
 }
 
 class BatchGoalSearchLoose(maxCompCost: Int,
-                           termOfCostAndVM: (Int, ValueMap) => Option[Term],
+                           termOfCostAndVM: (Int, IndexValueMap) => Option[Term],
                            termsOfCost: Int => Iterable[(ValueVector,Term)],
-                           boolOfVM: ValueMap => Option[(Int,Term)]) {
+                           boolOfVM: IndexValueMap => Option[(Int,Term)]) {
   private val buffer: mutable.Map[Set[Int], SearchResult] = mutable.Map()
 
 
-  def search(cost: Int, currentGoal: ValueMap): Option[(Int,Term)] = {
+  def search(cost: Int, currentGoal: IndexValueMap): Option[(Int,Term)] = {
     val keySet = currentGoal.keySet
     buffer.get(keySet).foreach {
       case FoundAtCost(c, term) if c <= cost =>
@@ -97,7 +97,7 @@ class BatchGoalSearchLoose(maxCompCost: Int,
     for (
       cThen <- 1 to maxCost - 1 - ifCost; // save one for cCond
       (thenVec, tThen) <- termsOfCost(cThen);
-      (vm1, _, vm3) <- ValueMap.splitValueMap(currentGoal, thenVec);
+      (vm1, _, vm3) <- IndexValueMap.splitValueMap(currentGoal, thenVec);
       (cCond, tCond) <- boolOfVM(vm1);
       (cElse, tElse) <- search(cost - cThen - cCond - ifCost, vm3)
     ) {

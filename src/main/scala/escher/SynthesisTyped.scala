@@ -26,7 +26,7 @@ object SynthesisTyped{
                    )
 
   object ValueTermMap{
-    def empty(depth: Int): ValueTermMap = new ValueVectorTree(depth)
+    def empty(depth: Int): ValueTermMap = mutable.Map()
   }
 
   case class SynthesisData(oracleBuffer: IS[(ArgList, TermValue)], reboots: Int)
@@ -90,12 +90,12 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def get(ty: Type): Option[ValueTermMap] = map.get(ty)
 
     def registerTerm(term: Term, ty: Type, valueVector: ValueVector): Unit = {
-      apply(ty).addTerm(term, valueVector)
+      apply(ty)(valueVector) = term
     }
 
     def show: String = {
       map.mapValues{map =>
-        val compList = map.elements.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+        val compList = map.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
         compList.mkString("{", ", ", "}")
       }.toString
     }
@@ -103,7 +103,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def print(indentation: Int): Unit = {
       val whiteSpace = " " * indentation
       map.mapValues{map =>
-        val compList = map.elements.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
+        val compList = map.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
         compList.mkString("{", ", ", "}")
       }.foreach{
         case (k, v) =>
@@ -137,51 +137,59 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       _levelMaps.length
     }
 
-    def typesMatch(ty: Type): List[Type] = {
-      totalMap.typesIterator.collect{
+    private var returnTypeVectorTrees: IS[ValueVectorTree[Term]] = IS()
+    private var boolVectorTrees: IS[ValueVectorTree[Term]] = IS()
+
+    def createLibrariesForThisLevel(): Unit ={
+      require(returnTypeVectorTrees.length == levels - 1)
+      require(boolVectorTrees.length == levels - 1)
+
+      val returnTypeTree = new ValueVectorTree[Term](examples.length)
+      val typeMap = getLevelOfCost(levels)
+      for(ty <- typesMatch(typeMap, returnType)){
+        val vt = typeMap(ty)
+        vt.foreach{ case (vv, term) => returnTypeTree.addTerm(term, vv) }
+      }
+      returnTypeVectorTrees = returnTypeVectorTrees :+ returnTypeTree
+
+      val boolTree = new ValueVectorTree[Term](examples.length)
+      for(ty <- typesMatch(typeMap, tyBool)){
+        val vt = typeMap(ty)
+        vt.foreach{ case (vv, term) => boolTree.addTerm(term, vv) }
+      }
+      boolVectorTrees = boolVectorTrees :+ boolTree
+    }
+
+    private def typesMatch(typeMap: TypeMap, ty: Type): List[Type] = {
+      typeMap.typesIterator.collect{
         case t if ty instanceOf t =>
           Type.alphaNormalForm(t)
       }.toList
     }
 
-    /**
-      * helper method for `BatchGoalSearch`
-      * @param types should be calculated using `typesMatch` method in SynthesisState, since that
-      *              calculation is expensive, it should be calculated only once for each level
-      */
-    def library(types: Seq[Type])(vm: ValueMap): Option[(Int, Term)] = {
-      for(cost <- 1 to levels;
-          map = getLevelOfCost(cost);
-          ty <- types;
-          vt <- map.get(ty);
-          term <- vt.searchATerm(vm)
-      ){
-        return Some(cost -> term)
+    def boolLibrary(vm: IndexValueMap): Option[(Int, Term)] = {
+      for(cost <- 1 to levels){
+        val tree = boolVectorTrees(cost-1)
+        tree.searchATerm(vm).foreach(t => return Some(cost -> t))
       }
       None
     }
 
-    /**
-      * helper method for `BatchGoalSearch`
-      * @param types should be calculated using `typesMatch` method in SynthesisState, since that
-      *              calculation is expensive, it should be calculated only once for each level
-      */
-    def libraryOfCost(types: Seq[Type])(cost: Int, vm: ValueMap): Option[Term] = {
-      val map = getLevelOfCost(cost)
-      for(ty <- types;
-          vt <- map.get(ty);
-          term <- vt.searchATerm(vm)
-      ) return Some(term)
+    def returnTypeLibrary(vm: IndexValueMap): Option[(Int, Term)] = {
+      for(cost <- 1 to levels){
+        val tree = returnTypeVectorTrees(cost-1)
+        tree.searchATerm(vm).foreach(t => return Some(cost -> t))
+      }
       None
     }
 
-    private val termsOfCostBuffer = mutable.Map[Int, IS[(ValueVector, Term)]]()
-    def termsOfCost(types: Seq[Type])(cost: Int): IS[(ValueVector, Term)] = {
-      termsOfCostBuffer.getOrElse(cost, {
-        val is = types.toIndexedSeq.flatMap(termType => getLevelOfCost(cost)(termType).elements.toIndexedSeq)
-        termsOfCostBuffer(cost) = is
-        is
-      })
+    def libraryOfCost(cost: Int, vm: IndexValueMap): Option[Term] = {
+      val tree = returnTypeVectorTrees(cost-1)
+      tree.searchATerm(vm)
+    }
+
+    def termsOfCost(cost: Int): Iterable[(ValueVector, Term)] = {
+      returnTypeVectorTrees(cost-1).elements
     }
 
     def openToLevel(n: Int): Unit ={
@@ -240,12 +248,12 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val inputs: IS[ArgList] = examples.map(_._1)
     val outputs: IS[TermValue] = examples.map(_._2)
     val inputTypes = inputTypesFree.map(_.fixVars)
-    val returnType = returnTypeFree.fixVars
+    val goalReturnType = returnTypeFree.fixVars
 
     require(inputTypes.length == inputNames.length)
 
     val bufferedOracle = new BufferedOracle(inputs.zip(outputs), oracle, initBuffer = synData.oracleBuffer)
-    val recursiveComp = ComponentImpl(inputTypes, returnType, PartialFunction(bufferedOracle.evaluate))
+    val recursiveComp = ComponentImpl(inputTypes, goalReturnType, PartialFunction(bufferedOracle.evaluate))
     val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
 
     def argDecrease(arg: ArgList, exampleId: Int) = {
@@ -256,17 +264,17 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val state = new SynthesisState(
       examples,
       TypeMap.empty(exampleCount),
-      returnType
+      goalReturnType
     )
 
     def resultFromState(term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
       val body = term
-      val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, body)
+      val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body)
       if(config.logReboot){
         println(s"Failed program found:")
         comp.print()
       }
-      val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType,
+      val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, goalReturnType,
         envCompMap, config.argListCompare, body)
       var passed, failed = IS[(ArgList, TermValue)]()
       bufferedOracle.buffer.foreach{
@@ -292,24 +300,16 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         val (newExamples, newBuffer) = config.rebootStrategy.newExamplesAndOracleBuffer(examples, failed, passed)
         println(s"New examples: ${showExamples(newExamples)}")
         val newSynData = SynthesisData(newBuffer, synData.reboots+1)
-        synthesize(name, inputTypes, inputNames, returnType)(
+        synthesize(name, inputTypes, inputNames, goalReturnType)(
           envCompMap, compCostFunction, newExamples, oracle, newSynData
         )
       }
     }
 
-    state.openNextLevel()
-    inputTypes.indices.foreach(argId =>{
-      val valueMap = inputs.indices.map(exId => {
-        inputs(exId)(argId)
-      })
-      state.registerTermAtLevel(1, inputTypes(argId), v(inputNames(argId)), valueMap)
-    })
-
     /**
       * @return Whether the goal has been solved
       */
-    def synthesizeAtLevel(cost: Int): Boolean = {
+    def synthesizeAtLevel(cost: Int, synBoolAndReturnType: Boolean): Unit = {
       for(
         (compName, impl) <- compMap;
         compCost = compCostFunction(impl) if compCost <= cost
@@ -321,63 +321,75 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
             val result = impl.execute(IS(), debug = false)
             val valueVector = (0 until exampleCount).map(_ => result)
             val term = Component(compName, IS())
-            if(state.registerTermAtLevel(cost, impl.returnType, term, valueVector))
-              return true
+            state.registerTermAtLevel(cost, impl.returnType, term, valueVector)
           }
         } else for(
-          costs <- TimeTools.runOnce( divideNumberAsSum(costLeft, arity, minNumber = 1)); //todo: currently not very important, check this later
+          costs <- divideNumberAsSum(costLeft, arity, minNumber = 1);
           (argTypes, returnType) <- TimeTools.runOnce{ typesForCosts(state, costs, impl.inputTypes, impl.returnType)}
+          if synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))
         ) {
           val candidatesForArgs =
             for (argIdx <- 0 until arity) yield {
               val c = costs(argIdx)
-              state.getLevelOfCost(c)(argTypes(argIdx)).elements
+              state.getLevelOfCost(c)(argTypes(argIdx))
             }
 
           val isRecCall = compName == name
           cartesianProduct(candidatesForArgs).foreach { product =>
-            TimeTools.runOnce{
-              val valueVector = (0 until exampleCount).map(exId => {
+
+            val valueVector = TimeTools.runOnce {
+              (0 until exampleCount).map(exId => {
                 val arguments = product.map(_._1(exId))
                 if (isRecCall && !argDecrease(arguments, exId))
                   ValueError
                 else
                   impl.execute(arguments, debug = false)
               })
-              if (!config.deleteAllErr || notAllErr(valueVector)) {
-                val term = Component(compName, product.map(_._2))
-                if (TimeTools.runOnce(state.registerTermAtLevel(cost, returnType, term, valueVector)))
-                  return true
-              }
+            }
+
+            if (!config.deleteAllErr || notAllErr(valueVector)) {
+              val term = Component(compName, product.map(_._2))
+              state.registerTermAtLevel(cost, returnType, term, valueVector)
             }
           }
         }
       }
-      false
     }
 
-
+    state.openNextLevel()
+    inputTypes.indices.foreach(argId =>{
+      val valueMap = inputs.indices.map(exId => {
+        inputs(exId)(argId)
+      })
+      state.registerTermAtLevel(1, inputTypes(argId), v(inputNames(argId)), valueMap)
+    })
 
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
-//    val batchBuffer = BatchGoalSearch.emptyBuffer()
+
     (1 to config.maxCost).foreach(level => {
-      TimeTools.printTimeUsed(s"synthesize components at level $level:"){
-        synthesizeAtLevel(level)
+      TimeTools.printTimeUsed(s"synthesize related components at level $level:"){
+        synthesizeAtLevel(level, synBoolAndReturnType = true)
+      }
+
+      TimeTools.printTimeUsed("create libraries") {
+        state.createLibrariesForThisLevel()
       }
 
       TimeTools.printTimeUsed("Goal searching") {
-        val (matchReturnType, matchBool) = (state.typesMatch(returnType), state.typesMatch(tyBool))
-
         val search = new BatchGoalSearchLoose(
           level,
-          termOfCostAndVM = state.libraryOfCost(matchReturnType),
-          termsOfCost = state.termsOfCost(matchReturnType),
-          boolOfVM = state.library(matchBool)
+          termOfCostAndVM = state.libraryOfCost,
+          termsOfCost = state.termsOfCost,
+          boolOfVM = state.boolLibrary
         )
         val searchingCost = 3 * level
         search.search(searchingCost, goalVM).foreach { case (c, term) =>
           return resultFromState(term)
         }
+      }
+
+      TimeTools.printTimeUsed(s"synthesize unrelated components"){
+        synthesizeAtLevel(level, synBoolAndReturnType = false)
       }
 
       logger(s"State at level: $level\n")

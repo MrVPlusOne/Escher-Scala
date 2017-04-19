@@ -65,7 +65,7 @@ class SynthesisTest extends WordSpec{
   }
 
   "ValueMap" should {
-    import escher.Synthesis.ValueMap._
+    import escher.Synthesis.IndexValueMap._
 
     def map(xs: (Int, TermValue)*) = Map[Int, TermValue](xs :_*)
 

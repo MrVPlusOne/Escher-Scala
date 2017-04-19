@@ -41,10 +41,6 @@ object TimeTools {
 
   @inline
   def run5Times[A](f: => A): A = {
-    f
-    f
-    f
-    f
-    f
+    f;f;f;f;f
   }
 }
