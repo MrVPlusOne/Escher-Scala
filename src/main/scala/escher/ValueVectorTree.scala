@@ -115,22 +115,37 @@ object ValueVectorTree {
   * can be used to efficiently find ValueVectors that match a goal (partial vector)
   * @param depth the length of each ValueVector
   */
-class ValueVectorTree[A](depth: Int){
+class ValueVectorTree[A](depth: Int, thresholdToUseTree: Double = Double.PositiveInfinity){
   private var _size = 0
   def size: Int = _size
 
   private val root = new InternalNode[A](mutable.Map())
+  private val valueTermMap = mutable.Map[ValueVector, A]()
 
-  private var _elements = List[(ValueVector, A)]()
-  def elements: List[(ValueVector, A)] = _elements
+  def elements: Iterable[(ValueVector, A)] = valueTermMap
 
+  private def shouldUseTree(): Boolean = size.toDouble/depth >= thresholdToUseTree
+
+  /** @return whether this term was added into this ValueVectorTree
+    *         (it will not be added if a term with the same ValueVector already exists) */
   def addTerm(term: A, valueVector: ValueVector): Boolean = {
-    val added = root.addTerm(term, valueVector.toList)
-    if(added) {
-      _size += 1
-      _elements = (valueVector -> term) :: _elements
+    if(shouldUseTree()) {
+      val added = root.addTerm(term, valueVector.toList)
+      if (added) {
+        _size += 1
+        valueTermMap(valueVector) = term
+      }
+      added
+    }else{
+      valueTermMap.get(valueVector) match {
+        case None =>
+          root.addTerm(term, valueVector.toList)
+          _size += 1
+          valueTermMap(valueVector) = term
+          true
+        case Some(_) => false
+      }
     }
-    added
   }
 
   def update(valueVector: ValueVector, term: A): Boolean = addTerm(term, valueVector)
@@ -145,17 +160,33 @@ class ValueVectorTree[A](depth: Int){
   }
 
   def searchTerms(valueMap: ValueMap): Iterator[A] = {
-    val vv = valueMapToVector(valueMap)
-    root.searchTerms(vv)
+    if(shouldUseTree()) {
+      val vv = valueMapToVector(valueMap)
+      root.searchTerms(vv)
+    }else{
+      valueTermMap.toIterator.collect {
+        case (vv, term) if ValueMap.matchVector(valueMap, vv) =>
+          term
+      }
+    }
   }
 
   def searchATerm(valueMap: ValueMap): Option[A] = {
-    val vv = valueMapToVector(valueMap)
-    root.searchATerm(vv)
+    if(shouldUseTree()) {
+      val vv = valueMapToVector(valueMap)
+      root.searchATerm(vv)
+    }else{
+      valueTermMap.foreach{
+        case (vv, term) =>
+          if(ValueMap.matchVector(valueMap, vv))
+            return Some(term)
+      }
+      None
+    }
   }
 
   def get(valueVector: ValueVector): Option[A] = {
-    root.searchATerm(valueVector.toList.map(tv => Right(tv)))
+    valueTermMap.get(valueVector)
   }
 
   def printRoot(show: A => String): Unit ={

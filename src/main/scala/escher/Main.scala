@@ -76,17 +76,17 @@ object Main {
     }
   }
 
-  def testSynthesisTyped(): Unit ={
+  def testSynthesisTyped(): Unit = {
     import escher.SynthesisTyped._
     import DSL._
 
     val syn = new SynthesisTyped(Config(maxCost = 20, logLevels = false, logReboot = true, logComponents = false), Console.print)
     import syn._
 
-    def reverseSynthesis() ={
+    def reverseSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
         argList(listValue()) -> listValue(),
-        argList(listValue(2,3,4)) -> listValue(4,3,2)
+        argList(listValue(2, 3, 4)) -> listValue(4, 3, 2)
       )
 
       val refComp = CommonComps.reverse
@@ -101,8 +101,8 @@ object Main {
       val examples: IS[(ArgList, TermValue)] = IS(
         argList(listValue()) -> listValue(),
         //      argList(listValue(true,false)) -> listValue(true,true,false,false),
-        argList(listValue(5)) -> listValue(5,5),
-        argList(listValue(5,6,3)) -> listValue(5,5,6,6,3,3)
+        argList(listValue(5)) -> listValue(5, 5),
+        argList(listValue(5, 6, 3)) -> listValue(5, 5, 6, 6, 3, 3)
       )
 
       val refComp = CommonComps.stutter
@@ -116,15 +116,15 @@ object Main {
     def cartesianSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
         //        argList(listValue(), listValue()) -> listValue(),
-        argList(listValue(), listValue(2,3,4)) -> listValue(),
-        argList(listValue(5), listValue(7,8,9)) -> listValue((5,7),(5,8),(5,9)),
-        argList(listValue(2,3), listValue(4,5)) -> listValue((2,4),(2,5),(3,4),(3,5))
+        argList(listValue(), listValue(2, 3, 4)) -> listValue(),
+        argList(listValue(5), listValue(7, 8, 9)) -> listValue((5, 7), (5, 8), (5, 9)),
+        argList(listValue(2, 3), listValue(4, 5)) -> listValue((2, 4), (2, 5), (3, 4), (3, 5))
       )
 
       val refComp = CommonComps.cartesian
 
-      synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs","ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
-        envCompMap = CommonComps.standardComps.updated("createPair", CommonComps.createPair(tyFixVar(0),tyFixVar(1))),
+      synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs", "ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
+        envCompMap = CommonComps.standardComps.updated("createPair", CommonComps.createPair(tyFixVar(0), tyFixVar(1))),
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
     }
@@ -134,9 +134,9 @@ object Main {
         //        argList(listValue(), listValue()) -> listValue(),
         argList(0) -> listValue(),
         argList(1) -> listValue(1),
-        argList(2) -> listValue(1,4),
-        argList(3) -> listValue(1,4,9),
-        argList(4) -> listValue(1,4,9,16)
+        argList(2) -> listValue(1, 4),
+        argList(3) -> listValue(1, 4, 9),
+        argList(4) -> listValue(1, 4, 9, 16)
       )
 
       val refComp = CommonComps.squareList
@@ -170,18 +170,18 @@ object Main {
     def gcdSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
         //        argList(listValue(), listValue()) -> listValue(),
-        argList(3,7) -> 1,
-        argList(12,8) -> 4,
-        argList(9,12) -> 3,
-        argList(9,3) -> 3,
-        argList(8,4) -> 4,
-        argList(2,3) -> 1,
-        argList(7,3) -> 1
+        argList(3, 7) -> 1,
+        argList(12, 8) -> 4,
+        argList(9, 12) -> 3,
+        argList(9, 3) -> 3,
+        argList(8, 4) -> 4,
+        argList(2, 3) -> 1,
+        argList(7, 3) -> 1
       )
 
       val refComp = CommonComps.gcd
 
-      synthesize("gcd", IS(tyInt, tyInt), IS("a","b"), tyInt)(
+      synthesize("gcd", IS(tyInt, tyInt), IS("a", "b"), tyInt)(
         envCompMap = CommonComps.standardComps ++ Map("mod" -> CommonComps.modulo),
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
@@ -189,13 +189,13 @@ object Main {
 
     def modSynthesis() = {
       val examples: IS[(ArgList, TermValue)] =
-        for(a <- -3 to 4; b <- -2 to 2) yield {
-          argList(a,b) -> CommonComps.modulo.execute(IS(a,b), debug = false)
+        for (a <- -3 to 4; b <- -2 to 2) yield {
+          argList(a, b) -> CommonComps.modulo.execute(IS(a, b), debug = false)
         }
 
       val refComp = CommonComps.modulo
 
-      synthesize("mod", IS(tyInt, tyInt), IS("a","b"), tyInt)(
+      synthesize("mod", IS(tyInt, tyInt), IS("a", "b"), tyInt)(
         envCompMap = CommonComps.standardComps ++ CommonComps.timesAndDiv,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
@@ -206,11 +206,11 @@ object Main {
         //        argList(listValue(), listValue()) -> listValue(),
         argList(listValue(), 0, 5) -> listValue(5),
         argList(listValue(), 3, 5) -> listValue(5),
-        argList(listValue(1,2,3), 0, 8) -> listValue(8,1,2,3),
-        argList(listValue(1,2,3), 1, 8) -> listValue(1,8,2,3),
-        argList(listValue(1,2,3), 2, 8) -> listValue(1,2,8,3),
-        argList(listValue(1,2,3), 3, 8) -> listValue(1,2,3,8),
-        argList(listValue(1,2,3), 4, 8) -> listValue(1,2,3,8)
+        argList(listValue(1, 2, 3), 0, 8) -> listValue(8, 1, 2, 3),
+        argList(listValue(1, 2, 3), 1, 8) -> listValue(1, 8, 2, 3),
+        argList(listValue(1, 2, 3), 2, 8) -> listValue(1, 2, 8, 3),
+        argList(listValue(1, 2, 3), 3, 8) -> listValue(1, 2, 3, 8),
+        argList(listValue(1, 2, 3), 4, 8) -> listValue(1, 2, 3, 8)
       )
 
       val refComp = CommonComps.insert
@@ -233,22 +233,24 @@ object Main {
       )
     val modTasks = Seq[TestCase](modSynthesis)
 
-    TimeTools.printTimeUsed(s"benchmark total time for ${tasks.length} tasks") {
-      val records = for (task <- tasks) yield {
-        val (time, result) = TimeTools.printTimeUsed("single synthesis") {
-          TimeTools.measureTime(task())
-        }
-        SynthesisTyped.printResult(syn)(result)
-
-        result.get._1.name -> time
+    val records = for (task <- tasks) yield {
+      val (time, result) = TimeTools.printTimeUsed("single synthesis") {
+        TimeTools.measureTime(task())
       }
+      SynthesisTyped.printResult(syn)(result)
 
-      println("Summery: ")
-      records.foreach{
-        case (taskName, time) =>
-          println(s"  $taskName: %.1fms".format(time/1e6))
-      }
+      result.get._1.name -> time
     }
+
+    var totalTime: Long = 0
+    println("Summery: ")
+    records.foreach {
+      case (taskName, time) =>
+        totalTime += time
+        println(s"  $taskName: %.1fms".format(time / 1e6))
+    }
+    println(s"Total time: %.1fms".format(totalTime / 1e6))
+
   }
 
 
