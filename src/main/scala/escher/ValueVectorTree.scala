@@ -119,7 +119,7 @@ class ValueVectorTree[A](depth: Int){
   private var _size = 0
   def size: Int = _size
 
-  val root = new InternalNode[A](mutable.Map())
+  private val root = new InternalNode[A](mutable.Map())
 
   private var _elements = List[(ValueVector, A)]()
   def elements: List[(ValueVector, A)] = _elements

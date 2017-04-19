@@ -98,11 +98,11 @@ object Synthesis {
   }
 
 
-  def divideNumberAsSum(number: Int, pieces: Int, minNumber: Int): Iterator[IndexedSeq[Int]] = {
-    if(number<minNumber) return Iterator()
-    if(pieces == 1) return Iterator(IndexedSeq(number))
+  def divideNumberAsSum(number: Int, pieces: Int, minNumber: Int): IS[IndexedSeq[Int]] = {
+    if(number<minNumber) return IS()
+    if(pieces == 1) return IS(IndexedSeq(number))
 
-    (minNumber to number).toIterator.flatMap(n => divideNumberAsSum(number - n, pieces - 1, minNumber).map(n +: _))
+    (minNumber to number).toVector.flatMap(n => divideNumberAsSum(number - n, pieces - 1, minNumber).map(n +: _))
   }
 
   def cartesianProduct[A](listOfSets: IndexedSeq[Iterable[A]]): Iterator[IndexedSeq[A]] = {

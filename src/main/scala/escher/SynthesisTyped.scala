@@ -58,6 +58,7 @@ object SynthesisTyped{
         state.print(exampleCount = examples.length)
         println(s"\nProgram found:\n")
         program.print()
+        println()
       case _ =>
         println(s"------- Synthesis Failed. -------")
     }
@@ -125,13 +126,15 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     val targetType: Type = Type.alphaNormalForm(returnType)
 
-    private var levelMaps: IS[TypeMap] = IS()
+    private var _levelMaps: IS[TypeMap] = IS()
 
-    def getLevelOfCost(cost: Int): TypeMap = levelMaps(cost-1)
+    def levels: Int = _levelMaps.length
+
+    def getLevelOfCost(cost: Int): TypeMap = _levelMaps(cost-1)
 
     def openNextLevel(): Int ={
-      levelMaps = levelMaps :+ TypeMap.empty(examples.length)
-      levelMaps.length
+      _levelMaps = _levelMaps :+ TypeMap.empty(examples.length)
+      _levelMaps.length
     }
 
     def typesMatch(ty: Type): List[Type] = {
@@ -141,9 +144,14 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       }.toList
     }
 
+    /**
+      * helper method for `BatchGoalSearch`
+      * @param types should be calculated using `typesMatch` method in SynthesisState, since that
+      *              calculation is expensive, it should be calculated only once for each level
+      */
     def library(types: Seq[Type])(vm: ValueMap): Option[(Int, Term)] = {
-      for(cost <- levelMaps.indices;
-          map = levelMaps(cost);
+      for(cost <- 1 to levels;
+          map = getLevelOfCost(cost);
           ty <- types;
           vt <- map.get(ty);
           term <- vt.searchATerm(vm)
@@ -153,6 +161,11 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       None
     }
 
+    /**
+      * helper method for `BatchGoalSearch`
+      * @param types should be calculated using `typesMatch` method in SynthesisState, since that
+      *              calculation is expensive, it should be calculated only once for each level
+      */
     def libraryOfCost(types: Seq[Type])(cost: Int, vm: ValueMap): Option[Term] = {
       val map = getLevelOfCost(cost)
       for(ty <- types;
@@ -172,7 +185,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     }
 
     def openToLevel(n: Int): Unit ={
-      (0 to n - levelMaps.length).foreach(_ => openNextLevel())
+      (0 to n - _levelMaps.length).foreach(_ => openNextLevel())
     }
 
     /**
@@ -183,10 +196,16 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def registerTermAtLevel(cost: Int, ty: Type, term: Term, valueVector: ValueVector): Boolean = {
       val ty1 = Type.alphaNormalForm(ty)
 
-      totalMap.typesIterator.foreach(t => {
-        if((ty1 instanceOf t) && totalMap(t).get(valueVector).nonEmpty)
-          return false
-      })
+//      // todo: should we check parent types?
+//      TimeTools.run5Times { () =>
+//        totalMap.typesIterator.foreach(t => {
+//          if ((ty1 instanceOf t) && totalMap(t).get(valueVector).nonEmpty)
+//            return false
+//        })
+//      }
+
+      if(totalMap(ty1).get(valueVector).nonEmpty)
+        return false
 
       totalMap(ty1)(valueVector) = term
       getLevelOfCost(cost)(ty1)(valueVector) = term
@@ -200,7 +219,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       }
       logLn(config.logLevels)(s"LevelMaps:")
       if(config.logLevels)
-        levelMaps.indices.foreach{i =>
+        _levelMaps.indices.foreach{i =>
           val c = i + 1
           val typeMap = getLevelOfCost(c)
           logLn(condition = true)(s"  $c: (${typeMap.statString})")
@@ -289,24 +308,24 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     /**
       * @return Whether the goal has been solved
       */
-    def synthesizeAtLevel(level: Int): Boolean = {
+    def synthesizeAtLevel(cost: Int): Boolean = {
       for(
         (compName, impl) <- compMap;
-        compCost = compCostFunction(impl) if compCost <= level
+        compCost = compCostFunction(impl) if compCost <= cost
       ){
         val arity = impl.inputTypes.length
-        val costLeft = level - compCost
+        val costLeft = cost - compCost
         if(arity==0){
-          if(compCost == level) {
+          if(compCost == cost) {
             val result = impl.execute(IS(), debug = false)
             val valueVector = (0 until exampleCount).map(_ => result)
             val term = Component(compName, IS())
-            if(state.registerTermAtLevel(level, impl.returnType, term, valueVector))
+            if(state.registerTermAtLevel(cost, impl.returnType, term, valueVector))
               return true
           }
         } else for(
-          costs <- divideNumberAsSum(costLeft, arity, minNumber = 1);
-          (argTypes, returnType) <- typesForCosts(state, costs, impl.inputTypes, impl.returnType)
+          costs <- TimeTools.runOnce( divideNumberAsSum(costLeft, arity, minNumber = 1)); //todo: currently not very important, check this later
+          (argTypes, returnType) <- TimeTools.runOnce{ typesForCosts(state, costs, impl.inputTypes, impl.returnType)}
         ) {
           val candidatesForArgs =
             for (argIdx <- 0 until arity) yield {
@@ -315,20 +334,22 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
             }
 
           val isRecCall = compName == name
-          cartesianProduct(candidatesForArgs).foreach(product => {
-            val valueVector = (0 until exampleCount).map(exId => {
-              val arguments = product.map(_._1(exId))
-              if(isRecCall && !argDecrease(arguments, exId))
-                ValueError
-              else
-                impl.execute(arguments, debug = false)
-            })
-            if(!config.deleteAllErr || notAllErr(valueVector)) {
-              val term = Component(compName, product.map(_._2))
-              if(state.registerTermAtLevel(level, returnType, term, valueVector))
-                return true
+          cartesianProduct(candidatesForArgs).foreach { product =>
+            TimeTools.runOnce{
+              val valueVector = (0 until exampleCount).map(exId => {
+                val arguments = product.map(_._1(exId))
+                if (isRecCall && !argDecrease(arguments, exId))
+                  ValueError
+                else
+                  impl.execute(arguments, debug = false)
+              })
+              if (!config.deleteAllErr || notAllErr(valueVector)) {
+                val term = Component(compName, product.map(_._2))
+                if (TimeTools.runOnce(state.registerTermAtLevel(cost, returnType, term, valueVector)))
+                  return true
+              }
             }
-          })
+          }
         }
       }
       false
@@ -339,18 +360,23 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
 //    val batchBuffer = BatchGoalSearch.emptyBuffer()
     (1 to config.maxCost).foreach(level => {
-      synthesizeAtLevel(level)
-      val matchReturnType = state.typesMatch(returnType)
-      val matchBool = state.typesMatch(tyBool)
-      val search = new BatchGoalSearchLoose(
-        level,
-        termOfCostAndVM = state.libraryOfCost(matchReturnType),
-        termsOfCost = state.termsOfCost(matchReturnType),
-        boolOfVM = state.library(matchBool)
-      )
-      val searchingCost = 3 * level
-      search.search(searchingCost, goalVM).foreach{ case (c,term) =>
-        return resultFromState(term)
+      TimeTools.printTimeUsed(s"synthesize components at level $level:"){
+        synthesizeAtLevel(level)
+      }
+
+      TimeTools.printTimeUsed("Goal searching") {
+        val (matchReturnType, matchBool) = (state.typesMatch(returnType), state.typesMatch(tyBool))
+
+        val search = new BatchGoalSearchLoose(
+          level,
+          termOfCostAndVM = state.libraryOfCost(matchReturnType),
+          termsOfCost = state.termsOfCost(matchReturnType),
+          boolOfVM = state.library(matchBool)
+        )
+        val searchingCost = 3 * level
+        search.search(searchingCost, goalVM).foreach { case (c, term) =>
+          return resultFromState(term)
+        }
       }
 
       logger(s"State at level: $level\n")
