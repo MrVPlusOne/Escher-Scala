@@ -262,8 +262,9 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def resultFromState(term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
       val body = term
       val comp = SynthesizedComponent(name, inputNames, inputTypes, returnType, body)
-      logLn(config.logReboot){
-        s"Program Found:\n${comp.show}"
+      if(config.logReboot){
+        println(s"Failed program found:")
+        comp.print()
       }
       val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, returnType,
         envCompMap, config.argListCompare, body)
