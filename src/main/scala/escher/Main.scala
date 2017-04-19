@@ -26,56 +26,6 @@ object Main {
   }
 
 
-  def testSynthesisUntyped(): Unit ={
-    import escher._
-    import DSL._
-    import SynthesisUntyped._
-
-    val syn = new SynthesisUntyped(Config(maxCost = 10, printComponents = false, printLevels = false), print)
-    import syn._
-
-//    val examples: IS[(ArgList, TermValue)] = IS(
-//      IS(listValue()) -> 0,
-//      IS(listValue(1)) -> 1,
-//      IS(listValue(1,2,3)) -> 3
-//    )
-//    val examples: IS[(ArgList, TermValue)] = IS(
-//      IS[TermValue](listValue(), 0, 5) -> listValue(5),
-//      IS[TermValue](listValue(1,2,3), 0, 7) -> listValue(7,1,2,3),
-//      IS[TermValue](listValue(1,2,3), 1, 8) -> listValue(1,8,2,3),
-//      IS[TermValue](listValue(1,2,3), 2, 8) -> listValue(1,2,8,3),
-//      IS[TermValue](listValue(1,2,3), 3, 9) -> listValue(1,2,3,9)
-//    )
-
-    val examples: IS[(ArgList, TermValue)] = IS(
-      argList(listValue()) -> listValue(),
-      argList(listValue(1,2,3,4)) -> listValue(4,3,2,1)
-    )
-
-    val refComp = CommonComps.reverse
-
-    synthesize("reverse", refComp.inputTypes, IS("xs"), refComp.returnType)(
-      envCompMap = CommonComps.standardComps,
-      compCostFunction = _ => 1, examples,
-      oracle = refComp.impl) match {
-      case Some((program, state)) =>
-        println(s"------ Synthesis Succeeded! ------")
-        println(s"Input-output examples:")
-        examples.foreach{case(a,r) =>
-          print(ArgList.showArgList(a))
-          print(" -> ")
-          println(r.show)
-        }
-        state.print(exampleCount = examples.length)
-        println(s"\nProgram found:")
-        println{
-          program.show
-        }
-      case _ =>
-        println("------- Synthesis Failed. -------")
-    }
-  }
-
   def testSynthesisTyped(): Unit = {
     import escher.SynthesisTyped._
     import DSL._
