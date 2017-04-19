@@ -273,10 +273,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def resultFromState(cost:Int, term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
       val body = term
       val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body, cost)
-      if(config.logReboot){
-        println(s"Failed program found:")
-        comp.print()
-      }
       val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, goalReturnType,
         envCompMap, config.argListCompare, body)
       var passed, failed = IS[(ArgList, TermValue)]()
@@ -290,6 +286,10 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       if(failed.isEmpty){
         Some((comp, state, synData.copy(oracleBuffer = passed)))
       }else {
+        if(config.logReboot){
+          println(s"Failed program found:")
+          comp.print()
+        }
         if(config.logReboot){
           println("--- Reboot ---")
         }
