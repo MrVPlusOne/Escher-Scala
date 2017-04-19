@@ -236,7 +236,7 @@ object Main {
       val (time, result) = TimeTools.printTimeUsed("single synthesis") {
         TimeTools.measureTime(task())
       }
-      SynthesisTyped.printResult(syn, maxExamplesShown = 13)(result)
+      SynthesisTyped.printResult(syn, maxExamplesShown = 8)(result)
 
       val reboots = result.get._3.reboots
       (result.get._1, reboots, time)

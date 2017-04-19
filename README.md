@@ -7,14 +7,19 @@ A Scala implementation of the algorithm described in this paper [Recursive Progr
 
 Example Run:
 
-   <!-- ![Stutter](documentation/Stutter.png | with=48) -->
+ <img src="documentation/summery.png" width="500px" alt="summery"/>
 
 - Stutter
 <img src="documentation/Stutter.png" width="600px" alt="stutter"/>
 
-- Catesian product of two lists
+- Cartesian product of two lists
 <img src="documentation/cartesian.png" width="600px" alt="cartesian product"/>
 
 - Square of naturals
 <img src="documentation/squareList.png" width="600px" alt="square list"/>
 
+- Remove adjacent duplicates
+<img src="documentation/removeDup.png" width="600px" alt="removeDup"/>
+
+- Insert an element into a list
+<img src="documentation/insert.png" width="600px" alt="insert"/>
