@@ -240,11 +240,14 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
                 (envCompMap: Map[String, ComponentImpl], compCostFunction: (ComponentImpl) => Int,
-                 examples: IS[(ArgList, TermValue)],
+                 examples0: IS[(ArgList, TermValue)],
                  oracle: PartialFunction[IS[TermValue], TermValue],
                  synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
     import DSL._
 
+    val examples = examples0.sortWith{ (a,b) =>
+      ArgList.alphabeticSmaller(a._1, b._1)
+    }
     val inputs: IS[ArgList] = examples.map(_._1)
     val outputs: IS[TermValue] = examples.map(_._2)
     val inputTypes = inputTypesFree.map(_.fixVars)
@@ -267,9 +270,9 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       goalReturnType
     )
 
-    def resultFromState(term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
+    def resultFromState(cost:Int, term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
       val body = term
-      val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body)
+      val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body, cost)
       if(config.logReboot){
         println(s"Failed program found:")
         comp.print()
@@ -384,7 +387,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         )
         val searchingCost = 3 * level
         search.search(searchingCost, goalVM).foreach { case (c, term) =>
-          return resultFromState(term)
+          return resultFromState(c,term)
         }
       }
 

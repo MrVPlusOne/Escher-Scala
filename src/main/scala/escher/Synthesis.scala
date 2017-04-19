@@ -112,7 +112,7 @@ object Synthesis {
 
   case class SynthesizedComponent(name: String, argNames: IS[String],
                                   inputTypes: IS[Type], returnType: Type,
-                                  body: Term){
+                                  body: Term, cost: Int){
     def show: String = {
       val paramList = argNames.zip(inputTypes).map{
         case (argName, ty) => s"@$argName: $ty"

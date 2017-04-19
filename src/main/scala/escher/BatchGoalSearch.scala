@@ -67,6 +67,17 @@ class BatchGoalSearchLoose(maxCompCost: Int,
   private val buffer: mutable.Map[Set[Int], SearchResult] = mutable.Map()
 
 
+  def maxSatConditions(vm: IndexValueMap): Option[((Int, Term), List[Int])] = {
+    var keyList = vm.keys.filter(i => vm(i) == ValueBool(true)).toList.sorted.reverse
+    var vm1 = vm
+    while(keyList.nonEmpty){
+      boolOfVM(vm1).foreach(x => return Some(x -> keyList))
+      vm1 = vm1.updated(keyList.head, ValueBool(false))
+      keyList = keyList.tail
+    }
+    None
+  }
+
   def search(cost: Int, currentGoal: IndexValueMap): Option[(Int,Term)] = {
     val keySet = currentGoal.keySet
     buffer.get(keySet).foreach {
@@ -97,9 +108,10 @@ class BatchGoalSearchLoose(maxCompCost: Int,
     for (
       cThen <- 1 to maxCost - 1 - ifCost; // save one for cCond
       (thenVec, tThen) <- termsOfCost(cThen);
-      (vm1, _, vm3) <- IndexValueMap.splitValueMap(currentGoal, thenVec);
-      (cCond, tCond) <- boolOfVM(vm1);
-      (cElse, tElse) <- search(cost - cThen - cCond - ifCost, vm3)
+      (vm, _, _) <- IndexValueMap.splitValueMap(currentGoal, thenVec);
+      ((cCond, tCond), trueKeys) <- maxSatConditions(vm); //this requirement maybe too much
+      elseGoal = currentGoal -- trueKeys;
+      (cElse, tElse) <- search(cost - cThen - cCond - ifCost, elseGoal)
     ) {
       import DSL._
 

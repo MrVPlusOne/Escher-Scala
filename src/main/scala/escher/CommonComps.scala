@@ -364,4 +364,15 @@ object CommonComps {
       }
     )
   }
+
+  val removeDup = {
+    def f[A](xs: List[A]): List[A] = xs match {
+      case a::b::tail => if(a==b) f(b::tail) else a :: f(b::tail)
+      case _ => xs
+    }
+
+    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)),
+      impl = { case IS(ValueList(xs)) => f(xs) }
+    )
+  }
 }

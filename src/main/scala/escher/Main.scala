@@ -50,7 +50,6 @@ object Main {
     def stutterSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
         argList(listValue()) -> listValue(),
-        //      argList(listValue(true,false)) -> listValue(true,true,false,false),
         argList(listValue(5)) -> listValue(5, 5),
         argList(listValue(5, 6, 3)) -> listValue(5, 5, 6, 6, 3, 3)
       )
@@ -65,8 +64,8 @@ object Main {
 
     def cartesianSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
-        //        argList(listValue(), listValue()) -> listValue(),
         argList(listValue(), listValue(2, 3, 4)) -> listValue(),
+        argList(listValue(5), listValue()) -> listValue(),
         argList(listValue(5), listValue(7, 8, 9)) -> listValue((5, 7), (5, 8), (5, 9)),
         argList(listValue(2, 3), listValue(4, 5)) -> listValue((2, 4), (2, 5), (3, 4), (3, 5))
       )
@@ -81,7 +80,7 @@ object Main {
 
     def squareListSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
-        //        argList(listValue(), listValue()) -> listValue(),
+        argList(-3) -> listValue(),
         argList(0) -> listValue(),
         argList(1) -> listValue(1),
         argList(2) -> listValue(1, 4),
@@ -99,7 +98,7 @@ object Main {
 
     def fibSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
-        //        argList(listValue(), listValue()) -> listValue(),
+        argList(-1) -> 1,
         argList(0) -> 1,
         argList(1) -> 1,
         argList(2) -> 2,
@@ -156,6 +155,7 @@ object Main {
         //        argList(listValue(), listValue()) -> listValue(),
         argList(listValue(), 0, 5) -> listValue(5),
         argList(listValue(), 3, 5) -> listValue(5),
+        argList(listValue(3), -1, 1) -> listValue(1,3),
         argList(listValue(1, 2, 3), 0, 8) -> listValue(8, 1, 2, 3),
         argList(listValue(1, 2, 3), 1, 8) -> listValue(1, 8, 2, 3),
         argList(listValue(1, 2, 3), 2, 8) -> listValue(1, 2, 8, 3),
@@ -171,6 +171,26 @@ object Main {
         examples, oracle = refComp.impl)
     }
 
+    def removeDupSynthesis() = {
+      val examples: IS[(ArgList, TermValue)] = IS(
+        argList(listValue()) -> listValue(),
+        argList(listValue(7)) -> listValue(7),
+        argList(listValue(2,3,3,9,9)) -> listValue(2,3,9),
+        argList(listValue(3,3,3,9)) -> listValue(3,9),
+        argList(listValue(2,3,9)) -> listValue(2,3,9),
+        argList(listValue(9,9)) -> listValue(9),
+        argList(listValue(3,9)) -> listValue(3,9),
+        argList(listValue(9,9,2)) -> listValue(9,2)
+      )
+
+      val refComp = CommonComps.removeDup
+
+      synthesize("removeDup", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+        envCompMap = CommonComps.standardComps,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
@@ -179,7 +199,8 @@ object Main {
         cartesianSynthesis,
         squareListSynthesis,
         fibSynthesis,
-        insertSynthesis
+        insertSynthesis,
+        removeDupSynthesis
       )
     val modTasks = Seq[TestCase](modSynthesis)
 
@@ -189,16 +210,20 @@ object Main {
       }
       SynthesisTyped.printResult(syn)(result)
 
-      result.get._1.name -> time
+      val reboots = result.get._3.reboots
+      (result.get._1, reboots, time)
     }
 
     var totalTime: Long = 0
     println("Summery: ")
-    records.foreach {
-      case (taskName, time) =>
+    val dataToPrint = records.toIndexedSeq.map {
+      case (comp, reboots, time) =>
         totalTime += time
-        println(s"  $taskName: %.1fms".format(time / 1e6))
+        IS(s"  ${comp.name}",
+          s"[cost=${comp.cost}]${if(reboots!=0) s"($reboots reboots)" else ""}",
+          "%.1fms".format(time/1e6))
     }
+    CmdInteract.printTable(dataToPrint, spacing = 2)
     println(s"Total time: %.1fms".format(totalTime / 1e6))
 
   }
