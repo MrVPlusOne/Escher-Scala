@@ -149,8 +149,8 @@ object Synthesis {
   }
 
 
-  def exampleLE(ex1: (ArgList, TermValue), ex2: (ArgList, TermValue)): Boolean = {
-    ex1._1 == ex2._2 || ArgList.alphabeticSmaller(ex1._1, ex2._1)
+  def exampleLt(ex1: (ArgList, TermValue), ex2: (ArgList, TermValue)): Boolean = {
+    ArgList.alphabeticSmaller(ex1._1, ex2._1)
   }
 
   trait RebootStrategy{
@@ -171,7 +171,7 @@ object Synthesis {
                                               failed: IS[(ArgList, TermValue)],
                                               passed: IS[(ArgList, TermValue)]):
       (IS[(ArgList, TermValue)], IS[(ArgList, TermValue)]) = {
-        val failSorted = failed.sortWith(exampleLE)
+        val failSorted = failed.sortWith(exampleLt)
         (examples :+ failSorted.head, failSorted.tail ++ passed)
       }
     }

@@ -245,9 +245,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
                  synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
     import DSL._
 
-    val examples = examples0.sortWith{ (a,b) =>
-      ArgList.alphabeticSmaller(a._1, b._1)
-    }
+    val examples = examples0.sortWith(Synthesis.exampleLt)
     val inputs: IS[ArgList] = examples.map(_._1)
     val outputs: IS[TermValue] = examples.map(_._2)
     val inputTypes = inputTypesFree.map(_.fixVars)
