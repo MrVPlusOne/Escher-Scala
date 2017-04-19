@@ -375,4 +375,20 @@ object CommonComps {
       impl = { case IS(ValueList(xs)) => f(xs) }
     )
   }
+
+  val nodesAtLevel = {
+    def impl[A](tree: BinaryTree[A], level: Int): List[A] = tree match {
+      case BinaryNode(tag, left, right) =>
+        if(level == 0) List(tag)
+        else if(level > 0) impl(left, level-1) ++ impl(right, level-1)
+        else List()
+      case BinaryLeaf => List()
+    }
+
+    ComponentImpl(IS(tyTree(tyVar(0)), tyInt), tyTree(tyVar(0)),
+      impl = { case IS(ValueTree(tree), ValueInt(level)) =>
+        impl(tree, level)
+      }
+    )
+  }
 }

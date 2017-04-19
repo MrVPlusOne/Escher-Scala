@@ -191,6 +191,33 @@ object Main {
         examples, oracle = refComp.impl)
     }
 
+    def nodesAtLevelSynthesis() = {
+      import BinaryTree._
+
+      val args: IS[ArgList] = IS(
+        argList(BinaryLeaf, 1),
+        argList(BinaryLeaf, 0),
+        argList(BinaryLeaf, -1),
+        argList(exNode(12), -1),
+        argList(exNode(12), 0),
+        argList(exNode(12), 1),
+        argList(exNode(12), 2),
+        argList(BinaryNode(12, exNode(7), exNode(9)), 1),
+        argList(BinaryNode(12, exNode(7), exNode(9)), 2),
+        argList(BinaryNode(12, BinaryNode(15, exNode(4), BinaryLeaf), exNode(9)), 3),
+        argList(BinaryNode(15, BinaryNode(15, exNode(4), BinaryLeaf), exNode(9)), 4)
+      )
+
+      val refComp = CommonComps.nodesAtLevel
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize("nodesAtLevel", IS(tyTree(tyVar(0)), tyInt), IS("tree", "level"), tyList(tyVar(0)))(
+        envCompMap = CommonComps.standardComps,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
@@ -200,7 +227,8 @@ object Main {
         squareListSynthesis,
         fibSynthesis,
         insertSynthesis,
-        removeDupSynthesis
+        removeDupSynthesis,
+        nodesAtLevelSynthesis
       )
     val modTasks = Seq[TestCase](modSynthesis)
 
@@ -208,7 +236,7 @@ object Main {
       val (time, result) = TimeTools.printTimeUsed("single synthesis") {
         TimeTools.measureTime(task())
       }
-      SynthesisTyped.printResult(syn)(result)
+      SynthesisTyped.printResult(syn, maxExamplesShown = 13)(result)
 
       val reboots = result.get._3.reboots
       (result.get._1, reboots, time)

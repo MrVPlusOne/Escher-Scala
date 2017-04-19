@@ -91,6 +91,10 @@ case class ValueList(elems: List[TermValue]) extends TermValue{
 sealed trait BinaryTree[+T]{
   def size: Int
 
+  def map[B](f: T => B): BinaryTree[B] = this match {
+    case BinaryNode(tag, left, right) => BinaryNode(f(tag), left.map(f), right.map(f))
+    case BinaryLeaf => BinaryLeaf
+  }
 }
 
 case class BinaryNode[T](tag: T, left: BinaryTree[T], right: BinaryTree[T]) extends BinaryTree[T]{
@@ -99,6 +103,10 @@ case class BinaryNode[T](tag: T, left: BinaryTree[T], right: BinaryTree[T]) exte
 
 case object BinaryLeaf extends BinaryTree[Nothing]{
   def size: Int = 0
+}
+
+object BinaryTree{
+  def exNode[A](tag: A): BinaryNode[A] = BinaryNode(tag, BinaryLeaf, BinaryLeaf)
 }
 
 

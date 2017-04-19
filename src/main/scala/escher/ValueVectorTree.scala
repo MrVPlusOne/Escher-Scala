@@ -115,7 +115,7 @@ object ValueVectorTree {
   * can be used to efficiently find ValueVectors that match a goal (partial vector)
   * @param depth the length of each ValueVector
   */
-class ValueVectorTree[A](depth: Int, thresholdToUseTree: Double = Double.PositiveInfinity){
+class ValueVectorTree[A](depth: Int, thresholdToUseTree: Double = 10){
   private var _size = 0
   def size: Int = _size
 
