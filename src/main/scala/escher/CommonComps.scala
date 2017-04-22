@@ -365,7 +365,7 @@ object CommonComps {
     )
   }
 
-  val removeDup = {
+  val compress = {
     def f[A](xs: List[A]): List[A] = xs match {
       case a::b::tail => if(a==b) f(b::tail) else a :: f(b::tail)
       case _ => xs

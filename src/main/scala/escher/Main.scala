@@ -171,7 +171,7 @@ object Main {
         examples, oracle = refComp.impl)
     }
 
-    def removeDupSynthesis() = {
+    def compressSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
         argList(listValue()) -> listValue(),
         argList(listValue(7)) -> listValue(7),
@@ -183,9 +183,9 @@ object Main {
         argList(listValue(9,9,2)) -> listValue(9,2)
       )
 
-      val refComp = CommonComps.removeDup
+      val refComp = CommonComps.compress
 
-      synthesize("removeDup", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
+      synthesize("compress", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
         envCompMap = CommonComps.standardComps,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
@@ -227,7 +227,7 @@ object Main {
         squareListSynthesis,
         fibSynthesis,
         insertSynthesis,
-        removeDupSynthesis,
+        compressSynthesis,
         nodesAtLevelSynthesis
       )
     val modTasks = Seq[TestCase](modSynthesis)
