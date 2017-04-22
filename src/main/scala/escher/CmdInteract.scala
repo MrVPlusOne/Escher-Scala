@@ -5,7 +5,7 @@ package escher
   */
 object CmdInteract {
 
-  def printTable(elements: IS[IS[String]], spacing: Int): Unit = {
+  def printTable(elements: IS[IS[String]], spacing: Int, alignRightCols: Set[Int]): Unit = {
     val rows = elements.length
     val cols = elements.head.length
 
@@ -13,8 +13,14 @@ object CmdInteract {
     elements.foreach(row => {
       for(c <- row.indices){
         val str = row(c)
-        print(str)
-        print(" " * (colWidths(c) + spacing - str.length))
+        if(alignRightCols contains c){
+          print(" " * (colWidths(c) - str.length))
+          print(str)
+          print(" " * spacing)
+        }else {
+          print(str)
+          print(" " * (colWidths(c) + spacing - str.length))
+        }
       }
       println()
     })

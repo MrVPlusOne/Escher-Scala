@@ -198,14 +198,14 @@ object Main {
         argList(BinaryLeaf, 1),
         argList(BinaryLeaf, 0),
         argList(BinaryLeaf, -1),
-        argList(exNode(12), -1),
-        argList(exNode(12), 0),
-        argList(exNode(12), 1),
-        argList(exNode(12), 2),
-        argList(BinaryNode(12, exNode(7), exNode(9)), 1),
-        argList(BinaryNode(12, exNode(7), exNode(9)), 2),
-        argList(BinaryNode(12, BinaryNode(15, exNode(4), BinaryLeaf), exNode(9)), 3),
-        argList(BinaryNode(15, BinaryNode(15, exNode(4), BinaryLeaf), exNode(9)), 4)
+        argList(singleNode(12), -1),
+        argList(singleNode(12), 0),
+        argList(singleNode(12), 1),
+        argList(singleNode(12), 2),
+        argList(BinaryNode(12, singleNode(7), singleNode(9)), 1),
+        argList(BinaryNode(12, singleNode(7), singleNode(9)), 2),
+        argList(BinaryNode(12, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 3),
+        argList(BinaryNode(15, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 4)
       )
 
       val refComp = CommonComps.nodesAtLevel
@@ -240,16 +240,17 @@ object Main {
         examples, oracle = refComp.impl)
     }
 
-    def dedupSynthesis() = {
+    def dedupSynthesis(useContains: Boolean)() = {
       val args: IS[ArgList] = IS(
         argList(listValue()),
-        argList(listValue(2)),
+        argList(listValue(1)),
+        argList(listValue(3,3)),
         argList(listValue(2,3)),
-        argList(listValue(1,1)),
         argList(listValue(1,2,3)),
-        argList(listValue(1,2,3,2,1)),
-        argList(listValue(1,2,2,3,2)),
-        argList(listValue(2,2,1,3,2))
+        argList(listValue(1,2,3,2)),
+        argList(listValue(1,1,1,2,3,2)),
+        argList(listValue(2,2,2,3,3,3)),
+        argList(listValue(1,2,3,2,1))
       )
 
       val refComp = CommonComps.dedup
@@ -257,28 +258,97 @@ object Main {
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
+      val envCompMap =
+        if(useContains) CommonComps.standardComps ++ Map("contains" -> CommonComps.contains)
+        else CommonComps.standardComps
+
       synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(
-        envCompMap = CommonComps.standardComps /*++ Map("contains" -> CommonComps.contains)*/,
+        envCompMap,
         compCostFunction = _ => 1,
         examples, oracle = refComp.impl)
+    }
 
+    def dropLastSynthesis() = {
+      val args: IS[ArgList] = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(1,2)),
+        argList(listValue(1,2,3)),
+        argList(listValue(1,1,1,2,3,2))
+      )
+
+      val refComp = CommonComps.dropLast
+      val name = "dropLast"
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(
+        envCompMap = CommonComps.standardComps,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def evensSynthesis() = {
+      val args: IS[ArgList] = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(1,2)),
+        argList(listValue(1,2,3,4)),
+        argList(listValue(1,2,3,4,5,6))
+      )
+
+      val refComp = CommonComps.evens
+      val name = "evens"
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(
+        envCompMap = CommonComps.standardComps,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def tConcatSynthesis() = {
+      import BinaryTree._
+
+      val args: IS[ArgList] = IS(
+        argList(BinaryLeaf, BinaryLeaf),
+        argList(BinaryLeaf, singleNode(1)),
+        argList(singleNode(1), BinaryLeaf),
+        argList(singleNode(1), BinaryNode(2, singleNode(3), singleNode(4))),
+        argList(BinaryNode(1, singleNode(2), singleNode(3)), BinaryNode(4, singleNode(5), singleNode(6))),
+        argList(BinaryNode(1, BinaryLeaf, BinaryNode(2, singleNode(3), singleNode(4))), singleNode(5))
+      )
+
+      val refComp = CommonComps.tConcat
+      val name = "tConcat"
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(name, refComp.inputTypes, IS("baseTree", "inserted"), refComp.returnType)(
+        envCompMap = CommonComps.standardComps,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
     }
 
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
-//        reverseSynthesis,
-//        stutterSynthesis,
-//        cartesianSynthesis,
-//        squareListSynthesis,
-//        fibSynthesis,
-//        insertSynthesis,
-//        compressSynthesis,
-//        nodesAtLevelSynthesis,
+        reverseSynthesis,
+        stutterSynthesis,
+        cartesianSynthesis,
+        squareListSynthesis,
+        fibSynthesis,
+        insertSynthesis,
+        compressSynthesis,
+        nodesAtLevelSynthesis,
         containsSynthesis,
-        dedupSynthesis
+        dropLastSynthesis,
+        evensSynthesis//,
+//        dedupSynthesis(useContains = false),
+//        tConcatSynthesis
       )
-    val modTasks = Seq[TestCase](modSynthesis)
+    val slowTasks = Seq[TestCase](modSynthesis)
 
     val records = for (task <- tasks) yield {
       val (time, result) = TimeTools.printTimeUsed("single synthesis") {
@@ -299,7 +369,7 @@ object Main {
           s"[cost=${comp.cost}]${if(reboots!=0) s"($reboots reboots)" else ""}",
           TimeTools.nanoToMillisString(time))
     }
-    CmdInteract.printTable(dataToPrint, spacing = 2)
+    CmdInteract.printTable(dataToPrint, spacing = 2, Set(2))
     println(s"Total time: ${TimeTools.nanoToMillisString(totalTime)}")
 
   }
