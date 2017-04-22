@@ -23,7 +23,7 @@ Example Run:
 
 - Remove adjacent duplicates in a list
 
-<img src="documentation/removeDup.png" width="600px" alt="compress"/>
+<img src="documentation/compress.png" width="600px" alt="compress"/>
 
 - Remove all duplicates in a list (synthesized without additional components)
 
