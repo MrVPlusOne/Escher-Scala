@@ -6,10 +6,18 @@ package escher
 object TimeTools {
   type Nanosecond = Long
 
+  def nanoToMillisString(nanosecond: Nanosecond): String = {
+    val millis = (nanosecond /1e9).toInt
+    if(millis>0){
+      val ms = nanosecond/1e6 - millis * 1000
+      "%d,%.2fms".format(millis.toInt, ms)
+    } else
+      "%.2fms".format(nanosecond /1e6)
+  }
+
   def printTimeUsed[A](taskName: String)(task: => A): A = {
     val (nano, result) = measureTime(task)
-    val time = nano/1000000.0
-    println(s"*** [$taskName] time used: %.2fms ***".format(time))
+    println(s"*** [$taskName] time used: ${nanoToMillisString(nano)} ***")
     result
   }
 

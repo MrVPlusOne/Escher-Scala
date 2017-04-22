@@ -29,10 +29,10 @@ object SynthesisTyped{
     def empty(depth: Int): ValueTermMap = mutable.Map()
   }
 
-  case class SynthesisData(oracleBuffer: IS[(ArgList, TermValue)], reboots: Int)
+  case class SynthesisData(oracleBuffer: IS[(ArgList, TermValue)], reboots: Int, lastRebootTimeUsed: TimeTools.Nanosecond)
 
   object SynthesisData{
-    def init: SynthesisData = SynthesisData(oracleBuffer = IS(), reboots = 0)
+    def init: SynthesisData = SynthesisData(oracleBuffer = IS(), reboots = 0, lastRebootTimeUsed = 0)
   }
 
   def printResult(syn: SynthesisTyped, maxExamplesShown: Int = 9)
@@ -53,6 +53,7 @@ object SynthesisTyped{
       case Some((program, state, synData)) =>
         val examples = state.examples
         println(s"------ Synthesis for ${program.name} Succeeded! (${synData.reboots} reboots) ------")
+        println(s"Time used for the last reboot: ${TimeTools.nanoToMillisString(synData.lastRebootTimeUsed)}")
         showExamples("Initial Examples", examples, maxExamplesShown = 50)
         showExamples("Additional examples provided", synData.oracleBuffer, maxExamplesShown)
         state.print(exampleCount = examples.length)
@@ -245,6 +246,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
                  synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
     import DSL._
 
+    val startTime = System.nanoTime()
+
     val examples = examples0.sortWith(Synthesis.exampleLt)
     val inputs: IS[ArgList] = examples.map(_._1)
     val outputs: IS[TermValue] = examples.map(_._2)
@@ -282,7 +285,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
             failed = failed :+ (a -> r)
       }
       if(failed.isEmpty){
-        Some((comp, state, synData.copy(oracleBuffer = passed)))
+        val timeUse = System.nanoTime() - startTime
+        Some((comp, state, synData.copy(oracleBuffer = passed, lastRebootTimeUsed = timeUse)))
       }else {
         if(config.logReboot){
           println(s"Failed program found:")
@@ -300,7 +304,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
         val (newExamples, newBuffer) = config.rebootStrategy.newExamplesAndOracleBuffer(examples, failed, passed)
         println(s"New examples: ${showExamples(newExamples)}")
-        val newSynData = SynthesisData(newBuffer, synData.reboots+1)
+        val newSynData = SynthesisData(newBuffer, synData.reboots+1, lastRebootTimeUsed = 0)
         synthesize(name, inputTypes, inputNames, goalReturnType)(
           envCompMap, compCostFunction, newExamples, oracle, newSynData
         )

@@ -297,10 +297,10 @@ object Main {
         totalTime += time
         IS(s"  ${comp.name}",
           s"[cost=${comp.cost}]${if(reboots!=0) s"($reboots reboots)" else ""}",
-          "%.1fms".format(time/1e6))
+          TimeTools.nanoToMillisString(time))
     }
     CmdInteract.printTable(dataToPrint, spacing = 2)
-    println(s"Total time: %.1fms".format(totalTime / 1e6))
+    println(s"Total time: ${TimeTools.nanoToMillisString(totalTime)}")
 
   }
 
