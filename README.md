@@ -27,4 +27,4 @@ Example Run:
 
 - Remove all duplicates in a list (synthesized without additional components)
 
-<img src="documentation/insert.png" width="600px" alt="dedup"/>
+<img src="documentation/dedup.png" width="600px" alt="dedup"/>
