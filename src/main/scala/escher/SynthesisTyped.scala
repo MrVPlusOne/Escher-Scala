@@ -271,9 +271,9 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       goalReturnType
     )
 
-    def resultFromState(cost:Int, term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
+    def resultFromState(cost:Int, depth: Int, term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
       val body = term
-      val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body, cost)
+      val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body, cost, depth)
       val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, goalReturnType,
         envCompMap, config.argListCompare, body)
       var passed, failed = IS[(ArgList, TermValue)]()
@@ -376,11 +376,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         synthesizeAtLevel(level, synBoolAndReturnType = true)
       }
 
-      TimeTools.printTimeUsed("create libraries") {
-        state.createLibrariesForThisLevel()
-      }
-
       TimeTools.printTimeUsed("Goal searching") {
+        state.createLibrariesForThisLevel()
         val search = new BatchGoalSearchLoose(
           level,
           termOfCostAndVM = state.libraryOfCost,
@@ -389,7 +386,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         )
         val searchingCost = 3 * level
         search.search(searchingCost, goalVM).foreach { case (c, term) =>
-          return resultFromState(c,term)
+          return resultFromState(c, level, term)
         }
       }
 

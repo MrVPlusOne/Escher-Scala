@@ -344,9 +344,9 @@ object Main {
         nodesAtLevelSynthesis,
         containsSynthesis,
         dropLastSynthesis,
-        evensSynthesis//,
-//        dedupSynthesis(useContains = false),
-//        tConcatSynthesis
+        evensSynthesis,
+        dedupSynthesis(useContains = false),
+        tConcatSynthesis
       )
     val slowTasks = Seq[TestCase](modSynthesis)
 
@@ -356,20 +356,24 @@ object Main {
       }
       SynthesisTyped.printResult(syn, maxExamplesShown = 8)(result)
 
-      val reboots = result.get._3.reboots
-      (result.get._1, reboots, time)
+      val (comp,state,synData) = result.get
+      val examples = (state.examples.length, synData.oracleBuffer.length)
+      (comp, examples, synData.reboots, time)
     }
 
     var totalTime: Long = 0
     println("Summery: ")
-    val dataToPrint = records.toIndexedSeq.map {
-      case (comp, reboots, time) =>
+    val dataToPrint = IS("name", "cost", "depth", "examples", "reboots", "time") +: records.toIndexedSeq.map {
+      case (comp, examples, reboots, time) =>
         totalTime += time
         IS(s"  ${comp.name}",
-          s"[cost=${comp.cost}]${if(reboots!=0) s"($reboots reboots)" else ""}",
+          comp.cost.toString,
+          comp.depth.toString,
+          s"${examples._1}/${examples._2}",
+          if(reboots==0) "None" else reboots.toString,
           TimeTools.nanoToMillisString(time))
     }
-    CmdInteract.printTable(dataToPrint, spacing = 2, Set(2))
+    CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4,5))
     println(s"Total time: ${TimeTools.nanoToMillisString(totalTime)}")
 
   }
