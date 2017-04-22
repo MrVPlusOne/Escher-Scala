@@ -345,8 +345,8 @@ object Main {
         containsSynthesis,
         dropLastSynthesis,
         evensSynthesis,
-        dedupSynthesis(useContains = false),
-        tConcatSynthesis
+        dedupSynthesis(useContains = true)
+//        tConcatSynthesis
       )
     val slowTasks = Seq[TestCase](modSynthesis)
 
@@ -363,7 +363,7 @@ object Main {
 
     var totalTime: Long = 0
     println("Summery: ")
-    val dataToPrint = IS("name", "cost", "depth", "examples", "reboots", "time") +: records.toIndexedSeq.map {
+    val dataToPrint = IS("  name", "cost", "depth", "examples", "reboots", "time") +: records.toIndexedSeq.map {
       case (comp, examples, reboots, time) =>
         totalTime += time
         IS(s"  ${comp.name}",
@@ -374,7 +374,7 @@ object Main {
           TimeTools.nanoToMillisString(time))
     }
     CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4,5))
-    println(s"Total time: ${TimeTools.nanoToMillisString(totalTime)}")
+    println(s"Total time: ${TimeTools.nanoToSecondString(totalTime)}")
 
   }
 

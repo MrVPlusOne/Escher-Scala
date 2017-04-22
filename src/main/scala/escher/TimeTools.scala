@@ -15,6 +15,10 @@ object TimeTools {
       "%.2fms".format(nanosecond /1e6)
   }
 
+  def nanoToSecondString(nanosecond: Nanosecond): String = {
+    "%.3fs".format(nanosecond/1e9)
+  }
+
   def printTimeUsed[A](taskName: String)(task: => A): A = {
     val (nano, result) = measureTime(task)
     println(s"*** [$taskName] time used: ${nanoToMillisString(nano)} ***")
