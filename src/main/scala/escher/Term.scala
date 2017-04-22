@@ -31,7 +31,7 @@ object Term {
       case Var(name) => varMap(name)
       case Component(name, terms) =>
         val args = terms.map(executeTerm(varMap, compMap))
-        compMap(name).execute(args, debug = false)
+        compMap(name).executeEfficient(args)
       case If(c, t, e) =>
         val cv = executeTerm(varMap,compMap)(c)
         cv match {

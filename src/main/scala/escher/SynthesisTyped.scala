@@ -279,7 +279,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       var passed, failed = IS[(ArgList, TermValue)]()
       bufferedOracle.buffer.foreach{
         case (a,r) =>
-          if(impl.execute(a, debug = false) == r)
+          if(impl.executeEfficient(a) == r)
             passed = passed :+ (a -> r)
           else
             failed = failed :+ (a -> r)
@@ -323,7 +323,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         val costLeft = cost - compCost
         if(arity==0){
           if(compCost == cost) {
-            val result = impl.execute(IS(), debug = false)
+            val result = impl.executeEfficient(IS())
             val valueVector = (0 until exampleCount).map(_ => result)
             val term = Component(compName, IS())
             state.registerTermAtLevel(cost, impl.returnType, term, valueVector)
@@ -348,7 +348,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
                 if (isRecCall && !argDecrease(arguments, exId))
                   ValueError
                 else
-                  impl.execute(arguments, debug = false)
+                  impl.executeEfficient(arguments)
               })
             }
 
@@ -372,7 +372,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
 
     (1 to config.maxCost).foreach(level => {
-      TimeTools.printTimeUsed(s"synthesize related components at level $level:"){
+      TimeTools.printTimeUsed(s"synthesize related components at level $level"){
         synthesizeAtLevel(level, synBoolAndReturnType = true)
       }
 

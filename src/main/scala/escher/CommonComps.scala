@@ -37,12 +37,19 @@ case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
         }
         ValueError
     }
+
     if(debug && r.matchType(returnType, returnType.nextFreeId).isEmpty) {
       throw ExecutionError(s"[Warning] Component return value type not match!\n"+
         s"  output type: $returnType\n  return value: $r"
       )
     }
     r
+  }
+
+  def executeEfficient(args: IS[TermValue]): TermValue = {
+    if(args.contains(ValueError))
+      return ValueError
+    impl.applyOrElse(args, (_: IS[TermValue]) => ValueError)
   }
 }
 
@@ -137,7 +144,7 @@ object CommonComps {
   )
 
   val tail = ComponentImpl(IS(TList of tyVar(0)), TList of tyVar(0),
-    impl = { case IS(ValueList(elems)) => ValueList(elems.tail)}
+    impl = { case IS(ValueList(_::xs)) => ValueList(xs)}
   )
 
   val cons = ComponentImpl(IS(tyVar(0), TList of tyVar(0)), TList of tyVar(0),
@@ -145,7 +152,7 @@ object CommonComps {
   )
 
   val head = ComponentImpl(IS(TList of tyVar(0)), tyVar(0),
-    impl = { case IS(ValueList(xs)) => xs.head }
+    impl = { case IS(ValueList(x::_)) => x }
   )
 
   val emptyList = ComponentImpl(IS(), tyList(tyVar(0)),
@@ -232,19 +239,21 @@ object CommonComps {
   val treeValue = ComponentImpl(
     IS(tyTree(tyVar(0))),
     tyVar(0),
-    impl = { case IS(ValueTree(t)) => t.asInstanceOf[BinaryNode[TermValue]].tag }
+    impl = {
+      case IS(ValueTree(BinaryNode(tag, _, _))) => tag
+    }
   )
 
   val treeLeft = ComponentImpl(
     IS(tyTree(tyVar(0))),
     tyTree(tyVar(0)),
-    impl = { case IS(ValueTree(t)) => t.asInstanceOf[BinaryNode[TermValue]].left }
+    impl = { case IS(ValueTree(n: BinaryNode[TermValue])) => n.left }
   )
 
   val treeRight = ComponentImpl(
     IS(tyTree(tyVar(0))),
     tyTree(tyVar(0)),
-    impl = { case IS(ValueTree(t)) => t.asInstanceOf[BinaryNode[TermValue]].right }
+    impl = { case IS(ValueTree(n: BinaryNode[TermValue])) => n.right }
   )
 
   val treeComps = Map(
@@ -416,6 +425,7 @@ object CommonComps {
     })
   }
 
+  /** Remove duplicate elements from a list. */
   val dedup = {
     def f[A](xs: List[A]): List[A] = xs match {
       case Nil => Nil
@@ -426,6 +436,36 @@ object CommonComps {
 
     ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
       case IS(ValueList(xs)) => f(xs)
+    })
+  }
+
+  val dropLast =
+    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
+      case IS(ValueList(xs)) =>  xs.dropRight(1)
+    })
+
+
+  /** Remove the odd numbers from a list. */
+  val evens = {
+    def impl[A](xs: List[A], isEven: Boolean): List[A] = xs match {
+      case Nil => Nil
+      case x::tail =>
+        if(isEven) x::impl(tail, !isEven) else impl(tail, !isEven)
+    }
+    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
+      case IS(ValueList(xs)) => impl(xs, isEven = true)
+    })
+  }
+
+  /** Insert a tree (2n arg) under each leaf of another tree (1st arg) */
+  val tConcat = {
+    def impl[A](baseTree: BinaryTree[A], insertTree: BinaryTree[A]): BinaryTree[A] = baseTree match {
+      case BinaryNode(tag, left, right) => BinaryNode(tag, impl(left, insertTree), impl(right, insertTree))
+      case BinaryLeaf => insertTree
+    }
+
+    ComponentImpl(IS(tyTree(tyVar(0)), tyTree(tyVar(0))), tyTree(tyVar(0)), impl = {
+      case IS(ValueTree(t1), ValueTree(t2)) => impl(t1,t2)
     })
   }
 }

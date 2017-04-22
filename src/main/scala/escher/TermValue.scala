@@ -106,7 +106,7 @@ case object BinaryLeaf extends BinaryTree[Nothing]{
 }
 
 object BinaryTree{
-  def exNode[A](tag: A): BinaryNode[A] = BinaryNode(tag, BinaryLeaf, BinaryLeaf)
+  def singleNode[A](tag: A): BinaryNode[A] = BinaryNode(tag, BinaryLeaf, BinaryLeaf)
 }
 
 

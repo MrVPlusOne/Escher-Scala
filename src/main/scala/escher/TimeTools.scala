@@ -10,7 +10,7 @@ object TimeTools {
     val millis = (nanosecond /1e9).toInt
     if(millis>0){
       val ms = nanosecond/1e6 - millis * 1000
-      "%d,%.2fms".format(millis.toInt, ms)
+      "%d,%06.2fms".format(millis.toInt, ms)
     } else
       "%.2fms".format(nanosecond /1e6)
   }
