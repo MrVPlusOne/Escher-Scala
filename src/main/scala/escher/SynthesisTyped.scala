@@ -12,6 +12,7 @@ object SynthesisTyped{
   /**
     *
     * @param deleteAllErr whether to delete synthesized components whose value vector consists only of Err
+    * @param searchSizeFactor searchSizeFactor = maxProgramCost / level
     */
   case class Config(
                      maxCost: Int = Int.MaxValue,
@@ -22,7 +23,8 @@ object SynthesisTyped{
                      logTotalMap: Boolean = true,
                      logReboot: Boolean = true,
                      rebootStrategy: RebootStrategy = RebootStrategy.addSimplestFailedExample,
-                     argListCompare: (ArgList, ArgList) => Boolean = ArgList.anyArgSmaller
+                     argListCompare: (ArgList, ArgList) => Boolean = ArgList.anyArgSmaller,
+                     searchSizeFactor: Int = 3
                    )
 
   object ValueTermMap{
@@ -384,8 +386,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           termsOfCost = state.termsOfCost,
           boolOfVM = state.boolLibrary
         )
-        val searchingCost = 3 * level
-        search.search(searchingCost, goalVM).foreach { case (c, term) =>
+        search.search(config.searchSizeFactor * level, goalVM).foreach { case (c, term) =>
           return resultFromState(c, level, term)
         }
       }

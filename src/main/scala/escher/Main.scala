@@ -30,7 +30,10 @@ object Main {
     import escher.SynthesisTyped._
     import DSL._
 
-    val syn = new SynthesisTyped(Config(maxCost = 20, logLevels = false, logReboot = true, logComponents = false), Console.print)
+    val syn = new SynthesisTyped(
+      Config(maxCost = 20, logLevels = false, logReboot = true, logComponents = false, searchSizeFactor = 3),
+      Console.print
+    )
     import syn._
 
     def reverseSynthesis() = {
@@ -334,18 +337,18 @@ object Main {
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
-        reverseSynthesis,
-        stutterSynthesis,
-        cartesianSynthesis,
-        squareListSynthesis,
-        fibSynthesis,
-        insertSynthesis,
-        compressSynthesis,
-        nodesAtLevelSynthesis,
-        containsSynthesis,
-        dropLastSynthesis,
-        evensSynthesis,
-        dedupSynthesis(useContains = true)
+//        reverseSynthesis,
+//        stutterSynthesis,
+//        cartesianSynthesis,
+//        squareListSynthesis,
+//        fibSynthesis,
+//        insertSynthesis,
+//        compressSynthesis,
+//        nodesAtLevelSynthesis,
+//        containsSynthesis,
+//        dropLastSynthesis,
+//        evensSynthesis,
+        dedupSynthesis(useContains = false)
 //        tConcatSynthesis
       )
     val slowTasks = Seq[TestCase](modSynthesis)
