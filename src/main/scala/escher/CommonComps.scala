@@ -54,33 +54,41 @@ object ComponentImpl{
                     body: Term, debug: Boolean = false
                    ): ComponentImpl = {
 
-    def impl(lastArg: Option[ArgList]): ComponentImpl = {
+    import collection.mutable
+
+    def impl(lastArg: Option[ArgList], buffer: mutable.Map[ArgList, TermValue]): ComponentImpl = {
       ComponentImpl(inputTypes, returnType, {
         case args => lastArg match {
           case Some(la) if !argListCompare(args, la) =>
             ValueError
           case _ =>
-            val newCompMap = compMap.updated(name, impl(Some(args)))
-            val varMap = argNames.zip(args).toMap
+            buffer.get(args) match{
+              case Some(v) => v
+              case None =>
+                val newCompMap = compMap.updated(name, impl(Some(args), buffer))
+                val varMap = argNames.zip(args).toMap
 
-            if (debug) {
-              println(s"[Call $name]")
-              val t = Term.executeTermDebug(
-                varMap = varMap,
-                compMap = newCompMap
-              )(body)
-              println(s"[$name Called]")
-              t
-            } else {
-              Term.executeTerm(
-                varMap = varMap,
-                compMap = newCompMap
-              )(body)
+                val result = if (debug) {
+                  println(s"[Call $name]")
+                  val t = Term.executeTermDebug(
+                    varMap = varMap,
+                    compMap = newCompMap
+                  )(body)
+                  println(s"[$name Called]")
+                  t
+                } else {
+                  Term.executeTerm(
+                    varMap = varMap,
+                    compMap = newCompMap
+                  )(body)
+                }
+                buffer(args) = result
+                result
             }
         }
       })
     }
-    impl(None)
+    impl(None, mutable.Map())
   }
 }
 
@@ -148,6 +156,14 @@ object CommonComps {
     impl = { case IS(ValueList(xs), ValueList(ys)) => ValueList(xs ++ ys)}
   )
 
+  val T = ComponentImpl(IS(), tyBool,
+    impl = { case IS() => true }
+  )
+
+  val F = ComponentImpl(IS(), tyBool,
+    impl = { case IS() => false }
+  )
+
   val equal = ComponentImpl(IS(tyVar(0), tyVar(0)), tyBool,
     impl = { case IS(a,b) => ValueBool(a == b) }
   )
@@ -170,6 +186,8 @@ object CommonComps {
 
   val noTree = Map(
     // boolean
+    "T" -> T,
+    "F" -> F,
     "and" -> and,
     "or" -> or,
     "not" -> not,
@@ -390,5 +408,24 @@ object CommonComps {
         impl(tree, level)
       }
     )
+  }
+
+  val contains = {
+    ComponentImpl(IS(tyList(tyVar(0)), tyVar(0)), tyBool, impl = {
+      case IS(ValueList(xs), x) => xs.contains(x)
+    })
+  }
+
+  val dedup = {
+    def f[A](xs: List[A]): List[A] = xs match {
+      case Nil => Nil
+      case x::tail =>
+        val t = f(tail)
+        if(t contains x) t else x :: t
+    }
+
+    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
+      case IS(ValueList(xs)) => f(xs)
+    })
   }
 }

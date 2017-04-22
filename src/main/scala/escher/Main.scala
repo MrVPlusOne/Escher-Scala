@@ -218,17 +218,65 @@ object Main {
         examples, oracle = refComp.impl)
     }
 
+    def containsSynthesis() = {
+      val args: IS[ArgList] = IS(
+        argList(listValue(1,2,3), 1),
+        argList(listValue(1,2,3), 2),
+        argList(listValue(1,2,3), 3),
+        argList(listValue(1,2,3), 4),
+        argList(listValue(1,2,3), -1),
+        argList(listValue(1,2), 3),
+        argList(listValue(), 1)
+      )
+
+      val refComp = CommonComps.contains
+      val name = "contains"
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(
+        envCompMap = CommonComps.standardComps,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+    }
+
+    def dedupSynthesis() = {
+      val args: IS[ArgList] = IS(
+        argList(listValue()),
+        argList(listValue(2)),
+        argList(listValue(2,3)),
+        argList(listValue(1,1)),
+        argList(listValue(1,2,3)),
+        argList(listValue(1,2,3,2,1)),
+        argList(listValue(1,2,2,3,2)),
+        argList(listValue(2,2,1,3,2))
+      )
+
+      val refComp = CommonComps.dedup
+      val name = "dedup"
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(
+        envCompMap = CommonComps.standardComps /*++ Map("contains" -> CommonComps.contains)*/,
+        compCostFunction = _ => 1,
+        examples, oracle = refComp.impl)
+
+    }
+
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
-        reverseSynthesis,
-        stutterSynthesis,
-        cartesianSynthesis,
-        squareListSynthesis,
-        fibSynthesis,
-        insertSynthesis,
-        compressSynthesis,
-        nodesAtLevelSynthesis
+//        reverseSynthesis,
+//        stutterSynthesis,
+//        cartesianSynthesis,
+//        squareListSynthesis,
+//        fibSynthesis,
+//        insertSynthesis,
+//        compressSynthesis,
+//        nodesAtLevelSynthesis,
+        containsSynthesis,
+        dedupSynthesis
       )
     val modTasks = Seq[TestCase](modSynthesis)
 

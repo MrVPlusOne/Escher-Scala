@@ -37,7 +37,7 @@ object SynthesisTyped{
 
   def printResult(syn: SynthesisTyped, maxExamplesShown: Int = 9)
                  (result: Option[(SynthesizedComponent, syn.SynthesisState, SynthesisData)]): Unit = {
-    def showExamples(tag: String, examples: IS[(ArgList, TermValue)]): Unit ={
+    def showExamples(tag: String, examples: IS[(ArgList, TermValue)], maxExamplesShown: Int): Unit ={
       println(s"$tag (${examples.length}):")
       examples.take(maxExamplesShown).foreach { case (a, r) =>
         print(ArgList.showArgList(a))
@@ -53,8 +53,8 @@ object SynthesisTyped{
       case Some((program, state, synData)) =>
         val examples = state.examples
         println(s"------ Synthesis for ${program.name} Succeeded! (${synData.reboots} reboots) ------")
-        showExamples("Initial Examples", examples)
-        showExamples("Additional examples provided", synData.oracleBuffer)
+        showExamples("Initial Examples", examples, maxExamplesShown = 50)
+        showExamples("Additional examples provided", synData.oracleBuffer, maxExamplesShown)
         state.print(exampleCount = examples.length)
         println(s"\nProgram found:\n")
         program.print()
