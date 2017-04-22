@@ -386,7 +386,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           termsOfCost = state.termsOfCost,
           boolOfVM = state.boolLibrary
         )
-        search.search(config.searchSizeFactor * level, goalVM).foreach { case (c, term) =>
+        search.searchMin(config.searchSizeFactor * level, goalVM).foreach { case (c, term) =>
           return resultFromState(c, level, term)
         }
       }
