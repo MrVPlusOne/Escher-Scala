@@ -11,12 +11,12 @@ case class ExecutionError(msg: String) extends Exception {
 
 
 case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
-                         impl: PartialFunction[IS[TermValue],TermValue]){
+                         impl: PartialFunction[IS[TermValue],TermValue], callByValue: Boolean = true){
 
   def shiftTypeId(amount: Int) = ComponentImpl(inputTypes.map(_.shiftId(amount)), returnType.shiftId(amount), impl)
 
   def execute(args: IS[TermValue], debug: Boolean): TermValue = {
-    if(args.contains(ValueError))
+    if(callByValue && args.contains(ValueError))
       return ValueError
 
     val r = try {
@@ -47,7 +47,7 @@ case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
   }
 
   def executeEfficient(args: IS[TermValue]): TermValue = {
-    if(args.contains(ValueError))
+    if(callByValue && args.contains(ValueError))
       return ValueError
     impl.applyOrElse(args, (_: IS[TermValue]) => ValueError)
   }
@@ -176,11 +176,21 @@ object CommonComps {
   )
 
   val or = ComponentImpl(IS(tyBool, tyBool), tyBool,
-    impl = { case IS(ValueBool(a),ValueBool(b)) => a || b }
+    impl = {
+      case IS(ValueBool(true), _) => true
+      case IS(ValueBool(false), ValueBool(b)) => b
+      case _ => ValueError
+    },
+    callByValue = false
   )
 
   val and = ComponentImpl(IS(tyBool, tyBool), tyBool,
-    impl = { case IS(ValueBool(a),ValueBool(b)) => a && b }
+    impl = {
+      case IS(ValueBool(false), _) => false
+      case IS(ValueBool(true), ValueBool(b)) => b
+      case _ => ValueError
+    },
+    callByValue = false
   )
 
   val not = ComponentImpl(IS(tyBool), tyBool,
