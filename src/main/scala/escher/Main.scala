@@ -348,7 +348,7 @@ object Main {
         containsSynthesis,
         dropLastSynthesis,
         evensSynthesis,
-        dedupSynthesis(useContains = true),
+        dedupSynthesis(useContains = false),
         tConcatSynthesis
       )
     val slowTasks = Seq[TestCase](modSynthesis)

@@ -175,22 +175,22 @@ object CommonComps {
     impl = { case IS(a,b) => ValueBool(a == b) }
   )
 
-  val or = ComponentImpl(IS(tyBool, tyBool), tyBool,
+  def or(callByValue: Boolean) = ComponentImpl(IS(tyBool, tyBool), tyBool,
     impl = {
       case IS(ValueBool(true), _) => true
       case IS(ValueBool(false), ValueBool(b)) => b
       case _ => ValueError
     },
-    callByValue = false
+    callByValue = callByValue
   )
 
-  val and = ComponentImpl(IS(tyBool, tyBool), tyBool,
+  def and(callByValue: Boolean) = ComponentImpl(IS(tyBool, tyBool), tyBool,
     impl = {
       case IS(ValueBool(false), _) => false
       case IS(ValueBool(true), ValueBool(b)) => b
       case _ => ValueError
     },
-    callByValue = false
+    callByValue = callByValue
   )
 
   val not = ComponentImpl(IS(tyBool), tyBool,
@@ -205,9 +205,11 @@ object CommonComps {
     // boolean
     "T" -> T,
     "F" -> F,
-    "and" -> and,
-    "or" -> or,
+    "and" -> and(callByValue = true),
+    "or" -> or(callByValue = true),
     "not" -> not,
+//    "or*" -> or(callByValue = false),
+//    "and*" -> or(callByValue = false),
     "equal" -> equal,
     "isEmpty" -> isEmpty,
     "isNonNeg" -> isNonNeg,
