@@ -101,7 +101,7 @@ object Main {
 
     def fibSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
-        argList(-1) -> 1,
+        argList(-3) -> 1,
         argList(0) -> 1,
         argList(1) -> 1,
         argList(2) -> 2,
@@ -337,19 +337,19 @@ object Main {
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
-//        reverseSynthesis,
-//        stutterSynthesis,
-//        cartesianSynthesis,
-//        squareListSynthesis,
-//        fibSynthesis,
-//        insertSynthesis,
-//        compressSynthesis,
-//        nodesAtLevelSynthesis,
-//        containsSynthesis,
-//        dropLastSynthesis,
-//        evensSynthesis,
-        dedupSynthesis(useContains = false)
-//        tConcatSynthesis
+        reverseSynthesis,
+        stutterSynthesis,
+        cartesianSynthesis,
+        squareListSynthesis,
+        fibSynthesis,
+        insertSynthesis,
+        compressSynthesis,
+        nodesAtLevelSynthesis,
+        containsSynthesis,
+        dropLastSynthesis,
+        evensSynthesis,
+        dedupSynthesis(useContains = false),
+        tConcatSynthesis
       )
     val slowTasks = Seq[TestCase](modSynthesis)
 

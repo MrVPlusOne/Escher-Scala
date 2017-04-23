@@ -175,6 +175,20 @@ object Synthesis {
         (examples :+ failSorted.head, failSorted.tail ++ passed)
       }
     }
+
+    /** this works surprisingly bad */
+    val addMostComplicatedFailedExample = new RebootStrategy {
+
+      /** @return (newExamples, newOracleBuffer)
+        */
+      override def newExamplesAndOracleBuffer(examples: IS[(ArgList, TermValue)],
+                                              failed: IS[(ArgList, TermValue)],
+                                              passed: IS[(ArgList, TermValue)]):
+      (IS[(ArgList, TermValue)], IS[(ArgList, TermValue)]) = {
+        val failSorted = failed.sortWith(exampleLt)
+        (examples :+ failSorted.last,  passed ++ failSorted.init)
+      }
+    }
   }
 
 
