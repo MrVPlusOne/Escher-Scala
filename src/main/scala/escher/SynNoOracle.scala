@@ -209,7 +209,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
       map.mapValues{map =>
         val compList = map.map{case (vMap, term) => {
           if(vMap.contains(None)){
-            println("WTF!")
+            println("WTF??")
           }
           s"'${term.show}': ${ValueVector.show(vMap)}"
         }}
@@ -379,8 +379,10 @@ object SynNoOracle {
   object ExtendedCompImpl{
     def fromImplOnTermValue(name: String, inputTypes: IS[Type], returnType: Type, impl: ArgList => ExtendedValue): ExtendedCompImpl = {
       def execute(args: IS[ExtendedValue]): ExtendedValue = {
-        val knownArgs = ExtendedValueVec.toValueVec(args).getOrElse(return ValueUnknown)
-        impl(knownArgs)
+        ExtendedValueVec.toValueVec(args) match {
+          case None => ValueUnknown
+          case Some(knownArgs) => impl(knownArgs)
+        }
       }
       ExtendedCompImpl(name, inputTypes, returnType, execute)
     }

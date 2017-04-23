@@ -100,10 +100,11 @@ object Synthesis {
 
   object ExtendedValueVec {
     def toValueVec(extendedValueVec: ExtendedValueVec): Option[ValueVector] = {
-      Some(extendedValueVec.collect{
+      val r = extendedValueVec.collect{
         case ValueUnknown => return None
         case other: TermValue => other
-      })
+      }
+      Some(r)
     }
 
     def show(valueVector: ExtendedValueVec): String = {
