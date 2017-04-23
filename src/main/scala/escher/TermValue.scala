@@ -3,9 +3,16 @@ package escher
 import escher.TermValue.matchTApply
 import escher.Type.{TApply, TFixedVar, TVar}
 
+sealed trait ExtendedValue{
+  def show: String
+}
+
+case object ValueUnknown extends ExtendedValue{
+  def show: String= "?"
+}
 
 /** The computational result to which a term can evaluate */
-trait TermValue {
+trait TermValue extends ExtendedValue {
 
   def matchType(ty: Type, freeId: Int): Option[(TypeSubst, Int)] = {
     var id = freeId
@@ -18,8 +25,6 @@ trait TermValue {
   }
 
   def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] //todo: consider removing this method
-
-  def show: String
 
   def smallerThan(tv: TermValue): Boolean = {
     if(sizeCompare.isDefinedAt(tv))

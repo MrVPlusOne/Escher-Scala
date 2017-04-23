@@ -4,7 +4,6 @@ package escher
 import SynthesisTyped._
 import Term.Component
 import Synthesis._
-import escher.ImmutableGoalGraph.GoalManager
 
 import scala.collection.mutable
 
@@ -27,9 +26,6 @@ object SynthesisTyped{
                      searchSizeFactor: Int = 3
                    )
 
-  object ValueTermMap{
-    def empty(depth: Int): ValueTermMap = mutable.Map()
-  }
 
   case class SynthesisData(oracleBuffer: IS[(ArgList, TermValue)], reboots: Int, lastRebootTimeUsed: TimeTools.Nanosecond)
 
@@ -85,7 +81,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
   class TypeMap private(private val map: mutable.Map[Type, ValueTermMap], examples: Int){
 
     def apply(ty: Type): ValueTermMap = {
-      val v = map.getOrElse(ty, ValueTermMap.empty(examples))
+      val v = map.getOrElse(ty, ValueTermMap.empty())
       map(ty) = v
       v
     }
@@ -94,13 +90,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     def registerTerm(term: Term, ty: Type, valueVector: ValueVector): Unit = {
       apply(ty)(valueVector) = term
-    }
-
-    def show: String = {
-      map.mapValues{map =>
-        val compList = map.map{case (vMap, term) => s"'${term.show}': ${ValueVector.show(vMap)}"}
-        compList.mkString("{", ", ", "}")
-      }.toString
     }
 
     def print(indentation: Int): Unit = {
@@ -126,8 +115,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
   class SynthesisState(val examples: IS[(ArgList,TermValue)], val totalMap: TypeMap, returnType: Type) {
     import DSL._
-
-    val targetType: Type = Type.alphaNormalForm(returnType)
 
     private var _levelMaps: IS[TypeMap] = IS()
 
@@ -207,14 +194,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     def registerTermAtLevel(cost: Int, ty: Type, term: Term, valueVector: ValueVector): Boolean = {
       val ty1 = Type.alphaNormalForm(ty)
 
-//      // todo: should we check parent types?
-//      TimeTools.run5Times { () =>
-//        totalMap.typesIterator.foreach(t => {
-//          if ((ty1 instanceOf t) && totalMap(t).get(valueVector).nonEmpty)
-//            return false
-//        })
-//      }
-
       if(totalMap(ty1).get(valueVector).nonEmpty)
         return false
 
@@ -242,10 +221,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
 
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
-                (envCompMap: Map[String, ComponentImpl], compCostFunction: (ComponentImpl) => Int,
-                 examples0: IS[(ArgList, TermValue)],
-                 oracle: PartialFunction[IS[TermValue], TermValue],
-                 synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
+                (envCompMap: Map[String, ComponentImpl], examples0: IS[(ArgList, TermValue)], oracle: PartialFunction[IS[TermValue], TermValue], synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
     import DSL._
 
     val startTime = System.nanoTime()
@@ -307,9 +283,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         val (newExamples, newBuffer) = config.rebootStrategy.newExamplesAndOracleBuffer(examples, failed, passed)
         println(s"New examples: ${showExamples(newExamples)}")
         val newSynData = SynthesisData(newBuffer, synData.reboots+1, lastRebootTimeUsed = 0)
-        synthesize(name, inputTypes, inputNames, goalReturnType)(
-          envCompMap, compCostFunction, newExamples, oracle, newSynData
-        )
+        synthesize(name, inputTypes, inputNames, goalReturnType)(envCompMap, newExamples, oracle, newSynData)
       }
     }
 
@@ -318,18 +292,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     }
 
 
-    val goodTypes = tyBool +: goalReturnType +: inputTypes
-    def isInterestingSignature(argTypes: IS[Type], returnType: Type): Boolean = {
-      def isInterestingType(ty: Type): Boolean = {
-        goodTypes.foreach(gt => {
-          if(ty canAppearIn gt)
-            return true
-        })
-        false
-      }
-
-      isInterestingType(returnType) || argTypes.forall(isInterestingType)
-    }
+    val isInterestingSignature = Synthesis.isInterestingSignature(goalReturnType, inputTypes)
 
     def synthesizeAtLevel(cost: Int, synBoolAndReturnType: Boolean): Unit = {
       for(
@@ -347,7 +310,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           }
         } else for(
           costs <- divideNumberAsSum(costLeft, arity, minNumber = 1);
-          (argTypes, returnType) <- TimeTools.runOnce{ typesForCosts(state, costs, impl.inputTypes, impl.returnType)}
+          (argTypes, returnType) <- typesForCosts(c => state.getLevelOfCost(c).typesIterator, costs, impl.inputTypes, impl.returnType)
           if (synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))) &&
             isInterestingSignature(argTypes, returnType)
         ) {
@@ -416,33 +379,6 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       state.openNextLevel()
     })
     None
-  }
-
-  def typesForCosts(state: SynthesisState, costs: IS[Int],
-                    inputTypes: IS[Type], returnType: Type): Iterator[(IS[Type], Type)] = {
-    val signatureNextFreeId =  (returnType.nextFreeId +: inputTypes.map(_.nextFreeId)).max
-
-    def aux(argId: Int, nextFreeId: Int, subst: TypeSubst): Iterator[(IS[Type], Type)] = {
-      if(argId == costs.length) return Iterator((IS(), Type.alphaNormalForm(subst(returnType))))
-
-      val c = costs(argId)
-      val requireType = subst(inputTypes(argId))
-      state.getLevelOfCost(c).typesIterator.flatMap { t =>
-        val candidateType = t.shiftId(nextFreeId)
-        val unifyResult = Type.unify(requireType, candidateType)
-        unifyResult match {
-          case Some(unifier) =>
-            val newFreeId = nextFreeId + t.nextFreeId
-            aux(argId+1, newFreeId, subst.compose(unifier)).map {
-              case (is, r) => (t +: is, r)
-            }
-          case None =>
-            Iterator()
-        }
-      }
-    }
-
-    aux(0, signatureNextFreeId, TypeSubst.empty)
   }
 
 

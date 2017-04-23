@@ -34,6 +34,7 @@ object Main {
       Config(maxCost = 20, logLevels = false, logReboot = true, logComponents = false, searchSizeFactor = 3),
       Console.print
     )
+
     import syn._
 
     def reverseSynthesis() = {
@@ -44,10 +45,7 @@ object Main {
 
       val refComp = CommonComps.reverse
 
-      synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("reverse", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def stutterSynthesis() = {
@@ -59,10 +57,7 @@ object Main {
 
       val refComp = CommonComps.stutter
 
-      synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("stutter", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def cartesianSynthesis() = {
@@ -75,10 +70,7 @@ object Main {
 
       val refComp = CommonComps.cartesian
 
-      synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs", "ys"), tyList(tyPair(tyVar(0), tyVar(1))))(
-        envCompMap = CommonComps.standardComps.updated("createPair", CommonComps.createPair(tyFixVar(0), tyFixVar(1))),
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("cartesian", IS(tyList(tyVar(0)), tyList(tyVar(1))), IS("xs", "ys"), tyList(tyPair(tyVar(0), tyVar(1))))(envCompMap = CommonComps.standardComps.updated("createPair", CommonComps.createPair(tyFixVar(0), tyFixVar(1))), examples, oracle = refComp.impl)
     }
 
     def squareListSynthesis() = {
@@ -93,10 +85,7 @@ object Main {
 
       val refComp = CommonComps.squareList
 
-      synthesize("squareList", IS(tyInt), IS("n"), tyList(tyInt))(
-        envCompMap = CommonComps.standardComps ++ CommonComps.timesAndDiv,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("squareList", IS(tyInt), IS("n"), tyList(tyInt))(envCompMap = CommonComps.standardComps ++ CommonComps.timesAndDiv, examples, oracle = refComp.impl)
     }
 
     def fibSynthesis() = {
@@ -113,10 +102,7 @@ object Main {
 
       val refComp = CommonComps.fib
 
-      synthesize("fib", IS(tyInt), IS("n"), tyInt)(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("fib", IS(tyInt), IS("n"), tyInt)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def gcdSynthesis() = {
@@ -133,10 +119,7 @@ object Main {
 
       val refComp = CommonComps.gcd
 
-      synthesize("gcd", IS(tyInt, tyInt), IS("a", "b"), tyInt)(
-        envCompMap = CommonComps.standardComps ++ Map("mod" -> CommonComps.modulo),
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("gcd", IS(tyInt, tyInt), IS("a", "b"), tyInt)(envCompMap = CommonComps.standardComps ++ Map("mod" -> CommonComps.modulo), examples, oracle = refComp.impl)
     }
 
     def modSynthesis() = {
@@ -147,10 +130,7 @@ object Main {
 
       val refComp = CommonComps.modulo
 
-      synthesize("mod", IS(tyInt, tyInt), IS("a", "b"), tyInt)(
-        envCompMap = CommonComps.standardComps ++ CommonComps.timesAndDiv,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("mod", IS(tyInt, tyInt), IS("a", "b"), tyInt)(envCompMap = CommonComps.standardComps ++ CommonComps.timesAndDiv, examples, oracle = refComp.impl)
     }
 
     def insertSynthesis() = {
@@ -168,10 +148,7 @@ object Main {
 
       val refComp = CommonComps.insert
 
-      synthesize("insert", IS(tyList(tyVar(0)), tyInt, tyVar(0)), IS("xs", "i", "x"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("insert", IS(tyList(tyVar(0)), tyInt, tyVar(0)), IS("xs", "i", "x"), tyList(tyVar(0)))(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def compressSynthesis() = {
@@ -188,10 +165,7 @@ object Main {
 
       val refComp = CommonComps.compress
 
-      synthesize("compress", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("compress", IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def nodesAtLevelSynthesis() = {
@@ -215,10 +189,7 @@ object Main {
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
-      synthesize("nodesAtLevel", IS(tyTree(tyVar(0)), tyInt), IS("tree", "level"), tyList(tyVar(0)))(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize("nodesAtLevel", IS(tyTree(tyVar(0)), tyInt), IS("tree", "level"), tyList(tyVar(0)))(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def containsSynthesis() = {
@@ -237,10 +208,7 @@ object Main {
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
-      synthesize(name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize(name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def dedupSynthesis(useContains: Boolean)() = {
@@ -265,10 +233,7 @@ object Main {
         if(useContains) CommonComps.standardComps ++ Map("contains" -> CommonComps.contains)
         else CommonComps.standardComps
 
-      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(
-        envCompMap,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(envCompMap, examples, oracle = refComp.impl)
     }
 
     def dropLastSynthesis() = {
@@ -285,10 +250,7 @@ object Main {
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
-      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def evensSynthesis() = {
@@ -305,10 +267,7 @@ object Main {
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
-      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize(name, refComp.inputTypes, IS("xs"), refComp.returnType)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     def tConcatSynthesis() = {
@@ -328,10 +287,7 @@ object Main {
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
-      synthesize(name, refComp.inputTypes, IS("baseTree", "inserted"), refComp.returnType)(
-        envCompMap = CommonComps.standardComps,
-        compCostFunction = _ => 1,
-        examples, oracle = refComp.impl)
+      synthesize(name, refComp.inputTypes, IS("baseTree", "inserted"), refComp.returnType)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]

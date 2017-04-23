@@ -13,8 +13,13 @@ object Synthesis {
   type ArgList = IndexedSeq[TermValue]
   type IndexValueMap = Map[Int, TermValue]
   type ValueTermMap = mutable.Map[ValueVector, Term]
+  type ExtendedValueVec = IS[ExtendedValue]
 
-  def notAllErr(valueVector: ValueVector): Boolean = {
+  object ValueTermMap{
+    def empty(): ValueTermMap = mutable.Map()
+  }
+
+  def notAllErr(valueVector: ExtendedValueVec): Boolean = {
     ! valueVector.forall(_ == ValueError)
   }
 
@@ -89,6 +94,19 @@ object Synthesis {
 
   object ValueVector{
     def show(valueVector: ValueVector): String = {
+      valueVector.map(_.show).mkString("<",", ",">")
+    }
+  }
+
+  object ExtendedValueVec {
+    def toValueVec(extendedValueVec: ExtendedValueVec): Option[ValueVector] = {
+      Some(extendedValueVec.collect{
+        case ValueUnknown => return None
+        case other: TermValue => other
+      })
+    }
+
+    def show(valueVector: ExtendedValueVec): String = {
       valueVector.map(_.show).mkString("<",", ",">")
     }
   }
@@ -192,6 +210,48 @@ object Synthesis {
   }
 
 
+  def isInterestingSignature(goalReturnType: Type, inputTypes: IS[Type]): (IS[Type], Type) => Boolean = {
+    import DSL._
+    val goodTypes = tyBool +: goalReturnType +: inputTypes
+    def isInterestingType(ty: Type): Boolean = {
+      goodTypes.foreach(gt => {
+        if(ty canAppearIn gt)
+          return true
+      })
+      false
+    }
+
+    (argTypes: IS[Type], returnType: Type) => {
+      isInterestingType(returnType) || argTypes.forall(isInterestingType)
+    }
+  }
+
+  def typesForCosts(typesOfCost: Int => Iterator[Type], costs: IS[Int],
+                    inputTypes: IS[Type], returnType: Type): Iterator[(IS[Type], Type)] = {
+    val signatureNextFreeId =  (returnType.nextFreeId +: inputTypes.map(_.nextFreeId)).max
+
+    def aux(argId: Int, nextFreeId: Int, subst: TypeSubst): Iterator[(IS[Type], Type)] = {
+      if(argId == costs.length) return Iterator((IS(), Type.alphaNormalForm(subst(returnType))))
+
+      val c = costs(argId)
+      val requireType = subst(inputTypes(argId))
+      typesOfCost(c).flatMap { t =>
+        val candidateType = t.shiftId(nextFreeId)
+        val unifyResult = Type.unify(requireType, candidateType)
+        unifyResult match {
+          case Some(unifier) =>
+            val newFreeId = nextFreeId + t.nextFreeId
+            aux(argId+1, newFreeId, subst.compose(unifier)).map {
+              case (is, r) => (t +: is, r)
+            }
+          case None =>
+            Iterator()
+        }
+      }
+    }
+
+    aux(0, signatureNextFreeId, TypeSubst.empty)
+  }
 
 
 }
