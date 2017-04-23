@@ -313,9 +313,24 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       }
     }
 
-    /**
-      * @return Whether the goal has been solved
-      */
+    def compCostFunction(impl: ComponentImpl): Int = {
+      1
+    }
+
+
+    val goodTypes = tyBool +: goalReturnType +: inputTypes
+    def isInterestingSignature(argTypes: IS[Type], returnType: Type): Boolean = {
+      def isInterestingType(ty: Type): Boolean = {
+        goodTypes.foreach(gt => {
+          if(ty canAppearIn gt)
+            return true
+        })
+        false
+      }
+
+      isInterestingType(returnType) || argTypes.forall(isInterestingType)
+    }
+
     def synthesizeAtLevel(cost: Int, synBoolAndReturnType: Boolean): Unit = {
       for(
         (compName, impl) <- compMap;
@@ -333,7 +348,8 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         } else for(
           costs <- divideNumberAsSum(costLeft, arity, minNumber = 1);
           (argTypes, returnType) <- TimeTools.runOnce{ typesForCosts(state, costs, impl.inputTypes, impl.returnType)}
-          if synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))
+          if (synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))) &&
+            isInterestingSignature(argTypes, returnType)
         ) {
           val candidatesForArgs =
             for (argIdx <- 0 until arity) yield {

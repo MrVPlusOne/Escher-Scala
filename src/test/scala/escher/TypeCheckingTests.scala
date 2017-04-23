@@ -120,5 +120,18 @@ class TypeCheckingTests extends WordSpec {
 
   }
 
+  "canAppearIn" should{
+    "pass examples" in {
+      assert { tyBool.canAppearIn(tyBool) }
+      assert{ tyVar(0).canAppearIn(tyInt) }
+      assert{ tyVar(0).canAppearIn(tyMap(tyInt, tyVar(1))) }
+      assert{ tyFixVar(0).canAppearIn(tyPair(tyFixVar(0), tyFixVar(1))) }
+      assert{ tyPair(tyFixVar(0), tyFixVar(1)).canAppearIn(tyPair(tyFixVar(0), tyFixVar(1))) }
+      assert{ tyPair(tyVar(0), tyVar(1)).canAppearIn(tyPair(tyFixVar(0), tyFixVar(1))) }
+      assert{ ! tyPair(tyVar(0), tyVar(0)).canAppearIn(tyPair(tyFixVar(0), tyFixVar(1))) }
+      assert{ tyInt.canAppearIn(tyList(tyInt)) }
+      assert{ ! tyInt.canAppearIn(tyList(tyBool)) }
+    }
+  }
 
 }

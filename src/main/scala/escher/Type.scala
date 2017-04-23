@@ -41,6 +41,14 @@ sealed trait Type{
     case TFixedVar(_) => false
     case TApply(_, params) => !params.forall(t => !t.containsVar(id))
   }
+
+  def containsFixedVar(id: Int): Boolean = this match {
+    case TFixedVar(id1) => id == id1
+    case TVar(_) => false
+    case TApply(_, params) => !params.forall(t => !t.containsFixedVar(id))
+  }
+
+  def canAppearIn(bigType: Type): Boolean = Type.canAppearIn(this, bigType)
 }
 
 object Type {
@@ -142,6 +150,17 @@ object Type {
         else None
       case None => None
     }
+  }
+
+  def canAppearIn(smallType: Type, bigType: Type): Boolean = (smallType, bigType) match {
+    case (TVar(_), _) => true
+    case (TFixedVar(id), _) => bigType.containsFixedVar(id)
+    case (a1@TApply(contr1, _), a2@ TApply(contr2, params2)) =>
+      if(contr1 == contr2 && a2.instanceOf(a1))
+        return true
+      params2.foreach(p => if(canAppearIn(a1, p)) return true)
+      false
+    case _ => false
   }
 
 }
