@@ -1,5 +1,6 @@
 package escher
 
+import escher.CommonComps.ReducibleCheck
 import escher.Synthesis.ArgList
 
 /** An Exception which will not be caught by ComponentImpl.execute */
@@ -11,7 +12,8 @@ case class ExecutionError(msg: String) extends Exception {
 
 
 case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
-                         impl: PartialFunction[IS[TermValue],TermValue], callByValue: Boolean = true){
+                         impl: PartialFunction[IS[TermValue],TermValue],
+                         callByValue: Boolean = true){
 
   def shiftTypeId(amount: Int) = ComponentImpl(inputTypes.map(_.shiftId(amount)), returnType.shiftId(amount), impl)
 
@@ -102,6 +104,47 @@ object ComponentImpl{
 /** Commonly used components */
 //noinspection TypeAnnotation
 object CommonComps {
+
+  case class ReducibleCheck(arity: Int, f: PartialFunction[IS[Term], Boolean]){
+    def isReducible(args: IS[Term]): Boolean = {
+      require(args.length == arity)
+      f.applyOrElse(args, (_: IS[Term]) => false)
+    }
+  }
+  type CompMap = Map[String, (ComponentImpl, ReducibleCheck)]
+
+  object ReducibleCheck{
+    def reduces(rules: ReducibleCheck*): ReducibleCheck = {
+      require(rules.nonEmpty)
+      val arity = rules.head.arity
+      require(rules.forall(_.arity == arity))
+
+      def f(args: IS[Term]): Boolean = {
+        for (r <- rules) {
+          if (r.isReducible(args)) return true
+        }
+        false
+      }
+      ReducibleCheck(arity, PartialFunction(f))
+    }
+
+    val commutative: ReducibleCheck = ReducibleCheck(2, {
+      case IS(t1,t2) => t1 > t2
+    })
+
+    def noDirectChild(childName: String): ReducibleCheck = ReducibleCheck(1, {
+      case IS(Term.Component(n, _)) => n == childName
+    })
+
+    val argsDifferent = ReducibleCheck(2, {
+      case IS(t1, t2) => t1 == t2
+    })
+
+    def associative(opName: String) = ReducibleCheck(2, {
+      case IS(_, Term.Component(n, _)) => n == opName
+    })
+  }
+  import ReducibleCheck._
 
   import DSL._
 
@@ -208,8 +251,6 @@ object CommonComps {
     "and" -> and(callByValue = true),
     "or" -> or(callByValue = true),
     "not" -> not,
-//    "or*" -> or(callByValue = false),
-//    "and*" -> or(callByValue = false),
     "equal" -> equal,
     "isEmpty" -> isEmpty,
     "isNonNeg" -> isNonNeg,
@@ -229,7 +270,27 @@ object CommonComps {
     "length" -> length,
     "plus" -> plus,
     "div2" -> div2
+  )
 
+  val rules_noTree = Map[String, ReducibleCheck](
+    // boolean
+    "not" -> noDirectChild("not"),
+    "and" -> reduces(commutative, associative("and"), argsDifferent),
+    "or" -> reduces(commutative, associative("or"), argsDifferent),
+    "equal" -> reduces(commutative, argsDifferent),
+    "isEmpty" -> noDirectChild("cons"),
+    "isNonNeg" -> noDirectChild("neg"),
+
+    // list
+    "tail" -> noDirectChild("cons"),
+    "concat" -> associative("concat"),
+
+    //integer
+    "inc" -> noDirectChild("dec"),
+    "dic" -> noDirectChild("inc"),
+    "neg" -> noDirectChild("nec"),
+    "length" -> noDirectChild("cons"),
+    "plus" -> reduces(commutative, argsDifferent)
   )
 
   val createLeaf = ComponentImpl(IS(), tyTree(tyVar(0)),

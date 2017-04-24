@@ -3,14 +3,16 @@ package escher
 import SynNoOracle._
 import escher.Term.Component
 import Synthesis._
+import escher.CommonComps.ReducibleCheck
 
 
 
 class SynNoOracle(config: Config, logger: String => Unit){
 
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
-                (envCompMap: Map[String, ComponentImpl],examples0: IS[(ArgList, TermValue)],
-                 oracle: PartialFunction[IS[TermValue], TermValue]): Option[SynthesizedComponent] = {
+                (envCompMap: Map[String, ComponentImpl],
+                 examples0: IS[(ArgList, TermValue)],
+                 oracle: PartialFunction[IS[TermValue], TermValue], compReductionRules: Map[String, ReducibleCheck]): Option[SynthesizedComponent] = {
     import DSL._
 
     val examples = examples0.sortWith(Synthesis.exampleLt)
@@ -19,7 +21,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
     val inputTypes = inputTypesFree.map(_.fixVars)
     val goalReturnType = returnTypeFree.fixVars
     val exampleCount = outputs.length
-    val state = new SynthesisState(examples, TypeMap.empty(), goalReturnType)
+    val state = new SynthesisState(examples, TypeMap.empty(), goalReturnType, compReductionRules)
 
     require(inputTypes.length == inputNames.length)
 
@@ -57,13 +59,13 @@ class SynNoOracle(config: Config, logger: String => Unit){
             state.registerTermAtLevel(cost, impl.returnType, term, valueVector)
           }
         } else {
-          // non-recursive terms generation
           for (
             costs <- divideNumberAsSum(costLeft, arity, minNumber = 1);
             (argTypes, returnType) <- typesForCosts(c => state.getNonRecOfCost(c).typesIterator, costs, impl.inputTypes, impl.returnType)
             if (synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))) &&
               isInterestingSignature(argTypes, returnType)
           ) {
+            // non-recursive terms generation
             val candidatesForArgs =
               for (argIdx <- 0 until arity) yield {
                 val c = costs(argIdx)
@@ -72,7 +74,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
             val isRecCall = impl.name == name
             cartesianProduct(candidatesForArgs).foreach { product =>
-              val valueVector = TimeTools.runOnce {
+              val valueVector =
                 (0 until exampleCount).map(exId => {
                   val arguments = product.map(_._1(exId))
                   if (isRecCall && !argDecrease(arguments, exId))
@@ -80,7 +82,6 @@ class SynNoOracle(config: Config, logger: String => Unit){
                   else
                     impl.execute(arguments)
                 })
-              }
 
               if (!config.deleteAllErr || notAllErr(valueVector)) {
                 val term = Component(impl.name, product.map(_._2))
@@ -88,6 +89,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
               }
             }
 
+            // recursive terms generation
             val recCandidates =
               for (argIdx <- 0 until arity) yield {
                 val c = costs(argIdx)
@@ -96,12 +98,11 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
             if (impl.name != name) { // we currently don't allow nested recursive call
               cartesianProduct(recCandidates).foreach { product =>
-                val valueVector = TimeTools.runOnce {
+                val valueVector =
                   (0 until exampleCount).map(exId => {
                     val arguments = product.map(_._2(exId))
                     impl.execute(arguments)
                   })
-                }
 
                 if (!config.deleteAllErr || notAllErr(valueVector)) {
                   val term = Component(impl.name, product.map(_._1))
@@ -230,7 +231,8 @@ class SynNoOracle(config: Config, logger: String => Unit){
     def empty() = new TypeMap(mutable.Map())
   }
 
-  class SynthesisState(val examples: IS[(ArgList,TermValue)], val totalNonRec: TypeMap, returnType: Type) {
+  class SynthesisState(val examples: IS[(ArgList,TermValue)], val totalNonRec: TypeMap, returnType: Type,
+                       reductionRules: Map[String, ReducibleCheck]) {
     import DSL._
 
     private var _levelNonRecs: IS[TypeMap] = IS()
@@ -323,6 +325,14 @@ class SynNoOracle(config: Config, logger: String => Unit){
       ExtendedValueVec.toValueVec(valueVector) match {
         case Some(x) => registerNonRecAtLevel(cost, ty, term, x)
         case None =>
+          if(config.useReductionRules) {
+            term match {
+              case Component(n, terms) if reductionRules contains n =>
+                if (reductionRules(n).isReducible(terms))
+                  return false
+              case _ =>
+            }
+          }
           val ty1 = Type.alphaNormalForm(ty)
           getRecOfCost(cost)(ty1, term) = valueVector
           true
@@ -370,7 +380,8 @@ object SynNoOracle {
                      logTotalMap: Boolean = true,
                      logReboot: Boolean = true,
                      argListCompare: (ArgList, ArgList) => Boolean = ArgList.anyArgSmaller,
-                     searchSizeFactor: Int = 3
+                     searchSizeFactor: Int = 3,
+                     useReductionRules: Boolean = true
                    )
 
   case class ExtendedCompImpl(name: String, inputTypes: IS[Type], returnType: Type,

@@ -16,15 +16,44 @@ sealed trait Term{
       s"if ${condition.show} then ${thenBranch.show} else ${elseBranch.show}"
   }
 
+  def kind: Int
+
+  def <(that: Term): Boolean = Term.lt(this, that)
+  def >(that: Term): Boolean = Term.lt(that, this)
 }
 
 object Term {
 
-  case class Var(name: String) extends Term
+  case class Var(name: String) extends Term{
+    def kind = 0
+  }
 
-  case class Component(name: String, terms: IS[Term]) extends Term
+  case class Component(name: String, terms: IS[Term]) extends Term{
+    def kind = 1
+  }
 
-  case class If(condition: Term, thenBranch: Term, elseBranch: Term) extends Term
+  case class If(condition: Term, thenBranch: Term, elseBranch: Term) extends Term{
+    def kind = 2
+  }
+
+  def termsLt(terms1: IS[Term], terms2: IS[Term]): Boolean = {
+    terms1.indices.foreach(i => {
+      if(lt(terms2(i), terms1(i)))
+        return false
+      else if(lt(terms1(i), terms2(i)))
+        return true
+    })
+    false
+  }
+
+  def lt(t1: Term, t2: Term): Boolean = (t1, t2) match {
+    case (Var(n1), Var(n2)) => n1 < n2
+    case (Component(n1, ts1), Component(n2, ts2)) =>
+      n1 < n2 || ((n1 == n2) && termsLt(ts1, ts2))
+    case (If(a1,b1,c1), If(a2,b2,c2)) =>
+      termsLt(IS(a1,b1,c1), IS(a2,b2,c2))
+    case (a,b) => a.kind < b.kind
+  }
 
   def executeTerm(varMap: String => TermValue, compMap: String => ComponentImpl)(term: Term): TermValue = {
     term match {

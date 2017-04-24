@@ -32,7 +32,7 @@ object TestSynNoOracle {
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
-      synthesize(name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl)
+      synthesize(name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl, CommonComps.rules_noTree)
     }
 
     containsSynthesis()
