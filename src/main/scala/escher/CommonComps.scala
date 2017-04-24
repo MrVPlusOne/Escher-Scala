@@ -63,6 +63,15 @@ object ComponentImpl{
                     body: Term, debug: Boolean = false
                    ): ComponentImpl = {
     val compMap = envComps.map(x => x.name -> x).toMap
+    recursiveImpl(name, argNames, inputTypes, returnType, compMap, argListCompare, body, debug)
+  }
+
+  def recursiveImpl(name: String, argNames: IS[String],
+                    inputTypes: IS[Type], returnType: Type,
+                    compMap: Map[String, ComponentImpl],
+                    argListCompare: (ArgList,ArgList) => Boolean,
+                    body: Term, debug: Boolean
+                   ): ComponentImpl = {
 
     import collection.mutable
 
@@ -283,6 +292,7 @@ object CommonComps {
   )
 
   val rules_noTree = Map[ComponentImpl, ReducibleCheck](
+    //todo add more rules
     // boolean
     not -> noDirectChild(not),
     and -> reduces(commutative, associative(and), argsDifferent),

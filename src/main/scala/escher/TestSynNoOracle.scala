@@ -26,6 +26,7 @@ object TestSynNoOracle {
         argList(listValue(2,3), 2),
         argList(listValue(2,3), 1),
         argList(listValue(2,3), -1),
+        argList(listValue(1), 1),
         argList(listValue(), 1)
       )
 
@@ -51,6 +52,11 @@ object TestSynNoOracle {
       synthesize(refComp.name, IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(envComps = CommonComps.standardComps, examples, CommonComps.rules_noTree)
     }
 
-    reverseSynthesis()
+    containsSynthesis() match {
+      case Some(component) =>
+        component.print()
+        println(s"cost = ${component.cost}")
+      case None => println("Failed")
+    }
   }
 }

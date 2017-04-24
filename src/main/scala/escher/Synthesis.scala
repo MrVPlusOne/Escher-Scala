@@ -110,6 +110,29 @@ object Synthesis {
     def show(valueVector: ExtendedValueVec): String = {
       valueVector.map(_.show).mkString("<",", ",">")
     }
+
+    sealed trait MatchResult
+    object MatchResult{
+      case object NotMatch extends MatchResult
+      case object ExactMatch extends MatchResult
+      case class PossibleMatch(leftToCheck: IndexValueMap) extends MatchResult
+    }
+
+    import MatchResult._
+    def matchWithIndexValueMap(extendedValueVec: ExtendedValueVec, indexValueMap: IndexValueMap): MatchResult = {
+      var leftToCheck: IndexValueMap = Map()
+      indexValueMap.foreach{
+        case (i, value) => extendedValueVec(i) match {
+          case ValueUnknown => leftToCheck = leftToCheck.updated(i, value)
+          case tv: TermValue =>
+            if(value != tv) return NotMatch
+        }
+      }
+      if(leftToCheck.isEmpty)
+        ExactMatch
+      else
+        PossibleMatch(leftToCheck)
+    }
   }
 
   def showExamples(examples: Seq[(ArgList, TermValue)]): String = {

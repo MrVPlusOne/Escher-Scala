@@ -114,6 +114,14 @@ class SynNoOracle(config: Config, logger: String => Unit){
       }
     }
 
+    def resultFromState(cost: Int, level: Int, term: Term): Option[SynthesizedComponent] = {
+      Some(SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, term, cost, level))
+    }
+
+    def assembleRecProgram(term: Term): ComponentImpl = {
+      ComponentImpl.recursiveImpl(name, inputNames, inputTypes, goalReturnType, envComps, config.argListCompare, term)
+    }
+
     state.openNextLevel()
     inputTypes.indices.foreach(argId =>{
       val valueMap = inputs.indices.map(exId => {
@@ -129,6 +137,22 @@ class SynNoOracle(config: Config, logger: String => Unit){
         synthesizeAtLevel(level, synBoolAndReturnType = true)
       }
 
+      TimeTools.printTimeUsed("Goal searching") {
+        state.createLibrariesForThisLevel()
+
+        val search = new DynamicGoalSearch(
+          assembleRecProgram,
+          level,
+          inputVector = inputs,
+          termOfCostAndVM = state.libraryOfCost,
+          termsOfCost = state.termsOfCost,
+          boolOfVM = state.boolLibrary
+        )
+        search.searchMin(config.searchSizeFactor * level, goalVM,
+          state.recTermsOfReturnType, fillTermToHole = { t => t } , isFirstBranch = true).foreach { case (c, term) =>
+          return resultFromState(c, level, term)
+        }
+      }
 
       TimeTools.printTimeUsed(s"synthesize unrelated components"){
         synthesizeAtLevel(level, synBoolAndReturnType = false)
@@ -255,6 +279,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
     private var returnTypeVectorTrees: IS[ValueVectorTree[Term]] = IS()
     private var boolVectorTrees: IS[ValueVectorTree[Term]] = IS()
+    var recTermsOfReturnType: IS[Seq[(Term, ExtendedValueVec)]] = IS()
 
     def createLibrariesForThisLevel(): Unit ={
       require(returnTypeVectorTrees.length == levels - 1)
@@ -262,22 +287,30 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
       val returnTypeTree = new ValueVectorTree[Term](examples.length)
       val typeMap = getNonRecOfCost(levels)
-      for(ty <- typesMatch(typeMap, returnType)){
+      for(ty <- typesMatch(typeMap.typesIterator, returnType)){
         val vt = typeMap(ty)
         vt.foreach{ case (vv, term) => returnTypeTree.addTerm(term, vv) }
       }
       returnTypeVectorTrees = returnTypeVectorTrees :+ returnTypeTree
 
       val boolTree = new ValueVectorTree[Term](examples.length)
-      for(ty <- typesMatch(typeMap, tyBool)){
+      for(ty <- typesMatch(typeMap.typesIterator, tyBool)){
         val vt = typeMap(ty)
         vt.foreach{ case (vv, term) => boolTree.addTerm(term, vv) }
       }
       boolVectorTrees = boolVectorTrees :+ boolTree
+
+      var newRecs: IS[(Term, ExtendedValueVec)] = IS()
+      val recTypeMap = getRecOfCost(levels)
+      for(ty <- typesMatch(recTypeMap.typesIterator, returnType)){
+        val recMap = recTypeMap(ty)
+        newRecs = newRecs ++ recMap
+      }
+      recTermsOfReturnType = recTermsOfReturnType :+ newRecs
     }
 
-    private def typesMatch(typeMap: TypeMap, ty: Type): List[Type] = {
-      typeMap.typesIterator.collect{
+    private def typesMatch(types: Iterator[Type], ty: Type): List[Type] = {
+      types.collect{
         case t if ty instanceOf t =>
           Type.alphaNormalForm(t)
       }.toList
