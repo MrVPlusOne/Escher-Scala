@@ -118,23 +118,20 @@ class BatchGoalSearchLoose(maxCompCost: Int,
       cThen <- 1 to maxCost - 1 - ifCost; // save one for cCond
       (thenVec, tThen) <- termsOfCost(cThen);
       (vm, _, _) <- IndexValueMap.splitValueMap(currentGoal, thenVec);
-      ((cCond, tCond), trueKeys) <- maxSatConditions(vm, boolOfVM); //this requirement maybe too much
+      ((cCond, tCond), trueKeys) <- maxSatConditions(vm, boolOfVM);
       elseGoal = currentGoal -- trueKeys;
-      (cElse, tElse) <- searchMin(cost - cThen - cCond - ifCost, elseGoal)
+      costSoFar = cThen + cCond + ifCost;
+      maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar;
+      (cElse, tElse) <- searchMin(maxCostForElse, elseGoal)
     ) {
       import DSL._
 
-      val totalCost = cElse + cThen + cCond + ifCost
+      val totalCost = cElse + costSoFar
       val t = `if`(tCond)(tThen)(tElse)
 
-      minCostCandidate match {
-        case Some((c, _)) =>
-          if (c > totalCost)
-            minCostCandidate = Some(totalCost -> t)
-        case None =>
-          minCostCandidate = Some(totalCost -> t)
-      }
+      minCostCandidate = Some(totalCost -> t)
     }
+
     minCostCandidate match{
       case Some((c, t)) => buffered(FoundAtCost(c,t))
       case None => buffered(NotFoundUnderCost(cost))

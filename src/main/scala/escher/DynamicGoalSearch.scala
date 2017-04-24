@@ -19,6 +19,8 @@ class DynamicGoalSearch( assembleRecProgram: Term => ComponentImpl,
                 recTermsOfReturnType: IS[Seq[(Term, ExtendedValueVec)]],
                 fillTermToHole: Term => Term,
                 isFirstBranch: Boolean): Option[(Int,Term)] = {
+    if(cost <= 0) return None
+
     val keySet = currentGoal.keySet
 //    buffer.get(keySet).foreach {
 //      case FoundAtCost(c, term) if c <= cost =>
@@ -77,7 +79,7 @@ class DynamicGoalSearch( assembleRecProgram: Term => ComponentImpl,
             vv(i) match {
               case ValueUnknown =>
                 if (trueKeys contains i)
-                  thenVec(i)
+                  thenVec(i) // fixme: this is wrong!
                 else ValueUnknown
               case tv: TermValue => tv
             }
@@ -89,21 +91,17 @@ class DynamicGoalSearch( assembleRecProgram: Term => ComponentImpl,
       def assembleTerm(tElse: Term): Term = {
         `if`(tCond)(tThen)(tElse)
       }
+      val costSoFar = cThen + cCond + ifCost
+      val maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar
       for (
-        (cElse, tElse) <- searchMin(cost - cThen - cCond - ifCost, elseGoal, newRecTermsOfCost,
+        (cElse, tElse) <- searchMin(maxCostForElse, elseGoal, newRecTermsOfCost,
           assembleTerm, isFirstBranch = false)
       ) {
 
-        val totalCost = cElse + cThen + cCond + ifCost
+        val totalCost = cElse + costSoFar
         val t = `if`(tCond)(tThen)(tElse)
 
-        minCostCandidate match {
-          case Some((c, _)) =>
-            if (c > totalCost)
-              minCostCandidate = Some(totalCost -> t)
-          case None =>
-            minCostCandidate = Some(totalCost -> t)
-        }
+        minCostCandidate = Some(totalCost -> t)
       }
     }
     minCostCandidate match {
