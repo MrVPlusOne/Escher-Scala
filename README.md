@@ -25,6 +25,6 @@ Example Run:
 
 <img src="documentation/compress.png" width="600px" alt="compress"/>
 
-- Remove all duplicates in a list (synthesized without additional components)
+- Remove all duplicates in a list (synthesized without using additional components)
 
 <img src="documentation/dedup.png" width="600px" alt="dedup"/>
