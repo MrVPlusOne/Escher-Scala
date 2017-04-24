@@ -22,18 +22,35 @@ object TestSynNoOracle {
         argList(listValue(1,2,3), 2),
         argList(listValue(1,2,3), 3),
         argList(listValue(1,2,3), 4),
-        argList(listValue(1,2,3), -1),
-        argList(listValue(1,2), 3),
+        argList(listValue(2,3), 3),
+        argList(listValue(2,3), 2),
+        argList(listValue(2,3), 1),
+        argList(listValue(2,3), -1),
         argList(listValue(), 1)
       )
 
       val refComp = CommonComps.contains
 
-      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+      val examples = args.map(argList => argList -> refComp.executeEfficient(argList))
 
-      synthesize(refComp.name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(envComps = CommonComps.standardComps, examples, oracle = refComp.impl, CommonComps.rules_noTree)
+      synthesize(refComp.name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(envComps = CommonComps.standardComps, examples, CommonComps.rules_noTree)
     }
 
-    containsSynthesis()
+    def reverseSynthesis() = {
+      val args: IS[ArgList] = IS(
+        argList(listValue(1,2,3)),
+        argList(listValue(1,2)),
+        argList(listValue(2,3)),
+        argList(listValue(1)),
+        argList(listValue())
+      )
+
+      val refComp = CommonComps.reverse
+      val examples = args.map(argList => argList -> refComp.executeEfficient(argList))
+
+      synthesize(refComp.name, IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(envComps = CommonComps.standardComps, examples, CommonComps.rules_noTree)
+    }
+
+    reverseSynthesis()
   }
 }

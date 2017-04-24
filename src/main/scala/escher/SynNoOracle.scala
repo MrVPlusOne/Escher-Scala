@@ -12,7 +12,6 @@ class SynNoOracle(config: Config, logger: String => Unit){
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
                 (envComps: Set[ComponentImpl],
                  examples0: IS[(ArgList, TermValue)],
-                 oracle: PartialFunction[IS[TermValue], TermValue],
                  compReductionRules: Map[ComponentImpl, ReducibleCheck]): Option[SynthesizedComponent] = {
     import DSL._
 
