@@ -10,9 +10,10 @@ import escher.CommonComps.ReducibleCheck
 class SynNoOracle(config: Config, logger: String => Unit){
 
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
-                (envCompMap: Map[String, ComponentImpl],
+                (envComps: Set[ComponentImpl],
                  examples0: IS[(ArgList, TermValue)],
-                 oracle: PartialFunction[IS[TermValue], TermValue], compReductionRules: Map[String, ReducibleCheck]): Option[SynthesizedComponent] = {
+                 oracle: PartialFunction[IS[TermValue], TermValue],
+                 compReductionRules: Map[ComponentImpl, ReducibleCheck]): Option[SynthesizedComponent] = {
     import DSL._
 
     val examples = examples0.sortWith(Synthesis.exampleLt)
@@ -33,10 +34,9 @@ class SynNoOracle(config: Config, logger: String => Unit){
     val recursiveComp = ExtendedCompImpl.fromImplOnTermValue(name, inputTypes, goalReturnType, impl = {
       argList => knownMap.getOrElse(argList, ValueUnknown)
     })
-    val compSet: Set[ExtendedCompImpl] = envCompMap.map{
-      case (n, impl) =>
-        ExtendedCompImpl.fromImplOnTermValue(n, impl.inputTypes, impl.returnType, impl.executeEfficient)
-    }.toSet ++ Set(recursiveComp)
+    val compSet: Set[ExtendedCompImpl] = envComps.map{ impl =>
+      ExtendedCompImpl.fromImplOnTermValue(impl.name, impl.inputTypes, impl.returnType, impl.executeEfficient)
+    } ++ Set(recursiveComp)
 
     def compCostFunction(impl: ExtendedCompImpl): Int = {
       1
@@ -232,8 +232,12 @@ class SynNoOracle(config: Config, logger: String => Unit){
   }
 
   class SynthesisState(val examples: IS[(ArgList,TermValue)], val totalNonRec: TypeMap, returnType: Type,
-                       reductionRules: Map[String, ReducibleCheck]) {
+                       reductionRules: Map[ComponentImpl, ReducibleCheck]) {
     import DSL._
+
+    val reductionRulesMap: Map[String, ReducibleCheck] = reductionRules.map{
+      case (impl, rule) => impl.name -> rule
+    }
 
     private var _levelNonRecs: IS[TypeMap] = IS()
     private var _levelRecComps: IS[RecTypeMap] = IS()
@@ -327,8 +331,8 @@ class SynNoOracle(config: Config, logger: String => Unit){
         case None =>
           if(config.useReductionRules) {
             term match {
-              case Component(n, terms) if reductionRules contains n =>
-                if (reductionRules(n).isReducible(terms))
+              case Component(n, terms) if reductionRulesMap contains n =>
+                if (reductionRulesMap(n).isReducible(terms))
                   return false
               case _ =>
             }

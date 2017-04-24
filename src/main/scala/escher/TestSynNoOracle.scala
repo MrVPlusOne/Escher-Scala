@@ -28,11 +28,10 @@ object TestSynNoOracle {
       )
 
       val refComp = CommonComps.contains
-      val name = "contains"
 
       val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
-      synthesize(name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(envCompMap = CommonComps.standardComps, examples, oracle = refComp.impl, CommonComps.rules_noTree)
+      synthesize(refComp.name, refComp.inputTypes, IS("xs", "x"), refComp.returnType)(envComps = CommonComps.standardComps, examples, oracle = refComp.impl, CommonComps.rules_noTree)
     }
 
     containsSynthesis()

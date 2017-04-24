@@ -23,7 +23,7 @@ class ImplTests extends WordSpec {
       argNames = IS("xs"),
       inputTypes = IS(TList of tyVar(0)),
       returnType = tyInt,
-      compMap = standardComps,
+      envComps = standardComps,
       body =
         `if`("isEmpty" $ v("xs")) {
           "zero" $ ()
@@ -49,7 +49,7 @@ class ImplTests extends WordSpec {
       argNames = IS("x"),
       inputTypes = IS(tyVar(0)),
       returnType = tyVar(0),
-      compMap = standardComps,
+      envComps = standardComps,
       body = "forever" $ v("x"),
       argListCompare = ArgList.alphabeticSmaller,
       debug = false
@@ -69,7 +69,7 @@ class ImplTests extends WordSpec {
       argNames = IS("n"),
       inputTypes = IS(tyInt),
       returnType = tyInt,
-      compMap = standardComps.updated("isZero",isZero),
+      envComps = standardComps + isZero,
       body =
         `if`("or"$ ("isZero" $ v("n"), "isZero" $ ("dec"$ v("n")))) {
           "inc"$("zero"$())

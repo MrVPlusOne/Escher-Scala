@@ -221,7 +221,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
 
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
-                (envCompMap: Map[String, ComponentImpl], examples0: IS[(ArgList, TermValue)], oracle: PartialFunction[IS[TermValue], TermValue], synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
+                (envComps: Set[ComponentImpl], examples0: IS[(ArgList, TermValue)], oracle: PartialFunction[IS[TermValue], TermValue], synData: SynthesisData = SynthesisData.init): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
     import DSL._
 
     val startTime = System.nanoTime()
@@ -235,8 +235,10 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     require(inputTypes.length == inputNames.length)
 
     val bufferedOracle = new BufferedOracle(inputs.zip(outputs), oracle, initBuffer = synData.oracleBuffer)
-    val recursiveComp = ComponentImpl(inputTypes, goalReturnType, PartialFunction(bufferedOracle.evaluate))
-    val compMap: Map[String, ComponentImpl] = envCompMap.updated(name, recursiveComp)
+    val recursiveComp = ComponentImpl(name, inputTypes, goalReturnType, PartialFunction(bufferedOracle.evaluate))
+
+    val compMap: Map[String, ComponentImpl] =
+      envComps.map(impl => impl.name -> impl).toMap.updated(name, recursiveComp)
 
     def argDecrease(arg: ArgList, exampleId: Int) = {
       config.argListCompare(arg, inputs(exampleId))
@@ -253,7 +255,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       val body = term
       val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body, cost, depth)
       val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, goalReturnType,
-        envCompMap, config.argListCompare, body)
+        envComps, config.argListCompare, body)
       var passed, failed = IS[(ArgList, TermValue)]()
       bufferedOracle.buffer.foreach{
         case (a,r) =>
@@ -283,7 +285,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         val (newExamples, newBuffer) = config.rebootStrategy.newExamplesAndOracleBuffer(examples, failed, passed)
         println(s"New examples: ${showExamples(newExamples)}")
         val newSynData = SynthesisData(newBuffer, synData.reboots+1, lastRebootTimeUsed = 0)
-        synthesize(name, inputTypes, inputNames, goalReturnType)(envCompMap, newExamples, oracle, newSynData)
+        synthesize(name, inputTypes, inputNames, goalReturnType)(envComps, newExamples, oracle, newSynData)
       }
     }
 

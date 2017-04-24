@@ -11,11 +11,11 @@ case class ExecutionError(msg: String) extends Exception {
 }
 
 
-case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
+case class ComponentImpl(name: String, inputTypes: IS[Type], returnType: Type,
                          impl: PartialFunction[IS[TermValue],TermValue],
                          callByValue: Boolean = true){
 
-  def shiftTypeId(amount: Int) = ComponentImpl(inputTypes.map(_.shiftId(amount)), returnType.shiftId(amount), impl)
+  def shiftTypeId(amount: Int) = ComponentImpl(name, inputTypes.map(_.shiftId(amount)), returnType.shiftId(amount), impl)
 
   def execute(args: IS[TermValue], debug: Boolean): TermValue = {
     if(callByValue && args.contains(ValueError))
@@ -58,15 +58,16 @@ case class ComponentImpl(inputTypes: IS[Type], returnType: Type,
 object ComponentImpl{
   def recursiveImpl(name: String, argNames: IS[String],
                     inputTypes: IS[Type], returnType: Type,
-                    compMap: Map[String, ComponentImpl],
+                    envComps: Set[ComponentImpl],
                     argListCompare: (ArgList,ArgList) => Boolean,
                     body: Term, debug: Boolean = false
                    ): ComponentImpl = {
+    val compMap = envComps.map(x => x.name -> x).toMap
 
     import collection.mutable
 
     def impl(lastArg: Option[ArgList], buffer: mutable.Map[ArgList, TermValue]): ComponentImpl = {
-      ComponentImpl(inputTypes, returnType, {
+      ComponentImpl(name, inputTypes, returnType, {
         case args => lastArg match {
           case Some(la) if !argListCompare(args, la) =>
             ValueError
@@ -132,93 +133,96 @@ object CommonComps {
       case IS(t1,t2) => t1 > t2
     })
 
-    def noDirectChild(childName: String): ReducibleCheck = ReducibleCheck(1, {
-      case IS(Term.Component(n, _)) => n == childName
+    def noDirectChild(child: ComponentImpl): ReducibleCheck = ReducibleCheck(1, {
+      case IS(Term.Component(n, _)) => n == child.name
     })
 
     val argsDifferent = ReducibleCheck(2, {
       case IS(t1, t2) => t1 == t2
     })
 
-    def associative(opName: String) = ReducibleCheck(2, {
-      case IS(_, Term.Component(n, _)) => n == opName
+    def associative(op: ComponentImpl) = ReducibleCheck(2, {
+      case IS(_, Term.Component(n, _)) => n == op.name
     })
   }
   import ReducibleCheck._
 
   import DSL._
 
-  val length = ComponentImpl(IS(TList of tyVar(0)), tyInt,
+  val length = ComponentImpl("length", IS(TList of tyVar(0)), tyInt,
     impl = { case IS(ValueList(elems)) => ValueInt(elems.length) }
   )
 
-  val isEmpty = ComponentImpl(IS(TList of tyVar(0)), tyBool,
+  val isNil = ComponentImpl("isNil", IS(TList of tyVar(0)), tyBool,
     impl = { case IS(ValueList(elems)) => ValueBool(elems.isEmpty)}
   )
 
-  val isZero = ComponentImpl(IS(tyInt), tyBool,
+  val isZero = ComponentImpl("isZero", IS(tyInt), tyBool,
     impl = { case IS(ValueInt(x)) => x == 0 }
   )
 
-  val isNonNeg = ComponentImpl(IS(tyInt), tyBool,
+  val isNonNeg = ComponentImpl("isNonNeg", IS(tyInt), tyBool,
     impl = { case IS(ValueInt(x)) => x >= 0 }
   )
 
   val zero = ComponentImpl(
+    "zero",
     inputTypes = IS(),
     returnType = tyInt,
     impl = { case IS() => ValueInt(0)}
   )
 
-  val inc = ComponentImpl(IS(tyInt), tyInt,
+  val inc = ComponentImpl("inc", IS(tyInt), tyInt,
     impl = { case IS(ValueInt(x)) => ValueInt(x + 1)}
   )
 
-  val dec = ComponentImpl(IS(tyInt), tyInt,
+  val dec = ComponentImpl("dec", IS(tyInt), tyInt,
     impl = { case IS(ValueInt(x)) => ValueInt(x - 1)}
   )
 
-  val neg = ComponentImpl(IS(tyInt), tyInt,
+  val neg = ComponentImpl("neg", IS(tyInt), tyInt,
     impl = { case IS(ValueInt(x)) => ValueInt(-x)}
   )
 
-  val div2 = ComponentImpl(IS(tyInt), tyInt,
+  val div2 = ComponentImpl("div2", IS(tyInt), tyInt,
     impl = { case IS(ValueInt(x)) => ValueInt(x/2)}
   )
 
-  val tail = ComponentImpl(IS(TList of tyVar(0)), TList of tyVar(0),
+  val tail = ComponentImpl("tail", IS(TList of tyVar(0)), TList of tyVar(0),
     impl = { case IS(ValueList(_::xs)) => ValueList(xs)}
   )
 
-  val cons = ComponentImpl(IS(tyVar(0), TList of tyVar(0)), TList of tyVar(0),
+  val cons = ComponentImpl("cons", IS(tyVar(0), TList of tyVar(0)), TList of tyVar(0),
     impl = { case IS(x, ValueList(x2)) => ValueList(x :: x2)}
   )
 
-  val head = ComponentImpl(IS(TList of tyVar(0)), tyVar(0),
+  val head = ComponentImpl("head", IS(TList of tyVar(0)), tyVar(0),
     impl = { case IS(ValueList(x::_)) => x }
   )
 
-  val emptyList = ComponentImpl(IS(), tyList(tyVar(0)),
+  val nil = ComponentImpl("nil", IS(), tyList(tyVar(0)),
     impl = { case IS() => listValue() }
   )
 
-  val concat = ComponentImpl(IS(TList of tyVar(0), tyList(tyVar(0))), TList of tyVar(0),
+  val concat = ComponentImpl("concat", IS(TList of tyVar(0), tyList(tyVar(0))), TList of tyVar(0),
     impl = { case IS(ValueList(xs), ValueList(ys)) => ValueList(xs ++ ys)}
   )
 
-  val T = ComponentImpl(IS(), tyBool,
+  val T = ComponentImpl("T", IS(), tyBool,
     impl = { case IS() => true }
   )
 
-  val F = ComponentImpl(IS(), tyBool,
+  val F = ComponentImpl("F", IS(), tyBool,
     impl = { case IS() => false }
   )
 
-  val equal = ComponentImpl(IS(tyVar(0), tyVar(0)), tyBool,
+  val equal = ComponentImpl("equal", IS(tyVar(0), tyVar(0)), tyBool,
     impl = { case IS(a,b) => ValueBool(a == b) }
   )
 
-  def or(callByValue: Boolean) = ComponentImpl(IS(tyBool, tyBool), tyBool,
+  def or_impl(callByValue: Boolean) = ComponentImpl(
+    "or",
+    IS(tyBool, tyBool), tyBool,
     impl = {
       case IS(ValueBool(true), _) => true
       case IS(ValueBool(false), ValueBool(b)) => b
@@ -227,7 +231,11 @@ object CommonComps {
     callByValue = callByValue
   )
 
-  def and(callByValue: Boolean) = ComponentImpl(IS(tyBool, tyBool), tyBool,
+  val or = or_impl(callByValue = true)
+
+  def and_impl(callByValue: Boolean) = ComponentImpl(
+    "and",
+    IS(tyBool, tyBool), tyBool,
     impl = {
       case IS(ValueBool(false), _) => false
       case IS(ValueBool(true), ValueBool(b)) => b
@@ -236,80 +244,85 @@ object CommonComps {
     callByValue = callByValue
   )
 
-  val not = ComponentImpl(IS(tyBool), tyBool,
+  val and = and_impl(callByValue = true)
+
+  val not = ComponentImpl("not", IS(tyBool), tyBool,
     impl = { case IS(ValueBool(a)) => !a }
   )
 
-  val plus = ComponentImpl(IS(tyInt, tyInt), tyInt,
+  val plus = ComponentImpl("plus", IS(tyInt, tyInt), tyInt,
     impl = { case IS(ValueInt(x), ValueInt(y)) => ValueInt(x + y)}
   )
 
-  val noTree = Map(
+  val noTree = Set(
     // boolean
-    "T" -> T,
-    "F" -> F,
-    "and" -> and(callByValue = true),
-    "or" -> or(callByValue = true),
-    "not" -> not,
-    "equal" -> equal,
-    "isEmpty" -> isEmpty,
-    "isNonNeg" -> isNonNeg,
+    T,
+    F,
+    and,
+    or,
+    not,
+    equal,
+    isNil,
+    isNonNeg,
 
     // list
-    "head" -> head,
-    "tail" -> tail,
-    "cons" -> cons,
-    "concat" -> concat,
-    "emptyList" -> emptyList,
+    head,
+    tail,
+    cons,
+    concat,
+    nil,
 
     // integer
-    "zero" -> zero,
-    "inc" -> inc,
-    "dec" -> dec,
-    "neg" -> neg,
-    "length" -> length,
-    "plus" -> plus,
-    "div2" -> div2
+    zero,
+    inc,
+    dec,
+    neg,
+    length,
+    plus,
+    div2
   )
 
-  val rules_noTree = Map[String, ReducibleCheck](
+  val rules_noTree = Map[ComponentImpl, ReducibleCheck](
     // boolean
-    "not" -> noDirectChild("not"),
-    "and" -> reduces(commutative, associative("and"), argsDifferent),
-    "or" -> reduces(commutative, associative("or"), argsDifferent),
-    "equal" -> reduces(commutative, argsDifferent),
-    "isEmpty" -> noDirectChild("cons"),
-    "isNonNeg" -> noDirectChild("neg"),
+    not -> noDirectChild(not),
+    and -> reduces(commutative, associative(and), argsDifferent),
+    or -> reduces(commutative, associative(or), argsDifferent),
+    equal -> reduces(commutative, argsDifferent),
+    isNil -> noDirectChild(cons),
+    neg -> noDirectChild(neg),
 
     // list
-    "tail" -> noDirectChild("cons"),
-    "concat" -> associative("concat"),
+    length -> noDirectChild(cons),
+    concat -> associative(concat),
 
     //integer
-    "inc" -> noDirectChild("dec"),
-    "dic" -> noDirectChild("inc"),
-    "neg" -> noDirectChild("nec"),
-    "length" -> noDirectChild("cons"),
-    "plus" -> reduces(commutative, argsDifferent)
+    inc -> noDirectChild(dec),
+    dec -> noDirectChild(inc),
+    neg -> noDirectChild(neg),
+    length -> noDirectChild(cons),
+    plus -> reduces(commutative, argsDifferent)
   )
 
-  val createLeaf = ComponentImpl(IS(), tyTree(tyVar(0)),
+  val createLeaf = ComponentImpl("createLeaf", IS(), tyTree(tyVar(0)),
     impl = { case IS() => ValueTree(BinaryLeaf) }
   )
 
   val createNode = ComponentImpl(
+    "createNode",
     IS(tyVar(0), tyTree(tyVar(0)), tyTree(tyVar(0))),
     tyTree(tyVar(0)),
     impl = { case IS(v, ValueTree(l), ValueTree(r)) => ValueTree(BinaryNode(v, l, r)) }
   )
 
   val isLeaf = ComponentImpl(
+    "isLeaf",
     IS(tyTree(tyVar(0))),
     tyBool,
     impl = { case IS(ValueTree(t)) => t == BinaryLeaf}
   )
 
   val treeValue = ComponentImpl(
+    "treeValue",
     IS(tyTree(tyVar(0))),
     tyVar(0),
     impl = {
@@ -318,54 +331,60 @@ object CommonComps {
   )
 
   val treeLeft = ComponentImpl(
+    "treeLeft",
     IS(tyTree(tyVar(0))),
     tyTree(tyVar(0)),
     impl = { case IS(ValueTree(n: BinaryNode[TermValue])) => n.left }
   )
 
   val treeRight = ComponentImpl(
+    "treeRight",
     IS(tyTree(tyVar(0))),
     tyTree(tyVar(0)),
     impl = { case IS(ValueTree(n: BinaryNode[TermValue])) => n.right }
   )
 
-  val treeComps = Map(
-    "createLeaf" -> createLeaf,
-    "createNode" -> createNode,
-    "isLeaf" -> isLeaf,
-    "treeValue" -> treeValue,
-    "treeLeft" -> treeLeft,
-    "treeRight" -> treeRight
+  val treeComps = Set(
+    createLeaf,
+    createNode,
+    isLeaf,
+    treeValue,
+    treeLeft,
+    treeRight
   )
 
   val standardComps = noTree ++ treeComps
 
 
   def createPair(t1: Type, t2: Type) = ComponentImpl(
+    "createPair",
     IS(t1, t2),
     tyPair(t1, t2),
     { case IS(v1, v2) => (v1, v2) }
   )
 
   val fst = ComponentImpl(
+    "fst",
     IS(tyPair(tyVar(0), tyVar(1))),
     tyVar(0),
     { case IS(ValuePair(v)) => v._1 }
   )
 
   val snd = ComponentImpl(
+    "snd",
     IS(tyPair(tyVar(0), tyVar(1))),
     tyVar(1),
     { case IS(ValuePair(v)) => v._2 }
   )
 
-  def pairComps(t1: Type, t2: Type) = Map(
-    "createPair" -> createPair(t1,t2),
-    "fst" -> fst,
-    "snd" -> snd
+  def pairComps(t1: Type, t2: Type) = Set(
+    createPair(t1,t2),
+    fst,
+    snd
   )
 
   val insert = ComponentImpl(
+    "insert",
     IS(tyList(tyVar(0)), tyInt, tyVar(0)), tyList(tyVar(0)),
     impl = {
       case IS(ValueList(xs), ValueInt(i), v) =>
@@ -375,6 +394,7 @@ object CommonComps {
   )
 
   val reverse = ComponentImpl(
+    "reverse",
     IS(tyList(tyVar(0))), tyList(tyVar(0)),
     impl = {
       case IS(ValueList(xs)) => xs.reverse
@@ -387,6 +407,7 @@ object CommonComps {
       else xs.head :: xs.head :: stutterF(xs.tail)
     }
     ComponentImpl(
+      "stutter",
       IS(tyList(tyVar(0))), tyList(tyVar(0)),
       impl = {
         case IS(ValueList(xs)) => stutterF(xs)
@@ -400,6 +421,7 @@ object CommonComps {
       xs.flatMap(x => ys.map(y => (x,y)))
     }
     ComponentImpl(
+      "cartesian",
       IS(tyList(tyVar(0)), tyList(tyVar(1))), tyList(tyPair(tyVar(0), tyVar(1))),
       impl = {
         case IS(ValueList(xs), ValueList(ys)) =>
@@ -409,6 +431,7 @@ object CommonComps {
   }
 
   val squareList = ComponentImpl(
+    "squareList",
     IS(tyInt), tyList(tyInt),
     impl = {
       case IS(ValueInt(n)) =>
@@ -416,17 +439,21 @@ object CommonComps {
     }
   )
 
-  val times = ComponentImpl(IS(tyInt, tyInt), tyInt,
+  val times = ComponentImpl(
+    "times",
+    IS(tyInt, tyInt), tyInt,
     impl = { case IS(ValueInt(x), ValueInt(y)) => ValueInt(x * y)}
   )
 
-  val div = ComponentImpl(IS(tyInt, tyInt), tyInt,
+  val div = ComponentImpl(
+    "div",
+    IS(tyInt, tyInt), tyInt,
     impl = { case IS(ValueInt(x), ValueInt(y)) => if(y == 0) ValueError else ValueInt(x / y)}
   )
 
-  val timesAndDiv = Map(
-    "times" -> CommonComps.times,
-    "div" -> CommonComps.div
+  val timesAndDiv = Set(
+    CommonComps.times,
+    CommonComps.div
   )
 
   /** 1,1,2,3,5,8,... */
@@ -441,13 +468,15 @@ object CommonComps {
       a
     }
 
-    ComponentImpl(IS(tyInt), tyInt,
+    ComponentImpl("fib", IS(tyInt), tyInt,
       impl = { case IS(ValueInt(n)) => fibF(n)}
     )
   }
 
   val modulo = {
-    ComponentImpl(IS(tyInt, tyInt), tyInt, impl = {
+    ComponentImpl(
+      "modulo",
+      IS(tyInt, tyInt), tyInt, impl = {
       case IS(ValueInt(a), ValueInt(b)) =>
         if(b == 0) ValueError else a % b
     })
@@ -459,7 +488,7 @@ object CommonComps {
       else gcdF(b, a % b)
     }
 
-    ComponentImpl(IS(tyInt, tyInt), tyInt,
+    ComponentImpl("gcd", IS(tyInt, tyInt), tyInt,
       impl = { case IS(ValueInt(a), ValueInt(b)) => gcdF(a,b)
       }
     )
@@ -471,7 +500,9 @@ object CommonComps {
       case _ => xs
     }
 
-    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)),
+    ComponentImpl(
+      "compress",
+      IS(tyList(tyVar(0))), tyList(tyVar(0)),
       impl = { case IS(ValueList(xs)) => f(xs) }
     )
   }
@@ -485,7 +516,7 @@ object CommonComps {
       case BinaryLeaf => List()
     }
 
-    ComponentImpl(IS(tyTree(tyVar(0)), tyInt), tyTree(tyVar(0)),
+    ComponentImpl("nodesAtLevel", IS(tyTree(tyVar(0)), tyInt), tyTree(tyVar(0)),
       impl = { case IS(ValueTree(tree), ValueInt(level)) =>
         impl(tree, level)
       }
@@ -493,7 +524,7 @@ object CommonComps {
   }
 
   val contains = {
-    ComponentImpl(IS(tyList(tyVar(0)), tyVar(0)), tyBool, impl = {
+    ComponentImpl("contains", IS(tyList(tyVar(0)), tyVar(0)), tyBool, impl = {
       case IS(ValueList(xs), x) => xs.contains(x)
     })
   }
@@ -507,13 +538,13 @@ object CommonComps {
         if(t contains x) t else x :: t
     }
 
-    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
+    ComponentImpl("dedup", IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
       case IS(ValueList(xs)) => f(xs)
     })
   }
 
   val dropLast =
-    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
+    ComponentImpl("dropLast", IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
       case IS(ValueList(xs)) =>  xs.dropRight(1)
     })
 
@@ -525,7 +556,7 @@ object CommonComps {
       case x::tail =>
         if(isEven) x::impl(tail, !isEven) else impl(tail, !isEven)
     }
-    ComponentImpl(IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
+    ComponentImpl("evens", IS(tyList(tyVar(0))), tyList(tyVar(0)), impl = {
       case IS(ValueList(xs)) => impl(xs, isEven = true)
     })
   }
@@ -537,7 +568,7 @@ object CommonComps {
       case BinaryLeaf => insertTree
     }
 
-    ComponentImpl(IS(tyTree(tyVar(0)), tyTree(tyVar(0))), tyTree(tyVar(0)), impl = {
+    ComponentImpl("tConcat", IS(tyTree(tyVar(0)), tyTree(tyVar(0))), tyTree(tyVar(0)), impl = {
       case IS(ValueTree(t1), ValueTree(t2)) => impl(t1,t2)
     })
   }
