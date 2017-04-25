@@ -17,6 +17,8 @@ sealed trait Term{
       s"if ${condition.show} then ${thenBranch.show} else ${elseBranch.show}"
   }
 
+  override def toString: String = show
+
   def kind: Int
 
   def <(that: Term): Boolean = Term.lt(this, that)
@@ -110,6 +112,7 @@ object Term {
           case ValueError => ValueError
           case ValueBool(true) => executeTermInExtendedEnv(varMap, compMap)(t)
           case ValueBool(false) => executeTermInExtendedEnv(varMap, compMap)(e)
+          case _ => throw new Exception("Branch condition evaluated to false type")
         }
     }
   }

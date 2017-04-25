@@ -141,9 +141,9 @@ object ComponentImpl{
 //noinspection TypeAnnotation
 object CommonComps {
 
-  case class ReducibleCheck(arity: Int, f: PartialFunction[IS[Term], Boolean]){
+  case class ReducibleCheck(arity: Option[Int], f: PartialFunction[IS[Term], Boolean]){
     def isReducible(args: IS[Term]): Boolean = {
-      require(args.length == arity)
+      require(arity.isEmpty || args.length == arity.get)
       f.applyOrElse(args, (_: IS[Term]) => false)
     }
   }
@@ -151,9 +151,11 @@ object CommonComps {
 
   object ReducibleCheck{
     def reduces(rules: ReducibleCheck*): ReducibleCheck = {
-      require(rules.nonEmpty)
-      val arity = rules.head.arity
-      require(rules.forall(_.arity == arity))
+      val rulesWithArity = rules.collect{
+        case r if r.arity.nonEmpty => r.arity.get
+      }
+      val arity = rulesWithArity.headOption
+      require(arity.isEmpty || rulesWithArity.forall(_ == arity.get))
 
       def f(args: IS[Term]): Boolean = {
         for (r <- rules) {
@@ -164,19 +166,22 @@ object CommonComps {
       ReducibleCheck(arity, PartialFunction(f))
     }
 
-    val commutative: ReducibleCheck = ReducibleCheck(2, {
+    val commutative: ReducibleCheck = ReducibleCheck(Some(2), {
       case IS(t1,t2) => t1 > t2
     })
 
-    def noDirectChild(child: ComponentImpl): ReducibleCheck = ReducibleCheck(1, {
-      case IS(Term.Component(n, _)) => n == child.name
-    })
+    def noDirectChildren(children: ComponentImpl*): ReducibleCheck = {
+      val blackList = children.map(_.name).toSet
+      ReducibleCheck(None, {
+        case IS(Term.Component(n, _)) => blackList.contains(n)
+      })
+    }
 
-    val argsDifferent = ReducibleCheck(2, {
+    val argsDifferent = ReducibleCheck(Some(2), {
       case IS(t1, t2) => t1 == t2
     })
 
-    def associative(op: ComponentImpl) = ReducibleCheck(2, {
+    def associative(op: ComponentImpl) = ReducibleCheck(Some(2), {
       case IS(_, Term.Component(n, _)) => n == op.name
     })
   }
@@ -320,22 +325,22 @@ object CommonComps {
   val rules_noTree = Map[ComponentImpl, ReducibleCheck](
     //todo add more rules
     // boolean
-    not -> noDirectChild(not),
-    and -> reduces(commutative, associative(and), argsDifferent),
-    or -> reduces(commutative, associative(or), argsDifferent),
-    equal -> reduces(commutative, argsDifferent),
-    isNil -> noDirectChild(cons),
-    neg -> noDirectChild(neg),
+    not -> noDirectChildren(not),
+    and -> reduces(commutative, associative(and), argsDifferent, noDirectChildren(T, F)),
+    or -> reduces(commutative, associative(or), argsDifferent, noDirectChildren(T, F)),
+    equal -> reduces(commutative, argsDifferent, noDirectChildren(T, F)),
+    isNil -> noDirectChildren(cons),
+    neg -> noDirectChildren(neg),
 
     // list
-    length -> noDirectChild(cons),
+    length -> noDirectChildren(cons),
     concat -> associative(concat),
 
     //integer
-    inc -> noDirectChild(dec),
-    dec -> noDirectChild(inc),
-    neg -> noDirectChild(neg),
-    length -> noDirectChild(cons),
+    inc -> noDirectChildren(dec),
+    dec -> noDirectChildren(inc),
+    neg -> noDirectChildren(neg),
+    length -> noDirectChildren(cons),
     plus -> reduces(commutative, argsDifferent)
   )
 
@@ -490,6 +495,11 @@ object CommonComps {
   val timesAndDiv = Set(
     CommonComps.times,
     CommonComps.div
+  )
+
+  val rules_timesAndDiv = Map[ComponentImpl, ReducibleCheck](
+    times -> reduces(commutative, associative(times), noDirectChildren(zero)),
+    div -> reduces(noDirectChildren(zero))
   )
 
   /** 1,1,2,3,5,8,... */

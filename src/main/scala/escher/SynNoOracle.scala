@@ -49,16 +49,17 @@ class SynNoOracle(config: Config, logger: String => Unit){
     def synthesizeAtLevel(cost: Int, synBoolAndReturnType: Boolean): Unit = {
       for (
         impl <- compSet;
+        isRecCall = impl.name == name;
         compCost = compCostFunction(impl) if compCost <= cost
       ) {
         val arity = impl.inputTypes.length
         val costLeft = cost - compCost
         if (arity == 0) {
           if (compCost == cost) {
-            val result = impl.execute(IS())
+            val result = impl.execute(IS()).asInstanceOf[TermValue]
             val valueVector = (0 until exampleCount).map(_ => result)
             val term = Component(impl.name, IS())
-            state.registerTermAtLevel(cost, impl.returnType, term, valueVector)
+            state.registerNonRecAtLevel(cost, impl.returnType, term, valueVector)
           }
         } else {
           for (
@@ -67,51 +68,53 @@ class SynNoOracle(config: Config, logger: String => Unit){
             if (synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))) &&
               isInterestingSignature(argTypes, returnType)
           ) {
-            // non-recursive terms generation
-            val candidatesForArgs =
+
+            // non-recursive terms
+            val nonRecCandidates =
               for (argIdx <- 0 until arity) yield {
                 val c = costs(argIdx)
-                state.getNonRecOfCost(c)(argTypes(argIdx))
+                state.getNonRecOfCost(c)(argTypes(argIdx)).toIndexedSeq
               }
 
-            val isRecCall = impl.name == name
-            cartesianProduct(candidatesForArgs).foreach { product =>
-              val valueVector =
-                (0 until exampleCount).map(exId => {
-                  val arguments = product.map(_._1(exId))
-                  if (isRecCall && !argDecrease(arguments, exId))
-                    ValueError
-                  else
-                    impl.execute(arguments)
-                })
-
-              if (!config.deleteAllErr || notAllErr(valueVector)) {
-                val term = Component(impl.name, product.map(_._2))
-                state.registerTermAtLevel(cost, returnType, term, valueVector)
-              }
-            }
-
-            // recursive terms generation
-            val recCandidates =
-              for (argIdx <- 0 until arity) yield {
-                val c = costs(argIdx)
-                state.getRecOfCost(c)(argTypes(argIdx))
-              }
-
-            if (impl.name != name) { // we currently don't allow nested recursive call
-              cartesianProduct(recCandidates).foreach { product =>
+            if (isRecCall) {
+              cartesianProduct(nonRecCandidates).foreach { product =>
                 val valueVector =
                   (0 until exampleCount).map(exId => {
-                    val arguments = product.map(_._2(exId))
+                    val arguments = product.map(_._1(exId))
+                    if (!argDecrease(arguments, exId))
+                      ValueError
+                    else
+                      impl.execute(arguments)
+                  })
+
+                if (!config.deleteAllErr || notAllErr(valueVector)) {
+                  val term = Component(impl.name, product.map(_._2))
+                  state.registerTermAtLevel(cost, returnType, term, valueVector)
+                }
+              }
+            } else {
+              // recursive terms generation
+              val recCandidates =
+                for (argIdx <- 0 until arity) yield {
+                  val c = costs(argIdx)
+                  state.getRecOfCost(c)(argTypes(argIdx)).toIndexedSeq.map(_.swap)
+                }
+              val allCandidates = (nonRecCandidates zip recCandidates).map(x => x._1 ++ x._2)
+
+              cartesianProduct(allCandidates).foreach { product =>
+                val valueVector =
+                  (0 until exampleCount).map(exId => {
+                    val arguments = product.map(_._1(exId))
                     impl.execute(arguments)
                   })
 
                 if (!config.deleteAllErr || notAllErr(valueVector)) {
-                  val term = Component(impl.name, product.map(_._1))
+                  val term = Component(impl.name, product.map(_._2))
                   state.registerTermAtLevel(cost, returnType, term, valueVector)
                 }
               }
             }
+
           }
         }
       }
@@ -127,7 +130,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
       val valueMap = inputs.indices.map(exId => {
         inputs(exId)(argId)
       })
-      state.registerTermAtLevel(1, inputTypes(argId), v(inputNames(argId)), valueMap)
+      state.registerNonRecAtLevel(1, inputTypes(argId), v(inputNames(argId)), valueMap)
     })
 
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
@@ -137,22 +140,30 @@ class SynNoOracle(config: Config, logger: String => Unit){
         synthesizeAtLevel(level, synBoolAndReturnType = true)
       }
 
-      TimeTools.printTimeUsed("Goal searching") {
-        state.createLibrariesForThisLevel()
+      logger(s"State at level: $level\n")
+      state.print(exampleCount)
 
-        val search = new DynamicGoalSearch(
-          level,
-          signature,
-          envComps,
-          config.argListCompare,
-          inputVector = inputs,
-          termOfCostAndVM = state.libraryOfCost,
-          termsOfCost = state.termsOfCost,
-          boolOfVM = state.boolLibrary
-        )
-        search.searchMin(config.searchSizeFactor * level, goalVM,
-          state.recTermsOfReturnType, fillTermToHole = { t => t } , isFirstBranch = true).foreach { case (c, term) =>
-          return resultFromState(c, level, term)
+      if(!config.onlyForwardSearch) {
+        TimeTools.printTimeUsed("Goal searching") {
+          state.createLibrariesForThisLevel()
+
+          val search = new DynamicGoalSearch(
+            level,
+            signature,
+            envComps,
+            config.argListCompare,
+            inputVector = inputs,
+            termOfCostAndVM = state.libraryOfCost,
+            termsOfCost = state.termsOfCost,
+            boolOfVM = state.boolLibrary
+          )
+          search.searchMin(config.searchSizeFactor * level, goalVM,
+            state.recTermsOfReturnType, fillTermToHole = { t => t },
+            isFirstBranch = true,
+            prefixTrigger = None
+          ).foreach { case (c, term) =>
+            return resultFromState(c, level, term)
+          }
         }
       }
 
@@ -160,8 +171,6 @@ class SynNoOracle(config: Config, logger: String => Unit){
         synthesizeAtLevel(level, synBoolAndReturnType = false)
       }
 
-      logger(s"State at level: $level\n")
-      state.print(exampleCount)
       state.openNextLevel()
     })
     None
@@ -359,23 +368,27 @@ class SynNoOracle(config: Config, logger: String => Unit){
       false
     }
 
+    def registerRecTermAtLevel(cost: Int, ty: Type, term: Term, valueVector: ExtendedValueVec): Boolean = {
+      if(config.useReductionRules) {
+        term match {
+          case Component(n, terms) if reductionRulesMap contains n =>
+            if (reductionRulesMap(n).isReducible(terms))
+              return false
+          case _ =>
+        }
+      }
+      val ty1 = Type.alphaNormalForm(ty)
+      getRecOfCost(cost)(ty1, term) = valueVector
+      true
+    }
+
     def registerTermAtLevel(cost: Int, ty: Type, term: Term, valueVector: ExtendedValueVec): Boolean = {
       ExtendedValueVec.toValueVec(valueVector) match {
         case Some(x) => registerNonRecAtLevel(cost, ty, term, x)
-        case None =>
-          if(config.useReductionRules) {
-            term match {
-              case Component(n, terms) if reductionRulesMap contains n =>
-                if (reductionRulesMap(n).isReducible(terms))
-                  return false
-              case _ =>
-            }
-          }
-          val ty1 = Type.alphaNormalForm(ty)
-          getRecOfCost(cost)(ty1, term) = valueVector
-          true
+        case None => registerRecTermAtLevel(cost, ty, term, valueVector)
       }
     }
+
 
     def print(exampleCount: Int): Unit = {
       logLn(config.logTotalMap)(s"TotalMap: (${totalNonRec.statString})")
@@ -419,7 +432,8 @@ object SynNoOracle {
                      logReboot: Boolean = true,
                      argListCompare: (ArgList, ArgList) => Boolean = ArgList.anyArgSmaller,
                      searchSizeFactor: Int = 3,
-                     useReductionRules: Boolean = true
+                     useReductionRules: Boolean = true,
+                     onlyForwardSearch: Boolean = false
                    )
 
   case class ExtendedCompImpl(name: String, inputTypes: IS[Type], returnType: Type,
@@ -429,7 +443,8 @@ object SynNoOracle {
     def fromImplOnTermValue(name: String, inputTypes: IS[Type], returnType: Type, impl: ArgList => ExtendedValue): ExtendedCompImpl = {
       def execute(args: IS[ExtendedValue]): ExtendedValue = {
         ExtendedValueVec.toValueVec(args) match {
-          case None => ValueUnknown
+          case None =>
+            if(args.contains(ValueError)) ValueError else ValueUnknown
           case Some(knownArgs) => impl(knownArgs)
         }
       }
