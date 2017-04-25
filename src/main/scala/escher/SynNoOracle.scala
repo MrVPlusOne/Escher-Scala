@@ -22,6 +22,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
     val goalReturnType = returnTypeFree.fixVars
     val exampleCount = outputs.length
     val state = new SynthesisState(examples, TypeMap.empty(), goalReturnType, compReductionRules)
+    val signature = ComponentSignature(name, inputNames, inputTypes, goalReturnType)
 
     require(inputTypes.length == inputNames.length)
 
@@ -33,9 +34,11 @@ class SynNoOracle(config: Config, logger: String => Unit){
     val recursiveComp = ExtendedCompImpl.fromImplOnTermValue(name, inputTypes, goalReturnType, impl = {
       argList => knownMap.getOrElse(argList, ValueUnknown)
     })
-    val compSet: Set[ExtendedCompImpl] = envComps.map{ impl =>
+
+    val envExtendedCompSet = envComps.map{ impl =>
       ExtendedCompImpl.fromImplOnTermValue(impl.name, impl.inputTypes, impl.returnType, impl.executeEfficient)
-    } ++ Set(recursiveComp)
+    }
+    val compSet: Set[ExtendedCompImpl] = envExtendedCompSet ++ Set(recursiveComp)
 
     def compCostFunction(impl: ExtendedCompImpl): Int = {
       1
@@ -115,12 +118,9 @@ class SynNoOracle(config: Config, logger: String => Unit){
     }
 
     def resultFromState(cost: Int, level: Int, term: Term): Option[SynthesizedComponent] = {
-      Some(SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, term, cost, level))
+      Some(SynthesizedComponent(signature, term, cost, level))
     }
 
-    def assembleRecProgram(term: Term): ComponentImpl = {
-      ComponentImpl.recursiveImpl(name, inputNames, inputTypes, goalReturnType, envComps, config.argListCompare, term)
-    }
 
     state.openNextLevel()
     inputTypes.indices.foreach(argId =>{
@@ -141,8 +141,10 @@ class SynNoOracle(config: Config, logger: String => Unit){
         state.createLibrariesForThisLevel()
 
         val search = new DynamicGoalSearch(
-          assembleRecProgram,
           level,
+          signature,
+          envComps,
+          config.argListCompare,
           inputVector = inputs,
           termOfCostAndVM = state.libraryOfCost,
           termsOfCost = state.termsOfCost,

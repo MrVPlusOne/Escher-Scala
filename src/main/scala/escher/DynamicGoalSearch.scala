@@ -1,18 +1,37 @@
 package escher
 
-import escher.Synthesis.{ArgList, ExtendedValueVec, IndexValueMap, ValueVector}
+import escher.Synthesis._
 
 import collection.mutable
 import BatchGoalSearch._
+import escher.DynamicGoalSearch.ExecuteHoleException
+import escher.SynNoOracle.ExtendedCompImpl
 
-class DynamicGoalSearch( assembleRecProgram: Term => ComponentImpl,
+class DynamicGoalSearch(
                          maxCompCost: Int,
+                         signature: ComponentSignature,
+                         envComps: Set[ComponentImpl],
+                         argListCompare: (ArgList, ArgList) => Boolean,
                          inputVector: IS[ArgList],
                          termOfCostAndVM: (Int, IndexValueMap) => Option[Term],
                          termsOfCost: Int => Iterable[(ValueVector,Term)],
                          boolOfVM: IndexValueMap => Option[(Int,Term)]
                        ) {
 //  private val buffer: mutable.Map[Set[Int], SearchResult] = mutable.Map()
+
+  val holeName = "HOLE"
+
+  private val envCompMap = envComps.map(x => x.name -> x).toMap
+  def assembleRecProgram(term: Term): ComponentImpl = {
+    ComponentImpl.recursiveImpl(signature, envCompMap, argListCompare, term)
+  }
+
+  private val compMapWithHole = {
+    val holeImpl = ComponentImpl(holeName, IS(), signature.returnType, impl = {
+      case _ => throw ExecuteHoleException
+    })
+    envCompMap.updated(holeName, holeImpl)
+  }
 
 
   def searchMin(cost: Int, currentGoal: IndexValueMap,
@@ -72,30 +91,39 @@ class DynamicGoalSearch( assembleRecProgram: Term => ComponentImpl,
       (vm, _, _) <- IndexValueMap.splitValueMap(currentGoal, thenVec);
       ((cCond, tCond), trueKeys) <- maxSatConditions(vm, boolOfVM)
     ) {
+      import DSL._
+      def assembleTerm(tElse: Term): Term = {
+        fillTermToHole(`if`(tCond)(tThen)(tElse))
+      }
+
       val elseGoal = currentGoal -- trueKeys
+
+      val partialImpl = // todo: need special check for this, maybe completely separate recursive terms from normal terms?
+        ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare, assembleTerm(holeName $()))
+
+      val envWithPartialImpl = envCompMap.updated(signature.name, partialImpl)
+
       val newRecTermsOfCost = recTermsOfReturnType.map(_.map {
         case (term, vv) =>
           val newVV = vv.indices.map { i =>
             vv(i) match {
               case ValueUnknown =>
-                if (trueKeys contains i)
-                  thenVec(i) // fixme: this is wrong!
-                else ValueUnknown
+                val varMap = signature.argNames.zip(inputVector(i)).toMap
+                try {
+                  Term.executeTerm(varMap, envWithPartialImpl)(term)
+                } catch {
+                  case ExecuteHoleException => ValueUnknown
+                }
               case tv: TermValue => tv
             }
           }
           term -> newVV
       })
 
-      import DSL._
-      def assembleTerm(tElse: Term): Term = {
-        `if`(tCond)(tThen)(tElse)
-      }
       val costSoFar = cThen + cCond + ifCost
       val maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar
       for (
-        (cElse, tElse) <- searchMin(maxCostForElse, elseGoal, newRecTermsOfCost,
-          assembleTerm, isFirstBranch = false)
+        (cElse, tElse) <- searchMin(maxCostForElse, elseGoal, newRecTermsOfCost, assembleTerm, isFirstBranch = false)
       ) {
 
         val totalCost = cElse + costSoFar
@@ -112,3 +140,6 @@ class DynamicGoalSearch( assembleRecProgram: Term => ComponentImpl,
 
 }
 
+object DynamicGoalSearch{
+  case object ExecuteHoleException extends Exception
+}

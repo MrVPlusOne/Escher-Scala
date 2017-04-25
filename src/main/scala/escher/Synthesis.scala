@@ -152,9 +152,13 @@ object Synthesis {
     listOfSets.head.toIterator.flatMap(v => cartesianProduct(listOfSets.tail).map(v +: _))
   }
 
-  case class SynthesizedComponent(name: String, argNames: IS[String],
-                                  inputTypes: IS[Type], returnType: Type,
+  case class ComponentSignature(name: String, argNames: IS[String],
+                                inputTypes: IS[Type], returnType: Type)
+
+  case class SynthesizedComponent(signature: ComponentSignature,
                                   body: Term, cost: Int, depth: Int){
+    import signature._
+
     def show: String = {
       val paramList = argNames.zip(inputTypes).map{
         case (argName, ty) => s"@$argName: $ty"

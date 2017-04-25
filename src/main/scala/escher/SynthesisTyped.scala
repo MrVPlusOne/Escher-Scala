@@ -50,7 +50,7 @@ object SynthesisTyped{
     result match {
       case Some((program, state, synData)) =>
         val examples = state.examples
-        println(s"------ Synthesis for ${program.name} Succeeded! (${synData.reboots} reboots) ------")
+        println(s"------ Synthesis for ${program.signature.name} Succeeded! (${synData.reboots} reboots) ------")
         println(s"Time used for the last reboot: ${TimeTools.nanoToMillisString(synData.lastRebootTimeUsed)}")
         showExamples("Initial Examples", examples, maxExamplesShown = 50)
         showExamples("Additional examples provided", synData.oracleBuffer, maxExamplesShown)
@@ -231,6 +231,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val outputs: IS[TermValue] = examples.map(_._2)
     val inputTypes = inputTypesFree.map(_.fixVars)
     val goalReturnType = returnTypeFree.fixVars
+    val signature = ComponentSignature(name, inputNames, inputTypes, goalReturnType)
 
     require(inputTypes.length == inputNames.length)
 
@@ -253,7 +254,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
     def resultFromState(cost:Int, depth: Int, term: Term): Option[(SynthesizedComponent, SynthesisState, SynthesisData)] = {
       val body = term
-      val comp = SynthesizedComponent(name, inputNames, inputTypes, goalReturnType, body, cost, depth)
+      val comp = SynthesizedComponent(signature, body, cost, depth)
       val impl = ComponentImpl.recursiveImpl(name, inputNames, inputTypes, goalReturnType,
         envComps, config.argListCompare, body)
       var passed, failed = IS[(ArgList, TermValue)]()

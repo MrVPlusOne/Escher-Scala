@@ -1,5 +1,6 @@
 package escher
 
+import escher.SynNoOracle.ExtendedCompImpl
 import escher.Term.{Component, If, Var}
 
 /**
@@ -55,7 +56,7 @@ object Term {
     case (a,b) => a.kind < b.kind
   }
 
-  def executeTerm(varMap: String => TermValue, compMap: String => ComponentImpl)(term: Term): TermValue = {
+  def executeTerm(varMap: String => TermValue, compMap: Map[String, ComponentImpl])(term: Term): TermValue = {
     term match {
       case Var(name) => varMap(name)
       case Component(name, terms) =>
@@ -88,6 +89,29 @@ object Term {
     }
     println("  " * depth + s"--> ${v.show}")
     v
+  }
+
+  def executeTermInExtendedEnv(varMap: Map[String, ExtendedValue], compMap: Map[String, ExtendedCompImpl])(term: Term): ExtendedValue = {
+    term match {
+      case Var(name) => varMap(name)
+      case Component(name, terms) =>
+        val args = terms.map { t =>
+          executeTermInExtendedEnv(varMap, compMap)(t) match {
+            case ValueUnknown => return ValueUnknown
+            case tv: TermValue => tv
+          }
+        }
+
+        compMap(name).execute(args)
+      case If(c, t, e) =>
+        val cv = executeTermInExtendedEnv(varMap, compMap)(c)
+        cv match {
+          case ValueUnknown => ValueUnknown
+          case ValueError => ValueError
+          case ValueBool(true) => executeTermInExtendedEnv(varMap, compMap)(t)
+          case ValueBool(false) => executeTermInExtendedEnv(varMap, compMap)(e)
+        }
+    }
   }
 
   def printTerm(term: Term, depth: Int = 0): Unit = {

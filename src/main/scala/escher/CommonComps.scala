@@ -1,7 +1,7 @@
 package escher
 
 import escher.CommonComps.ReducibleCheck
-import escher.Synthesis.ArgList
+import escher.Synthesis.{ArgList, ComponentSignature}
 
 /** An Exception which will not be caught by ComponentImpl.execute */
 case class ExecutionError(msg: String) extends Exception {
@@ -66,6 +66,15 @@ object ComponentImpl{
     recursiveImpl(name, argNames, inputTypes, returnType, compMap, argListCompare, body, debug)
   }
 
+  def recursiveImpl(signature: ComponentSignature,
+                    compMap: Map[String, ComponentImpl],
+                    argListCompare: (ArgList,ArgList) => Boolean,
+                    body: Term
+                   ): ComponentImpl = {
+    import signature._
+    recursiveImpl(name, argNames, inputTypes, returnType, compMap, argListCompare, body, debug = false)
+  }
+
   def recursiveImpl(name: String, argNames: IS[String],
                     inputTypes: IS[Type], returnType: Type,
                     compMap: Map[String, ComponentImpl],
@@ -109,6 +118,23 @@ object ComponentImpl{
     }
     impl(None, mutable.Map())
   }
+
+  def nonRecursiveImpl(signature: ComponentSignature,
+                       compMap: Map[String, ComponentImpl],
+                       argListCompare: (ArgList,ArgList) => Boolean,
+                       body: Term
+                   ): ComponentImpl = {
+    import signature._
+    ComponentImpl(name, inputTypes, returnType, {
+      case args =>
+        val varMap = argNames.zip(args).toMap
+        Term.executeTerm(
+          varMap = varMap,
+          compMap = compMap
+        )(body)
+    })
+  }
+
 }
 
 /** Commonly used components */

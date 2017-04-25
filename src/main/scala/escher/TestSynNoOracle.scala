@@ -39,9 +39,9 @@ object TestSynNoOracle {
 
     def reverseSynthesis() = {
       val args: IS[ArgList] = IS(
-        argList(listValue(1,2,3)),
-        argList(listValue(1,2)),
-        argList(listValue(2,3)),
+        argList(listValue(1, 2, 3)),
+        argList(listValue(1, 2)),
+        argList(listValue(2, 3)),
         argList(listValue(1)),
         argList(listValue())
       )
@@ -50,13 +50,16 @@ object TestSynNoOracle {
       val examples = args.map(argList => argList -> refComp.executeEfficient(argList))
 
       synthesize(refComp.name, IS(tyList(tyVar(0))), IS("xs"), tyList(tyVar(0)))(envComps = CommonComps.standardComps, examples, CommonComps.rules_noTree)
+
     }
 
-    containsSynthesis() match {
-      case Some(component) =>
-        component.print()
-        println(s"cost = ${component.cost}")
-      case None => println("Failed")
+    TimeTools.printTimeUsed("Synthesis task") {
+      reverseSynthesis() match {
+        case Some(component) =>
+          component.print()
+          println(s"cost = ${component.cost}")
+        case None => println("Failed")
+      }
     }
   }
 }

@@ -318,7 +318,7 @@ object Main {
     val dataToPrint = IS("  name", "cost", "depth", "examples", "reboots", "time") +: records.toIndexedSeq.map {
       case (comp, examples, reboots, time) =>
         totalTime += time
-        IS(s"  ${comp.name}",
+        IS(s"  ${comp.signature.name}",
           comp.cost.toString,
           comp.depth.toString,
           s"${examples._1}/${examples._2}",
