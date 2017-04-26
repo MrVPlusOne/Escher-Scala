@@ -281,6 +281,17 @@ object Synthesis {
     aux(0, signatureNextFreeId, TypeSubst.empty)
   }
 
+  def showExamples(tag: String, examples: IS[(ArgList, TermValue)], maxExamplesShown: Int): Unit ={
+    println(s"$tag (${examples.length}):")
+    examples.take(maxExamplesShown).foreach { case (a, r) =>
+      print(ArgList.showArgList(a))
+      print(" -> ")
+      println(r.show)
+    }
+    if(examples.length > maxExamplesShown)
+      println(s" ...(${examples.length - maxExamplesShown} more not shown)...")
+  }
+
 
 }
 

@@ -35,17 +35,6 @@ object SynthesisTyped{
 
   def printResult(syn: SynthesisTyped, maxExamplesShown: Int = 9)
                  (result: Option[(SynthesizedComponent, syn.SynthesisState, SynthesisData)]): Unit = {
-    def showExamples(tag: String, examples: IS[(ArgList, TermValue)], maxExamplesShown: Int): Unit ={
-      println(s"$tag (${examples.length}):")
-      examples.take(maxExamplesShown).foreach { case (a, r) =>
-        print(ArgList.showArgList(a))
-        print(" -> ")
-        println(r.show)
-      }
-      if(examples.length > maxExamplesShown)
-        println(s" ...(${examples.length - maxExamplesShown} more not shown)...")
-    }
-
 
     result match {
       case Some((program, state, synData)) =>
