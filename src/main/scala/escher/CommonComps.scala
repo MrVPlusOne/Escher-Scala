@@ -172,8 +172,16 @@ object CommonComps {
 
     def noDirectChildren(children: ComponentImpl*): ReducibleCheck = {
       val blackList = children.map(_.name).toSet
+      def checkArgs(args: IS[Term]): Boolean = {
+        args.foreach{
+          case Term.Component(n, _) if blackList.contains(n) =>
+            return true
+          case _ =>
+        }
+        false
+      }
       ReducibleCheck(None, {
-        case IS(Term.Component(n, _)) => blackList.contains(n)
+        case args => checkArgs(args)
       })
     }
 
@@ -335,13 +343,14 @@ object CommonComps {
     // list
     length -> noDirectChildren(cons),
     concat -> associative(concat),
+    head -> noDirectChildren(cons),
 
     //integer
     inc -> noDirectChildren(dec),
     dec -> noDirectChildren(inc),
-    neg -> noDirectChildren(neg),
+    neg -> noDirectChildren(neg, inc, dec),
     length -> noDirectChildren(cons),
-    plus -> reduces(commutative, argsDifferent)
+    plus -> reduces(commutative, argsDifferent, noDirectChildren(inc, dec))
   )
 
   val createLeaf = ComponentImpl("createLeaf", IS(), tyTree(tyVar(0)),
@@ -498,8 +507,8 @@ object CommonComps {
   )
 
   val rules_timesAndDiv = Map[ComponentImpl, ReducibleCheck](
-    times -> reduces(commutative, associative(times), noDirectChildren(zero)),
-    div -> reduces(noDirectChildren(zero))
+    times -> reduces(commutative, associative(times), noDirectChildren(zero, neg)),
+    div -> reduces(noDirectChildren(zero, neg))
   )
 
   /** 1,1,2,3,5,8,... */
