@@ -1,0 +1,908 @@
+*** [synthesize related components at level 1] time used: 7.31ms ***
+*** [Goal searching] time used: 15.04ms ***
+*** [synthesize unrelated components] time used: 1.14ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+*** [synthesize related components at level 2] time used: 14.95ms ***
+*** [Goal searching] time used: 0.44ms ***
+*** [synthesize unrelated components] time used: 4.05ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+*** [synthesize related components at level 3] time used: 9.84ms ***
+*** [Goal searching] time used: 6.99ms ***
+*** [synthesize unrelated components] time used: 4.97ms ***
+State at level: 3
+TotalMap: (24 components, 9 types)
+*** [synthesize related components at level 4] time used: 10.05ms ***
+*** [Goal searching] time used: 0.94ms ***
+*** [synthesize unrelated components] time used: 5.88ms ***
+State at level: 4
+TotalMap: (36 components, 9 types)
+*** [synthesize related components at level 5] time used: 12.49ms ***
+*** [Goal searching] time used: 0.93ms ***
+*** [synthesize unrelated components] time used: 7.00ms ***
+State at level: 5
+TotalMap: (52 components, 9 types)
+*** [synthesize related components at level 6] time used: 18.91ms ***
+*** [Goal searching] time used: 1.34ms ***
+*** [synthesize unrelated components] time used: 5.01ms ***
+State at level: 6
+TotalMap: (74 components, 9 types)
+*** [synthesize related components at level 7] time used: 17.71ms ***
+*** [Goal searching] time used: 3.55ms ***
+*** [synthesize unrelated components] time used: 6.46ms ***
+State at level: 7
+TotalMap: (107 components, 9 types)
+*** [synthesize related components at level 8] time used: 13.95ms ***
+*** [single synthesis] time used: 316.44ms ***
+------ Synthesis for reverse Succeeded! (0 reboots) ------
+Time used for the last reboot: 219.23ms
+Initial Examples (2):
+([]) -> []
+([2, 3, 4]) -> [4, 3, 2]
+Additional examples provided (10):
+([4, 2]) -> [2, 4]
+([2, 3]) -> [3, 2]
+([4]) -> [4]
+([2]) -> [2]
+([2, 4]) -> [4, 2]
+([2, 2]) -> [2, 2]
+([4, 3]) -> [3, 4]
+([3]) -> [3]
+ ...(2 more not shown)...
+TotalMap: (148 components, 9 types)
+
+Program found:
+
+reverse(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then @xs
+  else concat(reverse(tail(@xs)), cons(head(@xs), nil()))
+
+*** [synthesize related components at level 1] time used: 0.37ms ***
+*** [Goal searching] time used: 0.47ms ***
+*** [synthesize unrelated components] time used: 0.17ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+*** [synthesize related components at level 2] time used: 1.34ms ***
+*** [Goal searching] time used: 0.47ms ***
+*** [synthesize unrelated components] time used: 1.34ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+*** [synthesize related components at level 3] time used: 3.07ms ***
+*** [Goal searching] time used: 0.79ms ***
+*** [synthesize unrelated components] time used: 2.90ms ***
+State at level: 3
+TotalMap: (24 components, 9 types)
+*** [synthesize related components at level 4] time used: 3.35ms ***
+*** [Goal searching] time used: 0.87ms ***
+*** [synthesize unrelated components] time used: 1.68ms ***
+State at level: 4
+TotalMap: (43 components, 9 types)
+*** [synthesize related components at level 5] time used: 8.80ms ***
+*** [Goal searching] time used: 1.98ms ***
+*** [synthesize unrelated components] time used: 3.84ms ***
+State at level: 5
+TotalMap: (71 components, 9 types)
+*** [synthesize related components at level 6] time used: 7.48ms ***
+*** [Goal searching] time used: 3.13ms ***
+*** [synthesize unrelated components] time used: 4.56ms ***
+State at level: 6
+TotalMap: (112 components, 9 types)
+*** [synthesize related components at level 7] time used: 11.36ms ***
+*** [Goal searching] time used: 4.53ms ***
+*** [synthesize unrelated components] time used: 4.01ms ***
+State at level: 7
+TotalMap: (172 components, 9 types)
+*** [synthesize related components at level 8] time used: 16.24ms ***
+*** [Goal searching] time used: 4.35ms ***
+*** [synthesize unrelated components] time used: 8.39ms ***
+State at level: 8
+TotalMap: (279 components, 9 types)
+*** [synthesize related components at level 9] time used: 30.15ms ***
+*** [single synthesis] time used: 138.48ms ***
+------ Synthesis for stutter Succeeded! (0 reboots) ------
+Time used for the last reboot: 138.34ms
+Initial Examples (3):
+([]) -> []
+([5]) -> [5, 5]
+([5, 6, 3]) -> [5, 5, 6, 6, 3, 3]
+Additional examples provided (10):
+([6, 5]) -> [6, 6, 5, 5]
+([5, 6]) -> [5, 5, 6, 6]
+([6]) -> [6, 6]
+([5, 3]) -> [5, 5, 3, 3]
+([5, 5]) -> [5, 5, 5, 5]
+([6, 3]) -> [6, 6, 3, 3]
+([3, 3]) -> [3, 3, 3, 3]
+([3]) -> [3, 3]
+ ...(2 more not shown)...
+TotalMap: (415 components, 9 types)
+
+Program found:
+
+stutter(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else cons(head(@xs), cons(head(@xs), stutter(tail(@xs))))
+
+*** [synthesize related components at level 1] time used: 0.18ms ***
+*** [Goal searching] time used: 0.27ms ***
+*** [synthesize unrelated components] time used: 0.12ms ***
+State at level: 1
+TotalMap: (7 components, 6 types)
+*** [synthesize related components at level 2] time used: 0.71ms ***
+*** [Goal searching] time used: 0.16ms ***
+*** [synthesize unrelated components] time used: 0.69ms ***
+State at level: 2
+TotalMap: (15 components, 8 types)
+*** [synthesize related components at level 3] time used: 2.36ms ***
+*** [Goal searching] time used: 0.60ms ***
+*** [synthesize unrelated components] time used: 1.81ms ***
+State at level: 3
+TotalMap: (35 components, 13 types)
+*** [synthesize related components at level 4] time used: 2.66ms ***
+*** [Goal searching] time used: 0.69ms ***
+*** [synthesize unrelated components] time used: 2.37ms ***
+State at level: 4
+TotalMap: (63 components, 13 types)
+*** [synthesize related components at level 5] time used: 4.93ms ***
+*** [Goal searching] time used: 1.33ms ***
+*** [synthesize unrelated components] time used: 4.52ms ***
+State at level: 5
+TotalMap: (117 components, 15 types)
+*** [synthesize related components at level 6] time used: 6.60ms ***
+*** [Goal searching] time used: 1.67ms ***
+*** [synthesize unrelated components] time used: 12.05ms ***
+State at level: 6
+TotalMap: (189 components, 15 types)
+*** [synthesize related components at level 7] time used: 17.69ms ***
+*** [Goal searching] time used: 2.19ms ***
+*** [synthesize unrelated components] time used: 8.89ms ***
+State at level: 7
+TotalMap: (290 components, 15 types)
+*** [synthesize related components at level 8] time used: 24.10ms ***
+*** [Goal searching] time used: 3.60ms ***
+*** [synthesize unrelated components] time used: 14.64ms ***
+State at level: 8
+TotalMap: (425 components, 15 types)
+*** [synthesize related components at level 9] time used: 40.74ms ***
+*** [Goal searching] time used: 3.19ms ***
+*** [synthesize unrelated components] time used: 23.29ms ***
+State at level: 9
+TotalMap: (613 components, 15 types)
+*** [synthesize related components at level 10] time used: 39.25ms ***
+*** [Goal searching] time used: 3.10ms ***
+*** [synthesize unrelated components] time used: 19.22ms ***
+State at level: 10
+TotalMap: (915 components, 15 types)
+*** [synthesize related components at level 11] time used: 61.97ms ***
+*** [Goal searching] time used: 6.22ms ***
+*** [synthesize unrelated components] time used: 75.81ms ***
+State at level: 11
+TotalMap: (1358 components, 15 types)
+*** [synthesize related components at level 12] time used: 75.80ms ***
+*** [single synthesis] time used: 485.10ms ***
+------ Synthesis for cartesian Succeeded! (0 reboots) ------
+Time used for the last reboot: 481.26ms
+Initial Examples (4):
+([], [2, 3, 4]) -> []
+([5], []) -> []
+([5], [7, 8, 9]) -> [(5, 7), (5, 8), (5, 9)]
+([2, 3], [4, 5]) -> [(2, 4), (2, 5), (3, 4), (3, 5)]
+Additional examples provided (78):
+([], [8, 8]) -> []
+([5], [9, 7]) -> [(5, 9), (5, 7)]
+([5], [7, 8]) -> [(5, 7), (5, 8)]
+([], [7, 7]) -> []
+([], [7, 8]) -> []
+([], [9, 7]) -> []
+([], [4, 4]) -> []
+([3, 2], [5]) -> [(3, 5), (2, 5)]
+ ...(70 more not shown)...
+TotalMap: (1414 components, 15 types)
+
+Program found:
+
+cartesian(@xs: List['0], @ys: List['1]): List[Pair['0,'1]] =
+  if or(isNil(@ys), isNil(@xs))
+  then nil()
+  else if isNil(tail(@xs))
+       then cons(createPair(head(@xs), head(@ys)), cartesian(@xs, tail(@ys)))
+       else concat(cartesian(cons(head(@xs), nil()), @ys), cartesian(tail(@xs), @ys))
+
+*** [synthesize related components at level 1] time used: 0.21ms ***
+*** [Goal searching] time used: 1.52ms ***
+*** [synthesize unrelated components] time used: 0.13ms ***
+State at level: 1
+TotalMap: (6 components, 4 types)
+*** [synthesize related components at level 2] time used: 0.60ms ***
+*** [Goal searching] time used: 0.10ms ***
+*** [synthesize unrelated components] time used: 0.50ms ***
+State at level: 2
+TotalMap: (14 components, 5 types)
+*** [synthesize related components at level 3] time used: 1.29ms ***
+*** [Goal searching] time used: 0.28ms ***
+*** [synthesize unrelated components] time used: 0.71ms ***
+State at level: 3
+TotalMap: (45 components, 7 types)
+*** [synthesize related components at level 4] time used: 1.11ms ***
+*** [Goal searching] time used: 0.64ms ***
+*** [synthesize unrelated components] time used: 2.27ms ***
+State at level: 4
+TotalMap: (130 components, 8 types)
+*** [synthesize related components at level 5] time used: 3.53ms ***
+*** [Goal searching] time used: 2.90ms ***
+*** [synthesize unrelated components] time used: 5.03ms ***
+State at level: 5
+TotalMap: (395 components, 8 types)
+*** [synthesize related components at level 6] time used: 11.08ms ***
+*** [Goal searching] time used: 10.02ms ***
+*** [synthesize unrelated components] time used: 22.35ms ***
+State at level: 6
+TotalMap: (1154 components, 8 types)
+*** [synthesize related components at level 7] time used: 36.50ms ***
+*** [Goal searching] time used: 13.87ms ***
+*** [synthesize unrelated components] time used: 48.13ms ***
+State at level: 7
+TotalMap: (3388 components, 8 types)
+*** [synthesize related components at level 8] time used: 68.07ms ***
+*** [Goal searching] time used: 41.93ms ***
+*** [synthesize unrelated components] time used: 168.20ms ***
+State at level: 8
+TotalMap: (9971 components, 8 types)
+*** [synthesize related components at level 9] time used: 173.98ms ***
+*** [single synthesis] time used: 667.08ms ***
+------ Synthesis for squareList Succeeded! (0 reboots) ------
+Time used for the last reboot: 666.74ms
+Initial Examples (6):
+(0) -> []
+(1) -> [1]
+(2) -> [1, 4]
+(-3) -> []
+(3) -> [1, 4, 9]
+(4) -> [1, 4, 9, 16]
+Additional examples provided (2):
+(-2) -> []
+(-1) -> []
+TotalMap: (16504 components, 8 types)
+
+Program found:
+
+squareList(@n: Int): List[Int] =
+  if isNonNeg(neg(@n))
+  then nil()
+  else concat(squareList(dec(@n)), cons(times(@n, @n), nil()))
+
+*** [synthesize related components at level 1] time used: 0.65ms ***
+*** [Goal searching] time used: 0.12ms ***
+*** [synthesize unrelated components] time used: 0.12ms ***
+State at level: 1
+TotalMap: (6 components, 4 types)
+*** [synthesize related components at level 2] time used: 0.80ms ***
+*** [Goal searching] time used: 0.12ms ***
+*** [synthesize unrelated components] time used: 0.33ms ***
+State at level: 2
+TotalMap: (14 components, 4 types)
+*** [synthesize related components at level 3] time used: 1.53ms ***
+*** [Goal searching] time used: 0.39ms ***
+*** [synthesize unrelated components] time used: 0.33ms ***
+State at level: 3
+TotalMap: (39 components, 4 types)
+*** [synthesize related components at level 4] time used: 4.19ms ***
+*** [Goal searching] time used: 2.43ms ***
+*** [synthesize unrelated components] time used: 0.28ms ***
+State at level: 4
+TotalMap: (104 components, 4 types)
+*** [synthesize related components at level 5] time used: 5.73ms ***
+*** [Goal searching] time used: 6.83ms ***
+*** [synthesize unrelated components] time used: 0.48ms ***
+State at level: 5
+TotalMap: (269 components, 4 types)
+*** [synthesize related components at level 6] time used: 12.45ms ***
+*** [Goal searching] time used: 18.00ms ***
+*** [synthesize unrelated components] time used: 0.44ms ***
+State at level: 6
+TotalMap: (662 components, 4 types)
+*** [synthesize related components at level 7] time used: 30.35ms ***
+*** [Goal searching] time used: 83.26ms ***
+*** [synthesize unrelated components] time used: 0.94ms ***
+State at level: 7
+TotalMap: (1557 components, 4 types)
+*** [synthesize related components at level 8] time used: 68.94ms ***
+*** [single synthesis] time used: 262.96ms ***
+------ Synthesis for fib Succeeded! (0 reboots) ------
+Time used for the last reboot: 262.85ms
+Initial Examples (8):
+(0) -> 1
+(1) -> 1
+(2) -> 2
+(-3) -> 1
+(3) -> 3
+(4) -> 5
+(5) -> 8
+(6) -> 13
+Additional examples provided (4):
+(-2) -> 1
+(-5) -> 1
+(-1) -> 1
+(-4) -> 1
+TotalMap: (3446 components, 4 types)
+
+Program found:
+
+fib(@n: Int): Int =
+  if isNonNeg(inc(neg(@n)))
+  then inc(zero())
+  else plus(fib(dec(@n)), fib(dec(dec(@n))))
+
+*** [synthesize related components at level 1] time used: 0.67ms ***
+*** [Goal searching] time used: 0.21ms ***
+*** [synthesize unrelated components] time used: 0.14ms ***
+State at level: 1
+TotalMap: (8 components, 6 types)
+*** [synthesize related components at level 2] time used: 0.84ms ***
+*** [Goal searching] time used: 0.15ms ***
+*** [synthesize unrelated components] time used: 0.80ms ***
+State at level: 2
+TotalMap: (19 components, 6 types)
+*** [synthesize related components at level 3] time used: 1.13ms ***
+*** [Goal searching] time used: 0.16ms ***
+*** [synthesize unrelated components] time used: 0.98ms ***
+State at level: 3
+TotalMap: (54 components, 10 types)
+*** [synthesize related components at level 4] time used: 1.70ms ***
+*** [Goal searching] time used: 0.14ms ***
+*** [synthesize unrelated components] time used: 1.83ms ***
+State at level: 4
+TotalMap: (126 components, 10 types)
+*** [synthesize related components at level 5] time used: 4.28ms ***
+*** [Goal searching] time used: 0.57ms ***
+*** [synthesize unrelated components] time used: 2.25ms ***
+State at level: 5
+TotalMap: (302 components, 10 types)
+*** [synthesize related components at level 6] time used: 8.24ms ***
+*** [Goal searching] time used: 0.66ms ***
+*** [synthesize unrelated components] time used: 4.21ms ***
+State at level: 6
+TotalMap: (688 components, 10 types)
+*** [synthesize related components at level 7] time used: 37.04ms ***
+*** [Goal searching] time used: 4.33ms ***
+*** [synthesize unrelated components] time used: 12.33ms ***
+State at level: 7
+TotalMap: (1563 components, 10 types)
+*** [synthesize related components at level 8] time used: 103.00ms ***
+*** [Goal searching] time used: 8.72ms ***
+*** [synthesize unrelated components] time used: 25.27ms ***
+State at level: 8
+TotalMap: (3354 components, 10 types)
+*** [synthesize related components at level 9] time used: 361.81ms ***
+*** [single synthesis] time used: 604.21ms ***
+------ Synthesis for insert Succeeded! (0 reboots) ------
+Time used for the last reboot: 603.95ms
+Initial Examples (8):
+([], 0, 5) -> [5]
+([], 3, 5) -> [5]
+([3], -1, 1) -> [1, 3]
+([1, 2, 3], 0, 8) -> [8, 1, 2, 3]
+([1, 2, 3], 1, 8) -> [1, 8, 2, 3]
+([1, 2, 3], 2, 8) -> [1, 2, 8, 3]
+([1, 2, 3], 3, 8) -> [1, 2, 3, 8]
+([1, 2, 3], 4, 8) -> [1, 2, 3, 8]
+Additional examples provided (292):
+([3], 3, 2) -> [3, 2]
+([8, 8], 0, 8) -> [8, 8, 8]
+([3, 8], 3, 8) -> [3, 8, 8]
+([2, 3], -1, 3) -> [3, 2, 3]
+([2, 3], -4, 1) -> [1, 2, 3]
+([8], -3, 2) -> [2, 8]
+([8, 8], 4, 1) -> [8, 8, 1]
+([1, 2, 3], -2, 2) -> [2, 1, 2, 3]
+ ...(284 more not shown)...
+TotalMap: (4458 components, 10 types)
+
+Program found:
+
+insert(@xs: List['0], @i: Int, @x: '0): List['0] =
+  if or(isNil(@xs), isNonNeg(neg(@i)))
+  then cons(@x, @xs)
+  else cons(head(@xs), insert(tail(@xs), dec(@i), @x))
+
+*** [synthesize related components at level 1] time used: 0.11ms ***
+*** [Goal searching] time used: 0.09ms ***
+*** [synthesize unrelated components] time used: 0.06ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+*** [synthesize related components at level 2] time used: 0.30ms ***
+*** [Goal searching] time used: 0.04ms ***
+*** [synthesize unrelated components] time used: 0.18ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+*** [synthesize related components at level 3] time used: 0.64ms ***
+*** [Goal searching] time used: 0.17ms ***
+*** [synthesize unrelated components] time used: 0.32ms ***
+State at level: 3
+TotalMap: (24 components, 9 types)
+*** [synthesize related components at level 4] time used: 0.70ms ***
+*** [Goal searching] time used: 0.27ms ***
+*** [synthesize unrelated components] time used: 0.59ms ***
+State at level: 4
+TotalMap: (42 components, 9 types)
+*** [synthesize related components at level 5] time used: 1.50ms ***
+*** [Goal searching] time used: 0.40ms ***
+*** [synthesize unrelated components] time used: 0.69ms ***
+State at level: 5
+TotalMap: (75 components, 9 types)
+*** [synthesize related components at level 6] time used: 2.07ms ***
+*** [Goal searching] time used: 1.26ms ***
+*** [synthesize unrelated components] time used: 1.42ms ***
+State at level: 6
+TotalMap: (133 components, 9 types)
+*** [synthesize related components at level 7] time used: 5.35ms ***
+*** [Goal searching] time used: 3.30ms ***
+*** [synthesize unrelated components] time used: 1.49ms ***
+State at level: 7
+TotalMap: (240 components, 9 types)
+*** [synthesize related components at level 8] time used: 8.83ms ***
+*** [Goal searching] time used: 4.22ms ***
+*** [synthesize unrelated components] time used: 1.95ms ***
+State at level: 8
+TotalMap: (439 components, 9 types)
+*** [synthesize related components at level 9] time used: 10.83ms ***
+*** [single synthesis] time used: 57.22ms ***
+------ Synthesis for compress Succeeded! (0 reboots) ------
+Time used for the last reboot: 57.13ms
+Initial Examples (8):
+([]) -> []
+([7]) -> [7]
+([9, 9]) -> [9]
+([3, 9]) -> [3, 9]
+([2, 3, 9]) -> [2, 3, 9]
+([9, 9, 2]) -> [9, 2]
+([3, 3, 3, 9]) -> [3, 9]
+([2, 3, 3, 9, 9]) -> [2, 3, 9]
+Additional examples provided (22):
+([3, 9, 9, 9]) -> [3, 9]
+([2, 3]) -> [2, 3]
+([3, 9, 9]) -> [3, 9]
+([2, 9, 9]) -> [2, 9]
+([3, 3, 9, 9]) -> [3, 9]
+([3, 9, 3]) -> [3, 9, 3]
+([3, 9, 3, 9]) -> [3, 9, 3, 9]
+([3, 9, 9, 2]) -> [3, 9, 2]
+ ...(14 more not shown)...
+TotalMap: (685 components, 9 types)
+
+Program found:
+
+compress(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then @xs
+  else if isNil(tail(@xs))
+       then @xs
+       else if equal(head(@xs), head(tail(@xs)))
+            then compress(tail(@xs))
+            else cons(head(@xs), compress(tail(@xs)))
+
+*** [synthesize related components at level 1] time used: 0.06ms ***
+*** [Goal searching] time used: 0.07ms ***
+*** [synthesize unrelated components] time used: 0.05ms ***
+State at level: 1
+TotalMap: (7 components, 5 types)
+*** [synthesize related components at level 2] time used: 0.17ms ***
+*** [Goal searching] time used: 0.03ms ***
+*** [synthesize unrelated components] time used: 0.36ms ***
+State at level: 2
+TotalMap: (18 components, 6 types)
+*** [synthesize related components at level 3] time used: 0.57ms ***
+*** [Goal searching] time used: 0.16ms ***
+*** [synthesize unrelated components] time used: 0.36ms ***
+State at level: 3
+TotalMap: (51 components, 12 types)
+*** [synthesize related components at level 4] time used: 1.77ms ***
+*** [Goal searching] time used: 0.24ms ***
+*** [synthesize unrelated components] time used: 0.90ms ***
+State at level: 4
+TotalMap: (123 components, 17 types)
+*** [synthesize related components at level 5] time used: 3.30ms ***
+*** [Goal searching] time used: 0.64ms ***
+*** [synthesize unrelated components] time used: 1.63ms ***
+State at level: 5
+TotalMap: (290 components, 18 types)
+*** [synthesize related components at level 6] time used: 6.10ms ***
+*** [Goal searching] time used: 4.50ms ***
+*** [synthesize unrelated components] time used: 4.08ms ***
+State at level: 6
+TotalMap: (659 components, 19 types)
+*** [synthesize related components at level 7] time used: 14.72ms ***
+*** [Goal searching] time used: 21.98ms ***
+*** [synthesize unrelated components] time used: 7.85ms ***
+State at level: 7
+TotalMap: (1403 components, 19 types)
+*** [synthesize related components at level 8] time used: 31.69ms ***
+*** [Goal searching] time used: 71.85ms ***
+*** [synthesize unrelated components] time used: 16.26ms ***
+State at level: 8
+TotalMap: (2877 components, 19 types)
+*** [synthesize related components at level 9] time used: 95.84ms ***
+*** [Goal searching] time used: 191.11ms ***
+*** [synthesize unrelated components] time used: 56.17ms ***
+State at level: 9
+TotalMap: (5706 components, 19 types)
+*** [synthesize related components at level 10] time used: 424.08ms ***
+*** [Goal searching] time used: 353.78ms ***
+*** [synthesize unrelated components] time used: 86.69ms ***
+State at level: 10
+TotalMap: (11074 components, 19 types)
+*** [synthesize related components at level 11] time used: 1,281.64ms ***
+*** [single synthesis] time used: 3,070.84ms ***
+------ Synthesis for nodesAtLevel Succeeded! (0 reboots) ------
+Time used for the last reboot: 3,068.98ms
+Initial Examples (11):
+(L, 0) -> []
+(L, 1) -> []
+(L, -1) -> []
+((12: L, L), 0) -> [12]
+((12: L, L), -1) -> []
+((12: L, L), 1) -> []
+((12: L, L), 2) -> []
+((12: (7: L, L), (9: L, L)), 1) -> [7, 9]
+((12: (7: L, L), (9: L, L)), 2) -> []
+((12: (15: (4: L, L), L), (9: L, L)), 3) -> []
+((15: (15: (4: L, L), L), (9: L, L)), 4) -> []
+Additional examples provided (427):
+((12: L, (15: (4: L, L), L)), -3) -> []
+((9: (15: (4: L, L), L), (9: L, L)), -1) -> []
+((12: (4: L, L), (4: L, L)), 3) -> []
+((9: (9: L, L), L), -4) -> []
+((9: (9: L, L), (4: L, L)), 0) -> [9]
+((9: L, (7: L, L)), 2) -> []
+((12: (9: L, L), (4: L, L)), 1) -> [9, 4]
+((12: L, (7: L, L)), 2) -> []
+ ...(419 more not shown)...
+TotalMap: (12755 components, 19 types)
+
+Program found:
+
+nodesAtLevel(@tree: Tree['0], @level: Int): List['0] =
+  if or(isLeaf(@tree), not(isNonNeg(@level)))
+  then nil()
+  else if isNonNeg(neg(@level))
+       then cons(treeValue(@tree), nil())
+       else concat(nodesAtLevel(treeLeft(@tree), dec(@level)), nodesAtLevel(treeRight(@tree), dec(@level)))
+
+*** [synthesize related components at level 1] time used: 0.09ms ***
+*** [Goal searching] time used: 0.07ms ***
+*** [synthesize unrelated components] time used: 0.05ms ***
+State at level: 1
+TotalMap: (7 components, 6 types)
+*** [synthesize related components at level 2] time used: 0.22ms ***
+*** [Goal searching] time used: 0.04ms ***
+*** [synthesize unrelated components] time used: 0.23ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+*** [synthesize related components at level 3] time used: 0.46ms ***
+*** [Goal searching] time used: 0.09ms ***
+*** [synthesize unrelated components] time used: 0.23ms ***
+State at level: 3
+TotalMap: (23 components, 9 types)
+*** [synthesize related components at level 4] time used: 0.42ms ***
+*** [Goal searching] time used: 0.13ms ***
+*** [synthesize unrelated components] time used: 0.44ms ***
+State at level: 4
+TotalMap: (42 components, 9 types)
+*** [synthesize related components at level 5] time used: 0.66ms ***
+*** [single synthesis] time used: 6.10ms ***
+------ Synthesis for contains Succeeded! (0 reboots) ------
+Time used for the last reboot: 5.56ms
+Initial Examples (7):
+([], 1) -> F
+([1, 2], 3) -> F
+([1, 2, 3], 1) -> T
+([1, 2, 3], -1) -> F
+([1, 2, 3], 2) -> T
+([1, 2, 3], 3) -> T
+([1, 2, 3], 4) -> F
+Additional examples provided (22):
+([2], 2) -> T
+([3], 2) -> F
+([2, 3], 3) -> T
+([2, 3], 2) -> T
+([2, 3], -1) -> F
+([], -1) -> F
+([2], 3) -> F
+([1, 2], 2) -> T
+ ...(14 more not shown)...
+TotalMap: (50 components, 9 types)
+
+Program found:
+
+contains(@xs: List['0], @x: '0): Bool =
+  if isNil(@xs)
+  then F()
+  else if equal(@x, head(@xs))
+       then T()
+       else contains(tail(@xs), @x)
+
+*** [synthesize related components at level 1] time used: 0.04ms ***
+*** [Goal searching] time used: 0.07ms ***
+*** [synthesize unrelated components] time used: 0.04ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+*** [synthesize related components at level 2] time used: 0.15ms ***
+*** [Goal searching] time used: 0.09ms ***
+*** [synthesize unrelated components] time used: 0.09ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+*** [synthesize related components at level 3] time used: 0.23ms ***
+*** [Goal searching] time used: 0.09ms ***
+*** [synthesize unrelated components] time used: 0.16ms ***
+State at level: 3
+TotalMap: (24 components, 9 types)
+*** [synthesize related components at level 4] time used: 0.46ms ***
+*** [Goal searching] time used: 0.18ms ***
+*** [synthesize unrelated components] time used: 0.38ms ***
+State at level: 4
+TotalMap: (45 components, 9 types)
+*** [synthesize related components at level 5] time used: 0.85ms ***
+*** [Goal searching] time used: 0.26ms ***
+*** [synthesize unrelated components] time used: 0.47ms ***
+State at level: 5
+TotalMap: (85 components, 9 types)
+*** [synthesize related components at level 6] time used: 1.12ms ***
+*** [single synthesis] time used: 8.99ms ***
+------ Synthesis for dropLast Succeeded! (0 reboots) ------
+Time used for the last reboot: 8.62ms
+Initial Examples (5):
+([]) -> []
+([1]) -> []
+([1, 2]) -> [1]
+([1, 2, 3]) -> [1, 2]
+([1, 1, 1, 2, 3, 2]) -> [1, 1, 1, 2, 3]
+Additional examples provided (10):
+([2, 3]) -> [2]
+([1, 2, 3, 2]) -> [1, 2, 3]
+([2]) -> []
+([1, 1]) -> [1]
+([1, 1, 2, 3, 2]) -> [1, 1, 2, 3]
+([3]) -> []
+([3, 2]) -> [3]
+([2, 3, 2]) -> [2, 3]
+ ...(2 more not shown)...
+TotalMap: (128 components, 9 types)
+
+Program found:
+
+dropLast(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else if isNil(tail(@xs))
+       then nil()
+       else cons(head(@xs), dropLast(tail(@xs)))
+
+*** [synthesize related components at level 1] time used: 0.07ms ***
+*** [Goal searching] time used: 0.08ms ***
+*** [synthesize unrelated components] time used: 0.07ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+*** [synthesize related components at level 2] time used: 0.30ms ***
+*** [Goal searching] time used: 0.12ms ***
+*** [synthesize unrelated components] time used: 0.52ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+*** [synthesize related components at level 3] time used: 0.84ms ***
+*** [Goal searching] time used: 0.19ms ***
+*** [synthesize unrelated components] time used: 0.31ms ***
+State at level: 3
+TotalMap: (24 components, 9 types)
+*** [synthesize related components at level 4] time used: 0.76ms ***
+*** [Goal searching] time used: 0.17ms ***
+*** [synthesize unrelated components] time used: 0.30ms ***
+State at level: 4
+TotalMap: (43 components, 9 types)
+*** [synthesize related components at level 5] time used: 0.83ms ***
+*** [Goal searching] time used: 0.28ms ***
+*** [synthesize unrelated components] time used: 0.36ms ***
+State at level: 5
+TotalMap: (80 components, 9 types)
+*** [synthesize related components at level 6] time used: 1.00ms ***
+*** [Goal searching] time used: 0.25ms ***
+*** [synthesize unrelated components] time used: 0.80ms ***
+State at level: 6
+TotalMap: (145 components, 9 types)
+*** [synthesize related components at level 7] time used: 2.40ms ***
+*** [single synthesis] time used: 14.01ms ***
+------ Synthesis for evens Succeeded! (0 reboots) ------
+Time used for the last reboot: 13.55ms
+Initial Examples (5):
+([]) -> []
+([1]) -> [1]
+([1, 2]) -> [1]
+([1, 2, 3, 4]) -> [1, 3]
+([1, 2, 3, 4, 5, 6]) -> [1, 3, 5]
+Additional examples provided (20):
+([5]) -> [5]
+([4]) -> [4]
+([2, 4, 6]) -> [2, 6]
+([1, 3, 4]) -> [1, 4]
+([5, 6]) -> [5]
+([6]) -> [6]
+([1, 2, 4, 6]) -> [1, 4]
+([1, 3, 4, 5, 6]) -> [1, 4, 6]
+ ...(12 more not shown)...
+TotalMap: (220 components, 9 types)
+
+Program found:
+
+evens(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else if isNil(tail(@xs))
+       then @xs
+       else cons(head(@xs), evens(tail(tail(@xs))))
+
+*** [synthesize related components at level 1] time used: 0.09ms ***
+*** [Goal searching] time used: 0.11ms ***
+*** [synthesize unrelated components] time used: 0.05ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+*** [synthesize related components at level 2] time used: 0.22ms ***
+*** [Goal searching] time used: 0.04ms ***
+*** [synthesize unrelated components] time used: 0.20ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+*** [synthesize related components at level 3] time used: 0.35ms ***
+*** [Goal searching] time used: 0.09ms ***
+*** [synthesize unrelated components] time used: 0.17ms ***
+State at level: 3
+TotalMap: (24 components, 9 types)
+*** [synthesize related components at level 4] time used: 0.72ms ***
+*** [Goal searching] time used: 0.18ms ***
+*** [synthesize unrelated components] time used: 0.81ms ***
+State at level: 4
+TotalMap: (43 components, 9 types)
+*** [synthesize related components at level 5] time used: 2.65ms ***
+*** [Goal searching] time used: 0.38ms ***
+*** [synthesize unrelated components] time used: 0.55ms ***
+State at level: 5
+TotalMap: (77 components, 9 types)
+*** [synthesize related components at level 6] time used: 1.81ms ***
+*** [Goal searching] time used: 0.77ms ***
+*** [synthesize unrelated components] time used: 0.59ms ***
+State at level: 6
+TotalMap: (145 components, 9 types)
+*** [synthesize related components at level 7] time used: 3.15ms ***
+*** [single synthesis] time used: 17.96ms ***
+------ Synthesis for dedup Succeeded! (0 reboots) ------
+Time used for the last reboot: 17.44ms
+Initial Examples (9):
+([]) -> []
+([1]) -> [1]
+([3, 3]) -> [3]
+([2, 3]) -> [2, 3]
+([1, 2, 3]) -> [1, 2, 3]
+([1, 2, 3, 2]) -> [1, 3, 2]
+([1, 2, 3, 2, 1]) -> [3, 2, 1]
+([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]
+([2, 2, 2, 3, 3, 3]) -> [2, 3]
+Additional examples provided (16):
+([2, 3, 3, 3]) -> [2, 3]
+([2]) -> [2]
+([1, 3, 2]) -> [1, 3, 2]
+([3, 3, 3]) -> [3]
+([2, 2, 3]) -> [2, 3]
+([1, 1, 2, 3, 2]) -> [1, 3, 2]
+([3]) -> [3]
+([3, 2]) -> [3, 2]
+ ...(8 more not shown)...
+TotalMap: (226 components, 9 types)
+
+Program found:
+
+dedup(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then @xs
+  else if contains(tail(@xs), head(@xs))
+       then dedup(tail(@xs))
+       else cons(head(@xs), dedup(tail(@xs)))
+
+*** [synthesize related components at level 1] time used: 0.09ms ***
+*** [Goal searching] time used: 0.11ms ***
+*** [synthesize unrelated components] time used: 0.07ms ***
+State at level: 1
+TotalMap: (7 components, 5 types)
+*** [synthesize related components at level 2] time used: 0.24ms ***
+*** [Goal searching] time used: 0.07ms ***
+*** [synthesize unrelated components] time used: 0.13ms ***
+State at level: 2
+TotalMap: (15 components, 6 types)
+*** [synthesize related components at level 3] time used: 0.57ms ***
+*** [Goal searching] time used: 0.16ms ***
+*** [synthesize unrelated components] time used: 0.23ms ***
+State at level: 3
+TotalMap: (36 components, 6 types)
+*** [synthesize related components at level 4] time used: 1.41ms ***
+*** [Goal searching] time used: 0.37ms ***
+*** [synthesize unrelated components] time used: 0.22ms ***
+State at level: 4
+TotalMap: (93 components, 9 types)
+*** [synthesize related components at level 5] time used: 3.32ms ***
+*** [Goal searching] time used: 0.45ms ***
+*** [synthesize unrelated components] time used: 0.30ms ***
+State at level: 5
+TotalMap: (206 components, 9 types)
+*** [synthesize related components at level 6] time used: 11.63ms ***
+*** [Goal searching] time used: 1.15ms ***
+*** [synthesize unrelated components] time used: 1.12ms ***
+State at level: 6
+TotalMap: (403 components, 9 types)
+*** [synthesize related components at level 7] time used: 32.53ms ***
+*** [Goal searching] time used: 3.89ms ***
+*** [synthesize unrelated components] time used: 1.52ms ***
+State at level: 7
+TotalMap: (824 components, 9 types)
+*** [synthesize related components at level 8] time used: 216.29ms ***
+*** [Goal searching] time used: 10.01ms ***
+*** [synthesize unrelated components] time used: 2.32ms ***
+State at level: 8
+TotalMap: (1841 components, 9 types)
+*** [synthesize related components at level 9] time used: 755.04ms ***
+*** [Goal searching] time used: 20.65ms ***
+*** [synthesize unrelated components] time used: 3.46ms ***
+State at level: 9
+TotalMap: (4323 components, 9 types)
+*** [synthesize related components at level 10] time used: 3,252.49ms ***
+*** [Goal searching] time used: 51.19ms ***
+*** [synthesize unrelated components] time used: 5.84ms ***
+State at level: 10
+TotalMap: (10132 components, 9 types)
+*** [synthesize related components at level 11] time used: 9,798.48ms ***
+*** [single synthesis] time used: 14,262.24ms ***
+------ Synthesis for tConcat Succeeded! (0 reboots) ------
+Time used for the last reboot: 14,259.09ms
+Initial Examples (6):
+(L, L) -> L
+(L, (1: L, L)) -> (1: L, L)
+((1: L, L), L) -> (1: L, L)
+((1: L, L), (2: (3: L, L), (4: L, L))) -> (1: (2: (3: L, L), (4: L, L)), (2: (3: L, L), (4: L, L)))
+((1: (2: L, L), (3: L, L)), (4: (5: L, L), (6: L, L))) -> (1: (2: (4: (5: L, L), (6: L, L)), (4: (5: L, L), (6: L, L))), (3: (4: (5: L, L), (6: L, L)), (4: (5: L, L), (6: L, L))))
+((1: L, (2: (3: L, L), (4: L, L))), (5: L, L)) -> (1: (5: L, L), (2: (3: (5: L, L), (5: L, L)), (4: (5: L, L), (5: L, L))))
+Additional examples provided (2213):
+(L, (2: (3: L, L), (2: L, L))) -> (2: (3: L, L), (2: L, L))
+((5: L, L), (2: (2: L, L), (2: L, L))) -> (5: (2: (2: L, L), (2: L, L)), (2: (2: L, L), (2: L, L)))
+((1: L, (1: (5: L, L), L)), (5: L, L)) -> (1: (5: L, L), (1: (5: (5: L, L), (5: L, L)), (5: L, L)))
+((3: (2: L, L), (2: L, L)), (1: L, L)) -> (3: (2: (1: L, L), (1: L, L)), (2: (1: L, L), (1: L, L)))
+((5: L, L), (2: L, (3: L, L))) -> (5: (2: L, (3: L, L)), (2: L, (3: L, L)))
+((5: (6: L, L), L), (3: L, L)) -> (5: (6: (3: L, L), (3: L, L)), (3: L, L))
+((6: L, (5: L, L)), (1: (2: L, L), (3: L, L))) -> (6: (1: (2: L, L), (3: L, L)), (5: (1: (2: L, L), (3: L, L)), (1: (2: L, L), (3: L, L))))
+((6: L, L), (2: (3: L, L), (3: L, L))) -> (6: (2: (3: L, L), (3: L, L)), (2: (3: L, L), (3: L, L)))
+ ...(2205 more not shown)...
+TotalMap: (22927 components, 9 types)
+
+Program found:
+
+tConcat(@baseTree: Tree['0], @inserted: Tree['0]): Tree['0] =
+  if isLeaf(@baseTree)
+  then @inserted
+  else createNode(treeValue(@baseTree), tConcat(treeLeft(@baseTree), @inserted), tConcat(treeRight(@baseTree), @inserted))
+
+// createNode(treeValue(@baseTree), tConcat(treeLeft(@baseTree), @inserted), treeRight(@baseTree))
+
+Summery:
+  name          cost  depth  examples  reboots         time
+  reverse         12      8      2/10     None     316.43ms
+  stutter         13      9      3/10     None     138.47ms
+  cartesian       32     12      4/78     None     485.10ms
+  squareList      14      9       6/2     None     667.07ms
+  fib             15      8       8/4     None     262.95ms
+  insert          19      9     8/292     None     604.21ms
+  compress        25      9      8/22     None      57.22ms
+  nodesAtLevel    27     11    11/427     None   3,070.83ms
+  contains        14      5      7/22     None       6.10ms
+  dropLast        15      6      5/10     None       8.99ms
+  evens           16      7      5/20     None      14.01ms
+  dedup           19      7      9/16     None      17.96ms
+  tConcat         15     11    6/2213     None  14,262.24ms
+ Total           236    111         -        -      19.912s
+
+Process finished with exit code 0

@@ -403,7 +403,15 @@ object CommonComps {
     treeRight
   )
 
+  val rules_tree = Map[ComponentImpl, ReducibleCheck](
+    isLeaf -> noDirectChildren(createNode),
+    treeValue -> noDirectChildren(createNode),
+    treeLeft -> noDirectChildren(createNode),
+    treeRight -> noDirectChildren(createNode)
+  )
+
   val standardComps = noTree ++ treeComps
+  val rules_standard = rules_noTree ++ rules_tree
 
 
   def createPair(t1: Type, t2: Type) = ComponentImpl(
@@ -485,7 +493,7 @@ object CommonComps {
     IS(tyInt), tyList(tyInt),
     impl = {
       case IS(ValueInt(n)) =>
-        (0 to n).map(x => x* x).toList
+        (1 to n).map(x => x* x).toList
     }
   )
 
@@ -571,7 +579,7 @@ object CommonComps {
       case BinaryLeaf => List()
     }
 
-    ComponentImpl("nodesAtLevel", IS(tyTree(tyVar(0)), tyInt), tyTree(tyVar(0)),
+    ComponentImpl("nodesAtLevel", IS(tyTree(tyVar(0)), tyInt), tyList(tyVar(0)),
       impl = { case IS(ValueTree(tree), ValueInt(level)) =>
         impl(tree, level)
       }
