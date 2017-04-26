@@ -64,7 +64,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
         } else {
           for (
             costs <- divideNumberAsSum(costLeft, arity, minNumber = 1);
-            (argTypes, returnType) <- typesForCosts(c => state.getNonRecOfCost(c).typesIterator, costs, impl.inputTypes, impl.returnType)
+            (argTypes, returnType) <- typesForCosts(c => state.getNonRecOfCost(c).typeSet ++ state.getRecOfCost(c).typeSet, costs, impl.inputTypes, impl.returnType)
             if (synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))) &&
               isInterestingSignature(argTypes, returnType)
           ) {
@@ -157,11 +157,13 @@ class SynNoOracle(config: Config, logger: String => Unit){
             termsOfCost = state.termsOfCost,
             boolOfVM = state.boolLibrary
           )
-          search.searchMin(config.searchSizeFactor * level, goalVM,
+          val searchResult = search.searchMin(config.searchSizeFactor * level, goalVM,
             state.recTermsOfReturnType, fillTermToHole = { t => t },
             isFirstBranch = true,
             prefixTrigger = None
-          ).foreach { case (c, term) =>
+          )
+//          println("Buffer hit rate: %.3f".format(search.bufferHit.toDouble/(search.bufferHit + search.bufferMiss)))
+          searchResult.foreach { case (c, term) =>
             return resultFromState(c, level, term)
           }
         }
@@ -218,7 +220,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
       }
     }
 
-    def typesIterator: Iterator[Type] = map.keysIterator
+    def typeSet: collection.Set[Type] = map.keySet
 
     def statString: String = s"${map.values.map(_.size).sum} components, ${map.keys.size} types"
   }
@@ -257,7 +259,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
       }
     }
 
-    def typesIterator: Iterator[Type] = map.keysIterator
+    def typeSet: collection.Set[Type] = map.keySet
 
     def statString: String = s"${map.values.map(_.size).sum} components, ${map.keys.size} types"
   }
@@ -298,14 +300,14 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
       val returnTypeTree = new ValueVectorTree[Term](examples.length)
       val typeMap = getNonRecOfCost(levels)
-      for(ty <- typesMatch(typeMap.typesIterator, returnType)){
+      for(ty <- typesMatch(typeMap.typeSet, returnType)){
         val vt = typeMap(ty)
         vt.foreach{ case (vv, term) => returnTypeTree.addTerm(term, vv) }
       }
       returnTypeVectorTrees = returnTypeVectorTrees :+ returnTypeTree
 
       val boolTree = new ValueVectorTree[Term](examples.length)
-      for(ty <- typesMatch(typeMap.typesIterator, tyBool)){
+      for(ty <- typesMatch(typeMap.typeSet, tyBool)){
         val vt = typeMap(ty)
         vt.foreach{ case (vv, term) => boolTree.addTerm(term, vv) }
       }
@@ -313,14 +315,14 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
       var newRecs: IS[(Term, ExtendedValueVec)] = IS()
       val recTypeMap = getRecOfCost(levels)
-      for(ty <- typesMatch(recTypeMap.typesIterator, returnType)){
+      for(ty <- typesMatch(recTypeMap.typeSet, returnType)){
         val recMap = recTypeMap(ty)
         newRecs = newRecs ++ recMap
       }
       recTermsOfReturnType = recTermsOfReturnType :+ newRecs
     }
 
-    private def typesMatch(types: Iterator[Type], ty: Type): List[Type] = {
+    private def typesMatch(types: Iterable[Type], ty: Type): List[Type] = {
       types.collect{
         case t if ty instanceOf t =>
           Type.alphaNormalForm(t)
@@ -360,8 +362,21 @@ class SynNoOracle(config: Config, logger: String => Unit){
     def registerNonRecAtLevel(cost: Int, ty: Type, term: Term, valueVector: ValueVector): Boolean = {
       val ty1 = Type.alphaNormalForm(ty)
 
-      if(totalNonRec(ty1).get(valueVector).nonEmpty)
-        return false
+      totalNonRec.typeSet.foreach(t => {
+        if(ty1 instanceOf t) {
+          if (totalNonRec(t).get(valueVector).nonEmpty)
+            return false
+          //todo: need to improve the following
+          if (valueVector.contains(ValueError)) {
+            val indexValueMap = valueVector.zipWithIndex.collect {
+              case (value, i) if value != ValueError => i -> value
+            }.toMap
+            totalNonRec(t).foreach {
+              case (vv, _) => if (IndexValueMap.matchVector(indexValueMap, vv)) return false
+            }
+          }
+        }
+      })
 
       totalNonRec(ty1)(valueVector) = term
       getNonRecOfCost(cost)(ty1)(valueVector) = term

@@ -94,7 +94,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       }
     }
 
-    def typesIterator: Iterator[Type] = map.keysIterator
+    def typeSet: collection.Set[Type] = map.keySet
 
     def statString: String = s"${map.values.map(_.size).sum} components, ${map.keys.size} types"
   }
@@ -140,7 +140,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     }
 
     private def typesMatch(typeMap: TypeMap, ty: Type): List[Type] = {
-      typeMap.typesIterator.collect{
+      typeMap.typeSet.collect{
         case t if ty instanceOf t =>
           Type.alphaNormalForm(t)
       }.toList
@@ -302,7 +302,7 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
           }
         } else for(
           costs <- divideNumberAsSum(costLeft, arity, minNumber = 1);
-          (argTypes, returnType) <- typesForCosts(c => state.getLevelOfCost(c).typesIterator, costs, impl.inputTypes, impl.returnType)
+          (argTypes, returnType) <- typesForCosts(c => state.getLevelOfCost(c).typeSet, costs, impl.inputTypes, impl.returnType)
           if (synBoolAndReturnType == (goalReturnType.instanceOf(returnType) || tyBool.instanceOf(returnType))) &&
             isInterestingSignature(argTypes, returnType)
         ) {

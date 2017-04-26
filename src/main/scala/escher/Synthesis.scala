@@ -254,12 +254,12 @@ object Synthesis {
     }
   }
 
-  def typesForCosts(typesOfCost: Int => Iterator[Type], costs: IS[Int],
-                    inputTypes: IS[Type], returnType: Type): Iterator[(IS[Type], Type)] = {
+  def typesForCosts(typesOfCost: Int => Iterable[Type], costs: IS[Int],
+                    inputTypes: IS[Type], returnType: Type): Iterable[(IS[Type], Type)] = {
     val signatureNextFreeId =  (returnType.nextFreeId +: inputTypes.map(_.nextFreeId)).max
 
-    def aux(argId: Int, nextFreeId: Int, subst: TypeSubst): Iterator[(IS[Type], Type)] = {
-      if(argId == costs.length) return Iterator((IS(), Type.alphaNormalForm(subst(returnType))))
+    def aux(argId: Int, nextFreeId: Int, subst: TypeSubst): Iterable[(IS[Type], Type)] = {
+      if(argId == costs.length) return Vector((IS(), Type.alphaNormalForm(subst(returnType))))
 
       val c = costs(argId)
       val requireType = subst(inputTypes(argId))

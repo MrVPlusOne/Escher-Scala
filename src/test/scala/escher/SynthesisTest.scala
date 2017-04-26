@@ -10,10 +10,10 @@ class SynthesisTest extends WordSpec{
   
 
   "typesForCosts check" in {
-    def typesAtCost(cost: Int): Iterator[Type] = cost match {
-      case 1 => Iterator(tyInt)
-      case 2 => Iterator(tyInt, tyList(tyVar(0)))
-      case 3 => Iterator(tyPair(tyInt, tyBool))
+    def typesAtCost(cost: Int): Iterable[Type] = cost match {
+      case 1 => Iterable(tyInt)
+      case 2 => Iterable(tyInt, tyList(tyVar(0)))
+      case 3 => Iterable(tyPair(tyInt, tyBool))
     }
     
     def typesForCosts(costs: IS[Int],

@@ -119,16 +119,24 @@ object Main {
 
       val refComp = CommonComps.gcd
 
-      synthesize("gcd", IS(tyInt, tyInt), IS("a", "b"), tyInt)(envComps = CommonComps.standardComps + CommonComps.modulo, examples, oracle = refComp.impl)
+      synthesize("gcd", IS(tyInt, tyInt), IS("a", "b"), tyInt)(envComps = CommonComps.standardComps ++ CommonComps.timesAndDiv + CommonComps.modulo, examples, oracle = refComp.impl)
     }
 
     def modSynthesis() = {
-      val examples: IS[(ArgList, TermValue)] =
-        for (a <- -3 to 4; b <- -2 to 2) yield {
-          argList(a, b) -> CommonComps.modulo.execute(IS(a, b), debug = false)
-        }
+      val args: IS[(ArgList)] = IS(
+        argList(0, 1),
+        argList(0, 5),
+        argList(7, 1),
+        argList(7, 2),
+        argList(7, 3),
+        argList(15, 8),
+        argList(16, 9),
+        argList(14, -2),
+        argList(14, 4)
+      )
 
       val refComp = CommonComps.modulo
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
 
       synthesize("mod", IS(tyInt, tyInt), IS("a", "b"), tyInt)(envComps = CommonComps.standardComps ++ CommonComps.timesAndDiv, examples, oracle = refComp.impl)
     }
@@ -314,20 +322,22 @@ object Main {
     }
 
     var totalTime: Long = 0
+    var totalCost, totalDepth = 0
     println("Summery: ")
     val dataToPrint = IS("  name", "cost", "depth", "examples", "reboots", "time") +: records.toIndexedSeq.map {
       case (comp, examples, reboots, time) =>
         totalTime += time
+        totalCost += comp.cost
+        totalDepth += comp.depth
         IS(s"  ${comp.signature.name}",
           comp.cost.toString,
           comp.depth.toString,
           s"${examples._1}/${examples._2}",
           if(reboots==0) "None" else reboots.toString,
           TimeTools.nanoToMillisString(time))
-    }
-    CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4,5))
-    println(s"Total time: ${TimeTools.nanoToSecondString(totalTime)}")
+    } :+ IS(" Total", totalCost.toString, totalDepth.toString, "-", "-", TimeTools.nanoToSecondString(totalTime))
 
+    CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4,5))
   }
 
 

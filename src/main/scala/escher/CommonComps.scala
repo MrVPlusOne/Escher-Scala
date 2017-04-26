@@ -541,8 +541,8 @@ object CommonComps {
       "modulo",
       IS(tyInt, tyInt), tyInt, impl = {
       case IS(ValueInt(a), ValueInt(b)) =>
-        if(b == 0) ValueError else a % b
-    })
+        if(b!=0) a % b else ValueError
+      })
   }
 
   val gcd = {

@@ -2,7 +2,7 @@ package escher
 
 import escher.Synthesis._
 
-import collection.mutable
+import collection.{immutable, mutable}
 import BatchGoalSearch._
 import escher.DynamicGoalSearch.ExecuteHoleException
 import escher.SynNoOracle.ExtendedCompImpl
@@ -17,9 +17,10 @@ class DynamicGoalSearch(
                          termsOfCost: Int => Iterable[(ValueVector,Term)],
                          boolOfVM: IndexValueMap => Option[(Int,Term)]
                        ) {
-//  private val buffer: mutable.Map[Set[Int], SearchResult] = mutable.Map()
 
   val holeName = "HOLE"
+
+  val varMaps: IS[Map[String, TermValue]] = inputVector.indices.map{ i=> signature.argNames.zip(inputVector(i)).toMap }
 
   private val envCompMap = envComps.map(x => x.name -> x).toMap
   def assembleRecProgram(term: Term): ComponentImpl = {
@@ -33,39 +34,42 @@ class DynamicGoalSearch(
     envCompMap.updated(holeName, holeImpl)
   }
 
-  def checkTrigger(term: Term, prefixTrigger: Option[IS[String]]): (Boolean, Option[IS[String]]) ={
+  /** place break points at the results of this function to help debugging */
+  def checkTrigger(term: Term, prefixTrigger: Option[List[String]]): (Boolean, Option[List[String]]) ={
     prefixTrigger match {
       case None => (false, None)
       case Some(ts) => ts match {
-        case IndexedSeq() => (false, None)
-        case IndexedSeq(t) =>
-          (t == term.show, Some(IS()))
-        case _ =>
-          if(term.show == ts.head) {
-            (false, Some(ts.tail))
-          }else{
-            (false, None)
-          }
+        case Nil => (false, None)
+        case List(t) =>
+          (t == term.show, None)
+        case (h::t) =>
+          if(term.show == h) (false, Some(t))
+          else (false, None)
       }
     }
   }
 
+//  var bufferHit, bufferMiss = 0
 
   def searchMin(cost: Int, currentGoal: IndexValueMap,
                 recTermsOfReturnType: IS[Seq[(Term, ExtendedValueVec)]],
                 fillTermToHole: Term => Term,
                 isFirstBranch: Boolean,
-                prefixTrigger: Option[IS[String]]
+//                buffer: mutable.Map[Set[Int], SearchResult] = mutable.Map(),
+                prefixTrigger: Option[List[String]]
                ): Option[(Int,Term)] = {
     if(cost <= 0) return None
 
     val keySet = currentGoal.keySet
 //    buffer.get(keySet).foreach {
 //      case FoundAtCost(c, term) if c <= cost =>
+//        bufferHit +=1
 //        return Some(c -> term)
 //      case NotFoundUnderCost(c) if c >= cost =>
+//        bufferMiss += 1
 //        return None
 //      case _ =>
+//        bufferMiss += 1
 //    }
 
     def buffered(searchResult: SearchResult): Option[(Int,Term)] = {
@@ -105,7 +109,7 @@ class DynamicGoalSearch(
     var minCostCandidate: Option[(Int, Term)] = None
     //noinspection ReplaceToWithUntil
     for (
-      cThen <- 1 to maxCost - 1 - ifCost; // save one for cCond
+      cThen <- 1 to maxCost - ifCost - 2; // minus 2 because cCond + cElse >= 2
       (thenVec, tThen) <- termsOfCost(cThen)) {
       val (trig, prefixTrigger1) = checkTrigger(tThen, prefixTrigger)
       if(trig){
@@ -117,6 +121,11 @@ class DynamicGoalSearch(
         val (trig, prefixTrigger2) = checkTrigger(tCond, prefixTrigger1)
         if(trig){
           println("trigger condition!")
+          val costSoFar = cThen + cCond + ifCost
+          val maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar
+          val target = "createNode(treeValue(@baseTree), tConcat(treeLeft(@baseTree), @inserted), tConcat(treeRight(@baseTree), @inserted))"
+          val found = recTermsOfReturnType.take(maxCostForElse).exists(_.exists(x => x._1.show == target))
+          println("found: " + found)
         }
 
         import DSL._
@@ -124,19 +133,18 @@ class DynamicGoalSearch(
           fillTermToHole(`if`(tCond)(tThen)(tElse))
         }
 
-        val elseGoal = currentGoal -- trueKeys
+        val costSoFar = cThen + cCond + ifCost
+        val maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar
 
-        val partialImpl = // todo: need special check for this, maybe completely separate recursive terms from normal terms?
+        val partialImpl =
           ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare, assembleTerm(holeName $()))
-
         val envWithPartialImpl = envCompMap.updated(signature.name, partialImpl)
-
-        val newRecTermsOfCost = recTermsOfReturnType.map(_.map {
+        val newRecTermsOfCost = recTermsOfReturnType.take(maxCostForElse).map(_.map {
           case (term, vv) =>
             val newVV = vv.indices.map { i =>
               vv(i) match {
                 case ValueUnknown =>
-                  val varMap = signature.argNames.zip(inputVector(i)).toMap
+                  val varMap = varMaps(i)
                   try {
                     Term.executeTerm(varMap, envWithPartialImpl)(term)
                   } catch {
@@ -148,8 +156,8 @@ class DynamicGoalSearch(
             term -> newVV
         })
 
-        val costSoFar = cThen + cCond + ifCost
-        val maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar
+//        val bufferForNextSearch = buffer.clone()
+        val elseGoal = currentGoal -- trueKeys
         for (
           (cElse, tElse) <- searchMin(maxCostForElse, elseGoal, newRecTermsOfCost, assembleTerm,
             isFirstBranch = false, prefixTrigger = prefixTrigger2)
