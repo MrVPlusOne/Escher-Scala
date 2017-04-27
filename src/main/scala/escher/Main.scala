@@ -322,20 +322,24 @@ object Main {
     }
 
     var totalTime: Long = 0
-    var totalCost, totalDepth = 0
+    var totalCost, totalDepth, totalExample1, totalExample2, totalReboots = 0
     println("Summery: ")
     val dataToPrint = IS("  name", "cost", "depth", "examples", "reboots", "time") +: records.toIndexedSeq.map {
       case (comp, examples, reboots, time) =>
         totalTime += time
         totalCost += comp.cost
         totalDepth += comp.depth
+        totalExample1 += examples._1
+        totalExample2 += examples._2
+        totalReboots += reboots
         IS(s"  ${comp.signature.name}",
           comp.cost.toString,
           comp.depth.toString,
           s"${examples._1}/${examples._2}",
           if(reboots==0) "None" else reboots.toString,
           TimeTools.nanoToMillisString(time))
-    } :+ IS(" Total", totalCost.toString, totalDepth.toString, "-", "-", TimeTools.nanoToSecondString(totalTime))
+    } :+ IS(" Total", totalCost.toString, totalDepth.toString,
+      s"$totalExample1/$totalExample2", totalReboots.toString, TimeTools.nanoToSecondString(totalTime))
 
     CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4,5))
   }

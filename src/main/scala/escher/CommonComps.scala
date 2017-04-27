@@ -304,30 +304,12 @@ object CommonComps {
 
   val noTree = Set(
     // boolean
-    T,
-    F,
-    and,
-    or,
-    not,
-    equal,
-    isNil,
-    isNonNeg,
-
+    T, F, and, or, not, equal, isNil, isNonNeg,
     // list
-    head,
-    tail,
-    cons,
-    concat,
-    nil,
-
+    head, tail, cons, concat, nil,
     // integer
-    zero,
-    inc,
-    dec,
-    neg,
-    length,
-    plus,
-    div2
+    zero, inc, dec, neg, length, plus, div2
+
   )
 
   val rules_noTree = Map[ComponentImpl, ReducibleCheck](
@@ -395,12 +377,8 @@ object CommonComps {
   )
 
   val treeComps = Set(
-    createLeaf,
-    createNode,
-    isLeaf,
-    treeValue,
-    treeLeft,
-    treeRight
+    //binary tree
+    createLeaf, createNode, isLeaf, treeValue, treeLeft, treeRight
   )
 
   val rules_tree = Map[ComponentImpl, ReducibleCheck](

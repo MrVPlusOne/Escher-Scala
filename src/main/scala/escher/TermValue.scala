@@ -117,7 +117,9 @@ object BinaryTree{
 
 /** Binary tree */
 case class ValueTree(value: BinaryTree[TermValue]) extends TermValue{
-  override def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = ???
+  override def matchTypeAux(ty: Type, freeId: () => Int): Option[TypeSubst] = {
+    ???
+  }
 
   override def show: String = {
     def aux(t: BinaryTree[TermValue]): String = t match {
@@ -142,7 +144,8 @@ case class ValuePair(value: (TermValue, TermValue)) extends TermValue{
 
   val sizeCompare: PartialFunction[TermValue, Boolean] = {
     case ValuePair(v1) =>
-      (value._1 smallerThan v1._1) || (value._1 == v1._1 && value._2.smallerThan(v1._2))
+      (value._1 smallerThan v1._1) ||
+        (value._1 == v1._1 && value._2.smallerThan(v1._2))
   }
 }
 
