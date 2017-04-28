@@ -6,7 +6,6 @@ import Synthesis._
 import escher.CommonComps.ReducibleCheck
 
 
-
 class SynNoOracle(config: Config, logger: String => Unit){
 
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
@@ -147,20 +146,22 @@ class SynNoOracle(config: Config, logger: String => Unit){
         TimeTools.printTimeUsed("Goal searching") {
           state.createLibrariesForThisLevel()
 
-          val search = new DynamicGoalSearch(
+          val termsWithKnownVV = (1 to level).map{c => state.termsOfCost(c).toList}
+          val nonRecBoolTerms = (1 to level).map{c => state.nonRecBoolTerms(c).toList}
+
+          val search = new AscendRecGoalSearch(
             level,
             signature,
             envComps,
             config.argListCompare,
             inputVector = inputs,
-            termOfCostAndVM = state.libraryOfCost,
-            termsOfCost = state.termsOfCost,
-            boolOfVM = state.boolLibrary
+            termsWithKnownVV,
+            nonRecBoolTerms
           )
           val searchResult = search.searchMin(config.searchSizeFactor * level, goalVM,
             state.recTermsOfReturnType, fillTermToHole = { t => t },
             isFirstBranch = true,
-            prefixTrigger = None
+            prefixTrigger = if(true) Some(List("isNonNeg(inc(neg(@n)))", "inc(zero())")) else None
           )
 //          println("Buffer hit rate: %.3f".format(search.bufferHit.toDouble/(search.bufferHit + search.bufferMiss)))
           searchResult.foreach { case (c, term) =>
@@ -352,6 +353,10 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
     def termsOfCost(cost: Int): Iterable[(ValueVector, Term)] = {
       returnTypeVectorTrees(cost-1).elements
+    }
+
+    def nonRecBoolTerms(cost: Int): Iterable[(ValueVector, Term)] = {
+      boolVectorTrees(cost-1).elements
     }
 
     def openToLevel(n: Int): Unit ={

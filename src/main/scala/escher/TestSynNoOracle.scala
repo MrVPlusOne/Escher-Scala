@@ -23,7 +23,7 @@ object TestSynNoOracle {
     def synthesizeUsingRef(refComp: ComponentImpl, argNames: IS[String],
                            exampleInputs: IS[ArgList],
                            additionalComps: (Set[ComponentImpl], Map[ComponentImpl, ReducibleCheck]) = (Set(), Map())) = {
-      val examples = exampleInputs.map(argList => argList -> refComp.executeEfficient(argList))
+      val examples = exampleInputs.map(argList => argList -> refComp.executeEfficient(argList)).sortWith(Synthesis.exampleLt)
       val additionalImpls = additionalComps._1
       val additionalRules = additionalComps._2
 

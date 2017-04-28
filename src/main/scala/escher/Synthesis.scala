@@ -292,6 +292,23 @@ object Synthesis {
       println(s" ...(${examples.length - maxExamplesShown} more not shown)...")
   }
 
+  def splitGoal(boolVector: ValueVector, goal: IndexValueMap): Option[(IndexValueMap,IndexValueMap)] = {
+    var thenGoal, elseGoal: IndexValueMap = Map()
+    goal.foreach{
+      case (i, tv) =>
+        if(boolVector(i) == ValueError)
+          return None
+        if(boolVector(i).asInstanceOf[ValueBool].value)
+          thenGoal = thenGoal.updated(i, tv)
+        else
+          elseGoal = elseGoal.updated(i, tv)
+    }
+    if(thenGoal.nonEmpty && elseGoal.nonEmpty)
+      Some(thenGoal, elseGoal)
+    else
+      None
+  }
+
 
 }
 
