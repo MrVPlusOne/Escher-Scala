@@ -109,45 +109,51 @@ class AscendRecGoalSearch(maxCompCost: Int,
       cCond <- 1 to math.min(maxCompCost, cost - ifCost - 2) // minus 2 because cCond + cElse >= 2
       (condVec, tCond) <- nonRecBoolTerms(cCond - 1)
       (thenGoal, elseGoal) <- splitGoal(condVec, currentGoal)
-      cThen <- 1 to math.min(maxCompCost, cost - ifCost - cCond - 1)
     } {
       val (trigCond, prefixTrigger1) = checkTrigger(tCond, prefixTrigger)
       if (trigCond) {
         println("trigger cond branch!")
       }
 
-      var thenCandidates = termsWithKnownVV(cThen - 1).collect{
-        case (vv, term) if IndexValueMap.matchVector(thenGoal, vv) => term
-      }
-      for ((tThen, thenEVec) <- recTermsOfReturnType(cThen - 1)) {
-        import DSL._
-        val partialImpl = ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare,
-          fillTermToHole(`if`(tCond)(tThen)(holeName $())))
-        val envWithPartialImpl = envCompMap.updated(signature.name, partialImpl)
-
-        def isCandidateForThen: Boolean = {
-          thenGoal.foreach { case (i, v) =>
-            thenEVec(i) match {
-              case ValueUnknown =>
-                val varMap = varMaps(i)
-                try {
-                  if (Term.executeTerm(varMap, envWithPartialImpl)(tThen) != v)
-                    return false
-                } catch {
-                  case ExecuteHoleException => return false
-                }
-              case tv: TermValue => if (tv != v) return false
-            }
+      def thenCandidate: Option[(Int,Term)] = {
+        for(cThen <- 1 to math.min(maxCompCost, cost - ifCost - cCond - 1)) {
+          termsWithKnownVV(cThen - 1).foreach {
+            case (vv, term) =>
+              if (IndexValueMap.matchVector(thenGoal, vv))
+                return Some(cThen, term)
           }
-          true
-        }
 
-        if (isCandidateForThen)
-          thenCandidates = tThen +: thenCandidates
+          for ((tThen, thenEVec) <- recTermsOfReturnType(cThen - 1)) {
+            import DSL._
+            val partialImpl = ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare,
+              fillTermToHole(`if`(tCond)(tThen)(holeName $())))
+            val envWithPartialImpl = envCompMap.updated(signature.name, partialImpl)
+
+            def isCandidateForThen: Boolean = {
+              thenGoal.foreach { case (i, v) =>
+                thenEVec(i) match {
+                  case ValueUnknown =>
+                    val varMap = varMaps(i)
+                    try {
+                      if (Term.executeTerm(varMap, envWithPartialImpl)(tThen) != v)
+                        return false
+                    } catch {
+                      case ExecuteHoleException => return false
+                    }
+                  case tv: TermValue => if (tv != v) return false
+                }
+              }
+              true
+            }
+
+            if (isCandidateForThen)
+              return Some(cThen,tThen)
+          }
+        }
+        None
       }
 
-      for (tThen <- thenCandidates) {
-
+      for ((cThen, tThen) <- thenCandidate) {
         val (trigThen, prefixTrigger2) = checkTrigger(tThen, prefixTrigger1)
         if (trigThen) {
           println("trigger then branch!")
@@ -164,7 +170,7 @@ class AscendRecGoalSearch(maxCompCost: Int,
         val partialImpl =
           ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare, assembleTerm(holeName $()))
         val envWithPartialImpl = envCompMap.updated(signature.name, partialImpl)
-        val newRecTermsOfReturnType = recTermsOfReturnType.take(maxCostForElse).map(_.map {
+        val newRecTermsOfReturnType = recTermsOfReturnType /*.take(maxCostForElse).map(_.map {
           case (term, vv) =>
             val newVV = vv.indices.map { i =>
               vv(i) match {
@@ -179,7 +185,7 @@ class AscendRecGoalSearch(maxCompCost: Int,
               }
             }
             term -> newVV
-        })
+        })*/
 
 
         for (

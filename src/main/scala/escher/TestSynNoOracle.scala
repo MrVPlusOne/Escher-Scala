@@ -110,14 +110,16 @@ object TestSynNoOracle {
         argList(BinaryLeaf, 1),
         argList(BinaryLeaf, 0),
         argList(BinaryLeaf, -1),
-        argList(singleNode(12), -1),
-        argList(singleNode(12), 0),
-        argList(singleNode(12), 1),
-        argList(singleNode(12), 2),
-        argList(BinaryNode(12, singleNode(7), singleNode(9)), 1),
-        argList(BinaryNode(12, singleNode(7), singleNode(9)), 2),
-        argList(BinaryNode(12, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 3),
-        argList(BinaryNode(15, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 4)
+        argList(singleNode(1), -1),
+        argList(singleNode(1), 0),
+        argList(singleNode(1), 1),
+        argList(singleNode(1), 2),
+        argList(BinaryNode(1, singleNode(7), singleNode(9)), 1),
+        argList(BinaryNode(1, singleNode(7), singleNode(9)), 2),
+        argList(BinaryNode(1, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 3),
+        argList(BinaryNode(1, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 4),
+        argList(BinaryNode(1, BinaryNode(15, BinaryNode(3,singleNode(4), singleNode(5)), BinaryLeaf), singleNode(9)), 4),
+        argList(BinaryNode(1, BinaryNode(15, BinaryNode(3,singleNode(4), singleNode(5)), BinaryLeaf), singleNode(9)), 5)
       ))
     }
 
@@ -153,9 +155,20 @@ object TestSynNoOracle {
         argList(BinaryNode(1, BinaryLeaf, BinaryNode(2, singleNode(3), singleNode(4))), singleNode(5))
       ))
     }
+
+    val cartesianSynthesis = {
+      synthesizeUsingRef(CommonComps.cartesian, IS("xs", "ys"), exampleInputs = IS(
+        argList(listValue(), listValue(2, 3, 4)),
+        argList(listValue(5), listValue()),
+        argList(listValue(5), listValue(7, 8, 9)),
+        argList(listValue(2, 3), listValue(4, 5))
+      ), additionalComps = (Set(CommonComps.createPair(tyFixVar(0), tyFixVar(1))), Map()))
+    }
+
     // below are failed tasks
 
 
+    // this can be synthesized, but quite verbose
     val compressSynthesis = {
       synthesizeUsingRef(CommonComps.compress, IS("xs"), exampleInputs = IS(
         argList(listValue()),
@@ -169,14 +182,24 @@ object TestSynNoOracle {
       ))
     }
 
-    val cartesianSynthesis = {
-      synthesizeUsingRef(CommonComps.cartesian, IS("xs", "ys"), exampleInputs = IS(
-        argList(listValue(), listValue(2, 3, 4)),
-        argList(listValue(5), listValue()),
-        argList(listValue(5), listValue(7, 8, 9)),
-        argList(listValue(2, 3), listValue(4, 5))
-      ), additionalComps = (Set(CommonComps.createPair(tyFixVar(0), tyFixVar(1))), Map()))
+    def dedupSynthesis(useContains: Boolean) = {
+      synthesizeUsingRef(CommonComps.dedup, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(3,3)),
+        argList(listValue(2,3)),
+        argList(listValue(1,2,3)),
+        argList(listValue(1,2,3,2)),
+        argList(listValue(1,1,1,2,3,2)),
+        argList(listValue(2,2,2,3,3,3)),
+        argList(listValue(1,2,3,2,1))
+      ), additionalComps = (if(useContains) Set(CommonComps.contains) else Set(), Map()))
     }
+
+    val failedTasks = Seq(
+      compressSynthesis,
+      dedupSynthesis(true)
+    )
 
     val tasks = Seq(
       reverseSynthesis,
@@ -188,7 +211,8 @@ object TestSynNoOracle {
       containsSynthesis,
       dropLastSynthesis,
       evensSynthesis,
-      tConcatSynthesis
+      tConcatSynthesis,
+      cartesianSynthesis
     )
 
     var totalTime: Long = 0

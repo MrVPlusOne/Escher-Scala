@@ -161,7 +161,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
           val searchResult = search.searchMin(config.searchSizeFactor * level, goalVM,
             state.recTermsOfReturnType, fillTermToHole = { t => t },
             isFirstBranch = true,
-            prefixTrigger = if(false) Some(List("isNil(@xs)", "nil()")) else None
+            prefixTrigger = None
           )
 //          val search = new DynamicGoalSearch(
 //            level,

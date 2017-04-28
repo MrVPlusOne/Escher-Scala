@@ -5,7 +5,7 @@ package escher
   */
 object CmdInteract {
 
-  def printTable(elements: IS[IS[String]], spacing: Int, alignRightCols: Set[Int], indent: Int = 0): Unit = {
+  def printTable(elements: IS[IS[String]], spacing: Int, alignRightCols: Set[Int], indent: Int = 2): Unit = {
     val rows = elements.length
     val cols = elements.head.length
 
