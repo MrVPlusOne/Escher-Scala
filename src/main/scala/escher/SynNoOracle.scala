@@ -134,7 +134,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
 
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
 
-    (1 to config.maxCost).foreach(level => {
+    (1 to config.maxLevel).foreach(level => {
       TimeTools.printTimeUsed(s"synthesize related components at level $level"){
         synthesizeAtLevel(level, synBoolAndReturnType = true)
       }
@@ -161,8 +161,24 @@ class SynNoOracle(config: Config, logger: String => Unit){
           val searchResult = search.searchMin(config.searchSizeFactor * level, goalVM,
             state.recTermsOfReturnType, fillTermToHole = { t => t },
             isFirstBranch = true,
-            prefixTrigger = if(true) Some(List("isNonNeg(inc(neg(@n)))", "inc(zero())")) else None
+            prefixTrigger = if(false) Some(List("isNil(@xs)", "nil()")) else None
           )
+//          val search = new DynamicGoalSearch(
+//            level,
+//            signature,
+//            envComps,
+//            config.argListCompare,
+//            inputVector = inputs,
+//            termOfCostAndVM = state.libraryOfCost,
+//            termsOfCost = state.termsOfCost,
+//            boolOfVM = state.boolLibrary
+//          )
+//          val searchResult = search.searchMin(config.searchSizeFactor * level, goalVM,
+//            state.recTermsOfReturnType, fillTermToHole = { t => t },
+//            isFirstBranch = true,
+//            prefixTrigger = None
+//          )
+
 //          println("Buffer hit rate: %.3f".format(search.bufferHit.toDouble/(search.bufferHit + search.bufferMiss)))
           searchResult.foreach { case (c, term) =>
             return resultFromState(c, level, term)
@@ -443,7 +459,7 @@ object SynNoOracle {
   type RecMap = Map[Term, ExtendedValueVec]
 
   case class Config(
-                     maxCost: Int = Int.MaxValue,
+                     maxLevel: Int = Int.MaxValue,
                      deleteAllErr: Boolean = true,
                      logGoal: Boolean = true,
                      logLevels: Boolean = true,

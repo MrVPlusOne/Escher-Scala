@@ -11,7 +11,7 @@ object TestSynNoOracle {
 
 
     val syn = new SynNoOracle(
-      Config(maxCost = 20, logLevels = true, logReboot = true, logComponents = false, searchSizeFactor = 3),
+      Config(maxLevel = 15, logLevels = true, logReboot = true, logComponents = false, searchSizeFactor = 3),
       Console.print
     )
 

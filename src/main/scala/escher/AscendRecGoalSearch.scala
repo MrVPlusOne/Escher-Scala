@@ -54,7 +54,7 @@ class AscendRecGoalSearch(maxCompCost: Int,
                 fillTermToHole: Term => Term,
                 isFirstBranch: Boolean,
                 prefixTrigger: Option[List[String]]): Option[(Int,Term)] = {
-    if(cost <= 0) return None
+    if (cost <= 0) return None
 
     val keySet = currentGoal.keySet
     //    buffer.get(keySet).foreach {
@@ -68,7 +68,7 @@ class AscendRecGoalSearch(maxCompCost: Int,
     //        bufferMiss += 1
     //    }
 
-    def buffered(searchResult: SearchResult): Option[(Int,Term)] = {
+    def buffered(searchResult: SearchResult): Option[(Int, Term)] = {
       //      buffer(keySet) = searchResult
       searchResult match {
         case NotFoundUnderCost(_) => None
@@ -78,23 +78,23 @@ class AscendRecGoalSearch(maxCompCost: Int,
 
     val maxCost = math.min(maxCompCost, cost)
     for (c <- 1 to maxCost) {
-      termsWithKnownVV(c-1).foreach{ case (vv, term) =>
-        if(IndexValueMap.matchVector(currentGoal, vv))
+      termsWithKnownVV(c - 1).foreach { case (vv, term) =>
+        if (IndexValueMap.matchVector(currentGoal, vv))
           return buffered(FoundAtCost(c, term))
       }
 
       import ExtendedValueVec.MatchResult._
-      if(!isFirstBranch){
-        recTermsOfReturnType(c-1).foreach{
+      if (!isFirstBranch) {
+        recTermsOfReturnType(c - 1).foreach {
           case (term, vv) =>
             ExtendedValueVec.matchWithIndexValueMap(vv, currentGoal) match {
               case ExactMatch => return buffered(FoundAtCost(c, term))
               case PossibleMatch(leftToCheck) =>
                 val p = assembleRecProgram(fillTermToHole(term))
-                val passCheck = leftToCheck.forall{ case (i, desired) =>
+                val passCheck = leftToCheck.forall { case (i, desired) =>
                   p.executeEfficient(inputVector(i)) == desired
                 }
-                if(passCheck)
+                if (passCheck)
                   return buffered(FoundAtCost(c, term))
               case NotMatch =>
             }
@@ -111,11 +111,14 @@ class AscendRecGoalSearch(maxCompCost: Int,
       (thenGoal, elseGoal) <- splitGoal(condVec, currentGoal)
       cThen <- 1 to math.min(maxCompCost, cost - ifCost - cCond - 1)
     } {
-      val (trig, prefixTrigger1) = checkTrigger(tCond, prefixTrigger)
-      if (trig)
+      val (trigCond, prefixTrigger1) = checkTrigger(tCond, prefixTrigger)
+      if (trigCond) {
         println("trigger cond branch!")
+      }
 
-      var thenCandidates = termsWithKnownVV(cThen - 1).map(_._2)
+      var thenCandidates = termsWithKnownVV(cThen - 1).collect{
+        case (vv, term) if IndexValueMap.matchVector(thenGoal, vv) => term
+      }
       for ((tThen, thenEVec) <- recTermsOfReturnType(cThen - 1)) {
         import DSL._
         val partialImpl = ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare,
@@ -144,49 +147,50 @@ class AscendRecGoalSearch(maxCompCost: Int,
       }
 
       for (tThen <- thenCandidates) {
-        val (trig, prefixTrigger2) = checkTrigger(tThen, prefixTrigger1)
-        if (trig) {
+
+        val (trigThen, prefixTrigger2) = checkTrigger(tThen, prefixTrigger1)
+        if (trigThen) {
           println("trigger then branch!")
+        }
 
-          import DSL._
-          def assembleTerm(tElse: Term): Term = {
-            fillTermToHole(`if`(tCond)(tThen)(tElse))
-          }
+        import DSL._
+        def assembleTerm(tElse: Term): Term = {
+          fillTermToHole(`if`(tCond)(tThen)(tElse))
+        }
 
-          val costSoFar = cThen + cCond + ifCost
-          val maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar
+        val costSoFar = cThen + cCond + ifCost
+        val maxCostForElse = math.min(cost, minCostCandidate.map(_._1).getOrElse(Int.MaxValue) - 1) - costSoFar
 
-          val partialImpl =
-            ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare, assembleTerm(holeName $()))
-          val envWithPartialImpl = envCompMap.updated(signature.name, partialImpl)
-          val newRecTermsOfCost = recTermsOfReturnType.take(maxCostForElse).map(_.map {
-            case (term, vv) =>
-              val newVV = vv.indices.map { i =>
-                vv(i) match {
-                  case ValueUnknown =>
-                    val varMap = varMaps(i)
-                    try {
-                      Term.executeTerm(varMap, envWithPartialImpl)(term)
-                    } catch {
-                      case ExecuteHoleException => ValueUnknown
-                    }
-                  case tv: TermValue => tv
-                }
+        val partialImpl =
+          ComponentImpl.recursiveImpl(signature, compMapWithHole, argListCompare, assembleTerm(holeName $()))
+        val envWithPartialImpl = envCompMap.updated(signature.name, partialImpl)
+        val newRecTermsOfReturnType = recTermsOfReturnType.take(maxCostForElse).map(_.map {
+          case (term, vv) =>
+            val newVV = vv.indices.map { i =>
+              vv(i) match {
+                case ValueUnknown =>
+                  val varMap = varMaps(i)
+                  try {
+                    Term.executeTerm(varMap, envWithPartialImpl)(term)
+                  } catch {
+                    case ExecuteHoleException => ValueUnknown
+                  }
+                case tv: TermValue => tv
               }
-              term -> newVV
-          })
+            }
+            term -> newVV
+        })
 
 
-          for (
-            (cElse, tElse) <- searchMin(maxCostForElse, elseGoal, newRecTermsOfCost, assembleTerm,
-              isFirstBranch = false, prefixTrigger = prefixTrigger2)
-          ) {
+        for (
+          (cElse, tElse) <- searchMin(maxCostForElse, elseGoal, newRecTermsOfReturnType, assembleTerm,
+            isFirstBranch = false, prefixTrigger = prefixTrigger2)
+        ) {
 
-            val totalCost = cElse + costSoFar
-            val t = `if`(tCond)(tThen)(tElse)
+          val totalCost = cElse + costSoFar
+          val t = `if`(tCond)(tThen)(tElse)
 
-            minCostCandidate = Some(totalCost -> t)
-          }
+          minCostCandidate = Some(totalCost -> t)
         }
       }
     }
