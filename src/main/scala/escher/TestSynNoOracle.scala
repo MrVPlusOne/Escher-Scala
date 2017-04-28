@@ -17,6 +17,9 @@ object TestSynNoOracle {
 
     import syn._
 
+    case class TestCase(name: String, examples: IndexedSeq[(ArgList, TermValue)],
+                        result: () => Option[SynthesizedComponent])
+
     def synthesizeUsingRef(refComp: ComponentImpl, argNames: IS[String],
                            exampleInputs: IS[ArgList],
                            additionalComps: (Set[ComponentImpl], Map[ComponentImpl, ReducibleCheck]) = (Set(), Map())) = {
@@ -24,13 +27,16 @@ object TestSynNoOracle {
       val additionalImpls = additionalComps._1
       val additionalRules = additionalComps._2
 
-      Synthesis.showExamples("sorted examples", examples, maxExamplesShown = 50)
 
-      synthesize(refComp.name, refComp.inputTypes, argNames, refComp.returnType)(
-        envComps = CommonComps.standardComps ++ additionalImpls, examples, CommonComps.rules_standard ++ additionalRules)
+      TestCase(refComp.name, examples, () => {
+        println(s"Task name: ${refComp.name}")
+        Synthesis.showExamples("sorted examples", examples, maxExamplesShown = 50)
+        synthesize(refComp.name, refComp.inputTypes, argNames, refComp.returnType)(
+          envComps = CommonComps.standardComps ++ additionalImpls, examples, CommonComps.rules_standard ++ additionalRules)
+      })
     }
 
-    def reverseSynthesis() = {
+    val reverseSynthesis = {
       synthesizeUsingRef(CommonComps.reverse, IS("xs"), exampleInputs = IS(
         argList(listValue(1, 2, 3)),
         argList(listValue(1, 2)),
@@ -40,7 +46,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def stutterSynthesis() = {
+    val stutterSynthesis = {
       synthesizeUsingRef(CommonComps.stutter, IS("xs"), exampleInputs = IS(
         argList(listValue()),
         argList(listValue(5)),
@@ -48,7 +54,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def containsSynthesis() = {
+    val containsSynthesis = {
       synthesizeUsingRef(CommonComps.contains, IS("xs", "x"), exampleInputs = IS(
         argList(listValue(1,2,3), 1),
         argList(listValue(1,2,3), 2),
@@ -60,7 +66,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def insertSynthesis() = {
+    val insertSynthesis = {
       synthesizeUsingRef(CommonComps.insert, IS("xs", "i", "x"), exampleInputs = IS(
         argList(listValue(), 0, 5),
         argList(listValue(), 3, 5),
@@ -73,7 +79,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def fibSynthesis() = {
+    val fibSynthesis = {
       synthesizeUsingRef(CommonComps.fib, IS("n"), exampleInputs = IS(
         argList(-3),
         argList(0),
@@ -86,7 +92,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def squareListSynthesis() = {
+    val squareListSynthesis = {
       synthesizeUsingRef(CommonComps.squareList, IS("n"), exampleInputs = IS(
         argList(-3),
         argList(0),
@@ -97,7 +103,7 @@ object TestSynNoOracle {
       ), additionalComps = (Set(CommonComps.times), CommonComps.rules_timesAndDiv))
     }
 
-    def nodesAtLevelSynthesis() = {
+    val nodesAtLevelSynthesis = {
       import BinaryTree._
 
       synthesizeUsingRef(CommonComps.nodesAtLevel, IS("tree", "level"), exampleInputs = IS(
@@ -115,7 +121,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def dropLastSynthesis() = {
+    val dropLastSynthesis = {
       synthesizeUsingRef(CommonComps.dropLast, IS("xs"), exampleInputs = IS(
         argList(listValue()),
         argList(listValue(1)),
@@ -125,7 +131,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def evensSynthesis() = {
+    val evensSynthesis = {
       synthesizeUsingRef(CommonComps.evens, IS("xs"), exampleInputs = IS(
         argList(listValue()),
         argList(listValue(1)),
@@ -135,7 +141,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def tConcatSynthesis() = {
+    val tConcatSynthesis = {
       import BinaryTree._
 
       synthesizeUsingRef(CommonComps.tConcat, IS("baseTree", "inserted"), exampleInputs = IS(
@@ -150,7 +156,7 @@ object TestSynNoOracle {
     // below are failed tasks
 
 
-    def compressSynthesis() = {
+    val compressSynthesis = {
       synthesizeUsingRef(CommonComps.compress, IS("xs"), exampleInputs = IS(
         argList(listValue()),
         argList(listValue(7)),
@@ -163,7 +169,7 @@ object TestSynNoOracle {
       ))
     }
 
-    def cartesianSynthesis() = {
+    val cartesianSynthesis = {
       synthesizeUsingRef(CommonComps.cartesian, IS("xs", "ys"), exampleInputs = IS(
         argList(listValue(), listValue(2, 3, 4)),
         argList(listValue(5), listValue()),
@@ -172,14 +178,52 @@ object TestSynNoOracle {
       ), additionalComps = (Set(CommonComps.createPair(tyFixVar(0), tyFixVar(1))), Map()))
     }
 
+    val tasks = Seq(
+      reverseSynthesis,
+      stutterSynthesis,
+      squareListSynthesis,
+      fibSynthesis,
+      insertSynthesis,
+      nodesAtLevelSynthesis,
+      containsSynthesis,
+      dropLastSynthesis,
+      evensSynthesis,
+      tConcatSynthesis
+    )
 
-    TimeTools.printTimeUsed("Synthesis task") {
-      nodesAtLevelSynthesis() match {
-        case Some(component) =>
-          component.print()
-          println(s"cost = ${component.cost}")
-        case None => println("Failed")
+    var totalTime: Long = 0
+    var totalCost, totalDepth, totalExamples = 0
+    val records = for (task <- tasks) yield {
+      val (time, result) = TimeTools.printTimeUsed("single synthesis") {
+        val (time, result) = TimeTools.measureTime(task.result())
+        result match {
+          case Some(component) =>
+            println("Program Found: ")
+            component.print()
+            println(s"cost = ${component.cost}")
+            totalTime += time
+            totalCost += component.cost
+            totalDepth += component.depth
+            totalExamples += task.examples.length
+          case None => println("Failed")
+        }
+        (time, result)
+      }
+
+      result match {
+        case Some(comp) =>
+          IS(task.name, comp.cost.toString, comp.depth.toString,
+            task.examples.length.toString, TimeTools.nanoToMillisString(time))
+        case None =>
+          IS(task.name, "FAIL", "FAIL", task.examples.length.toString, "FAIL")
       }
     }
+
+    println("Summery: ")
+    val dataToPrint = IS("name", "cost", "depth", "examples", "time") +: records.toIndexedSeq :+
+      IS("Total", totalCost.toString, totalDepth.toString,
+        totalExamples.toString, TimeTools.nanoToSecondString(totalTime))
+
+    CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4))
   }
 }

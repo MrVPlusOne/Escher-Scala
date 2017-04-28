@@ -1,0 +1,902 @@
+Task name: reverse
+sorted examples (5):
+([1, 2, 3]) -> [3, 2, 1]
+([1, 2]) -> [2, 1]
+([2, 3]) -> [3, 2]
+([1]) -> [1]
+([]) -> []
+*** [synthesize related components at level 1] time used: 14.36ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+Non-recursive LevelMaps:
+  1: (6 components, 5 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 12.29ms ***
+*** [synthesize unrelated components] time used: 1.82ms ***
+*** [synthesize related components at level 2] time used: 20.27ms ***
+State at level: 2
+TotalMap: (8 components, 5 types)
+Non-recursive LevelMaps:
+  2: (2 components, 2 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.75ms ***
+*** [synthesize unrelated components] time used: 6.17ms ***
+*** [synthesize related components at level 3] time used: 15.46ms ***
+State at level: 3
+TotalMap: (14 components, 6 types)
+Non-recursive LevelMaps:
+  3: (4 components, 2 types)
+Recursive LevelMaps:
+  3: (1 components, 1 types)
+*** [Goal searching] time used: 2.14ms ***
+*** [synthesize unrelated components] time used: 6.96ms ***
+*** [synthesize related components at level 4] time used: 18.25ms ***
+State at level: 4
+TotalMap: (26 components, 9 types)
+Non-recursive LevelMaps:
+  4: (6 components, 2 types)
+Recursive LevelMaps:
+  4: (3 components, 2 types)
+*** [Goal searching] time used: 11.20ms ***
+*** [synthesize unrelated components] time used: 10.03ms ***
+*** [synthesize related components at level 5] time used: 20.11ms ***
+State at level: 5
+TotalMap: (38 components, 9 types)
+Non-recursive LevelMaps:
+  5: (7 components, 2 types)
+Recursive LevelMaps:
+  5: (13 components, 2 types)
+*** [Goal searching] time used: 3.68ms ***
+*** [synthesize unrelated components] time used: 7.25ms ***
+*** [synthesize related components at level 6] time used: 24.92ms ***
+State at level: 6
+TotalMap: (57 components, 9 types)
+Non-recursive LevelMaps:
+  6: (11 components, 1 types)
+Recursive LevelMaps:
+  6: (41 components, 2 types)
+*** [Goal searching] time used: 12.50ms ***
+*** [synthesize unrelated components] time used: 9.70ms ***
+*** [synthesize related components at level 7] time used: 46.88ms ***
+State at level: 7
+TotalMap: (86 components, 9 types)
+Non-recursive LevelMaps:
+  7: (20 components, 2 types)
+Recursive LevelMaps:
+  7: (127 components, 2 types)
+*** [Goal searching] time used: 52.76ms ***
+*** [synthesize unrelated components] time used: 11.18ms ***
+*** [synthesize related components at level 8] time used: 71.43ms ***
+State at level: 8
+TotalMap: (136 components, 9 types)
+Non-recursive LevelMaps:
+  8: (38 components, 2 types)
+Recursive LevelMaps:
+  8: (404 components, 2 types)
+Program Found:
+reverse(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else concat(reverse(tail(@xs)), cons(head(@xs), nil()))
+cost = 12
+*** [single synthesis] time used: 471.37ms ***
+Task name: stutter
+sorted examples (3):
+([]) -> []
+([5]) -> [5, 5]
+([5, 6, 3]) -> [5, 5, 6, 6, 3, 3]
+*** [synthesize related components at level 1] time used: 0.34ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+Non-recursive LevelMaps:
+  1: (6 components, 5 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.70ms ***
+*** [synthesize unrelated components] time used: 0.31ms ***
+*** [synthesize related components at level 2] time used: 3.79ms ***
+State at level: 2
+TotalMap: (8 components, 5 types)
+Non-recursive LevelMaps:
+  2: (2 components, 2 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.38ms ***
+*** [synthesize unrelated components] time used: 1.46ms ***
+*** [synthesize related components at level 3] time used: 2.51ms ***
+State at level: 3
+TotalMap: (14 components, 6 types)
+Non-recursive LevelMaps:
+  3: (4 components, 2 types)
+Recursive LevelMaps:
+  3: (1 components, 1 types)
+*** [Goal searching] time used: 0.29ms ***
+*** [synthesize unrelated components] time used: 1.31ms ***
+*** [synthesize related components at level 4] time used: 5.28ms ***
+State at level: 4
+TotalMap: (25 components, 9 types)
+Non-recursive LevelMaps:
+  4: (5 components, 2 types)
+Recursive LevelMaps:
+  4: (3 components, 2 types)
+*** [Goal searching] time used: 1.07ms ***
+*** [synthesize unrelated components] time used: 2.55ms ***
+*** [synthesize related components at level 5] time used: 6.16ms ***
+State at level: 5
+TotalMap: (38 components, 9 types)
+Non-recursive LevelMaps:
+  5: (8 components, 1 types)
+Recursive LevelMaps:
+  5: (12 components, 2 types)
+*** [Goal searching] time used: 1.33ms ***
+*** [synthesize unrelated components] time used: 5.40ms ***
+*** [synthesize related components at level 6] time used: 15.26ms ***
+State at level: 6
+TotalMap: (56 components, 9 types)
+Non-recursive LevelMaps:
+  6: (10 components, 1 types)
+Recursive LevelMaps:
+  6: (40 components, 2 types)
+*** [Goal searching] time used: 7.00ms ***
+*** [synthesize unrelated components] time used: 4.67ms ***
+*** [synthesize related components at level 7] time used: 26.08ms ***
+State at level: 7
+TotalMap: (85 components, 9 types)
+Non-recursive LevelMaps:
+  7: (22 components, 1 types)
+Recursive LevelMaps:
+  7: (116 components, 2 types)
+*** [Goal searching] time used: 36.80ms ***
+*** [synthesize unrelated components] time used: 10.27ms ***
+*** [synthesize related components at level 8] time used: 55.16ms ***
+State at level: 8
+TotalMap: (134 components, 9 types)
+Non-recursive LevelMaps:
+  8: (39 components, 1 types)
+Recursive LevelMaps:
+  8: (380 components, 2 types)
+*** [Goal searching] time used: 104.92ms ***
+*** [synthesize unrelated components] time used: 6.80ms ***
+*** [synthesize related components at level 9] time used: 48.56ms ***
+State at level: 9
+TotalMap: (206 components, 9 types)
+Non-recursive LevelMaps:
+  9: (57 components, 1 types)
+Recursive LevelMaps:
+  9: (1168 components, 2 types)
+Program Found:
+stutter(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else cons(head(@xs), cons(head(@xs), stutter(tail(@xs))))
+cost = 13
+*** [single synthesis] time used: 389.21ms ***
+Task name: squareList
+sorted examples (6):
+(-3) -> []
+(0) -> []
+(1) -> [1]
+(2) -> [1, 4]
+(3) -> [1, 4, 9]
+(4) -> [1, 4, 9, 16]
+*** [synthesize related components at level 1] time used: 0.29ms ***
+State at level: 1
+TotalMap: (6 components, 4 types)
+Non-recursive LevelMaps:
+  1: (6 components, 4 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.53ms ***
+*** [synthesize unrelated components] time used: 0.22ms ***
+*** [synthesize related components at level 2] time used: 0.98ms ***
+State at level: 2
+TotalMap: (7 components, 4 types)
+Non-recursive LevelMaps:
+  2: (1 components, 1 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.28ms ***
+*** [synthesize unrelated components] time used: 0.98ms ***
+*** [synthesize related components at level 3] time used: 1.90ms ***
+State at level: 3
+TotalMap: (21 components, 5 types)
+Non-recursive LevelMaps:
+  3: (8 components, 2 types)
+Recursive LevelMaps:
+  3: (3 components, 1 types)
+*** [Goal searching] time used: 0.32ms ***
+*** [synthesize unrelated components] time used: 1.88ms ***
+*** [synthesize related components at level 4] time used: 4.10ms ***
+State at level: 4
+TotalMap: (54 components, 7 types)
+Non-recursive LevelMaps:
+  4: (16 components, 2 types)
+Recursive LevelMaps:
+  4: (13 components, 2 types)
+*** [Goal searching] time used: 0.97ms ***
+*** [synthesize unrelated components] time used: 4.45ms ***
+*** [synthesize related components at level 5] time used: 16.67ms ***
+State at level: 5
+TotalMap: (127 components, 7 types)
+Non-recursive LevelMaps:
+  5: (38 components, 2 types)
+Recursive LevelMaps:
+  5: (58 components, 2 types)
+*** [Goal searching] time used: 1.86ms ***
+*** [synthesize unrelated components] time used: 10.22ms ***
+*** [synthesize related components at level 6] time used: 30.75ms ***
+State at level: 6
+TotalMap: (326 components, 8 types)
+Non-recursive LevelMaps:
+  6: (102 components, 2 types)
+Recursive LevelMaps:
+  6: (238 components, 2 types)
+*** [Goal searching] time used: 12.31ms ***
+*** [synthesize unrelated components] time used: 31.35ms ***
+*** [synthesize related components at level 7] time used: 101.97ms ***
+State at level: 7
+TotalMap: (893 components, 8 types)
+Non-recursive LevelMaps:
+  7: (312 components, 2 types)
+Recursive LevelMaps:
+  7: (1080 components, 2 types)
+*** [Goal searching] time used: 109.99ms ***
+*** [synthesize unrelated components] time used: 76.34ms ***
+*** [synthesize related components at level 8] time used: 386.89ms ***
+State at level: 8
+TotalMap: (2539 components, 8 types)
+Non-recursive LevelMaps:
+  8: (952 components, 2 types)
+Recursive LevelMaps:
+  8: (4973 components, 2 types)
+*** [Goal searching] time used: 715.73ms ***
+*** [synthesize unrelated components] time used: 145.72ms ***
+*** [synthesize related components at level 9] time used: 732.17ms ***
+State at level: 9
+TotalMap: (7457 components, 8 types)
+Non-recursive LevelMaps:
+  9: (2993 components, 2 types)
+Recursive LevelMaps:
+  9: (22604 components, 2 types)
+Program Found:
+squareList(@n: Int): List[Int] =
+  if isNonNeg(neg(@n))
+  then nil()
+  else concat(squareList(dec(@n)), cons(times(@n, @n), nil()))
+cost = 14
+*** [single synthesis] time used: 2,514.40ms ***
+Task name: fib
+sorted examples (8):
+(-3) -> 1
+(0) -> 1
+(1) -> 1
+(2) -> 2
+(3) -> 3
+(4) -> 5
+(5) -> 8
+(6) -> 13
+*** [synthesize related components at level 1] time used: 0.16ms ***
+State at level: 1
+TotalMap: (6 components, 4 types)
+Non-recursive LevelMaps:
+  1: (6 components, 4 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.12ms ***
+*** [synthesize unrelated components] time used: 0.12ms ***
+*** [synthesize related components at level 2] time used: 1.10ms ***
+State at level: 2
+TotalMap: (13 components, 4 types)
+Non-recursive LevelMaps:
+  2: (7 components, 2 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.59ms ***
+*** [synthesize unrelated components] time used: 0.57ms ***
+*** [synthesize related components at level 3] time used: 2.27ms ***
+State at level: 3
+TotalMap: (31 components, 4 types)
+Non-recursive LevelMaps:
+  3: (18 components, 2 types)
+Recursive LevelMaps:
+  3: (3 components, 1 types)
+*** [Goal searching] time used: 0.23ms ***
+*** [synthesize unrelated components] time used: 0.47ms ***
+*** [synthesize related components at level 4] time used: 2.74ms ***
+State at level: 4
+TotalMap: (70 components, 4 types)
+Non-recursive LevelMaps:
+  4: (39 components, 2 types)
+Recursive LevelMaps:
+  4: (22 components, 2 types)
+*** [Goal searching] time used: 0.84ms ***
+*** [synthesize unrelated components] time used: 0.41ms ***
+*** [synthesize related components at level 5] time used: 9.19ms ***
+State at level: 5
+TotalMap: (165 components, 4 types)
+Non-recursive LevelMaps:
+  5: (95 components, 2 types)
+Recursive LevelMaps:
+  5: (111 components, 2 types)
+*** [Goal searching] time used: 4.99ms ***
+*** [synthesize unrelated components] time used: 0.45ms ***
+*** [synthesize related components at level 6] time used: 25.81ms ***
+State at level: 6
+TotalMap: (371 components, 4 types)
+Non-recursive LevelMaps:
+  6: (206 components, 2 types)
+Recursive LevelMaps:
+  6: (492 components, 2 types)
+*** [Goal searching] time used: 75.02ms ***
+*** [synthesize unrelated components] time used: 0.46ms ***
+*** [synthesize related components at level 7] time used: 52.45ms ***
+State at level: 7
+TotalMap: (778 components, 4 types)
+Non-recursive LevelMaps:
+  7: (407 components, 2 types)
+Recursive LevelMaps:
+  7: (2045 components, 2 types)
+*** [Goal searching] time used: 757.28ms ***
+*** [synthesize unrelated components] time used: 0.51ms ***
+*** [synthesize related components at level 8] time used: 249.86ms ***
+State at level: 8
+TotalMap: (1594 components, 4 types)
+Non-recursive LevelMaps:
+  8: (816 components, 2 types)
+Recursive LevelMaps:
+  8: (8207 components, 2 types)
+Program Found:
+fib(@n: Int): Int =
+  if isNonNeg(inc(neg(@n)))
+  then inc(zero())
+  else plus(fib(dec(@n)), fib(dec(dec(@n))))
+cost = 15
+*** [single synthesis] time used: 1,566.94ms ***
+Task name: insert
+sorted examples (8):
+([], 0, 5) -> [5]
+([], 3, 5) -> [5]
+([3], -1, 1) -> [1, 3]
+([1, 2, 3], 0, 8) -> [8, 1, 2, 3]
+([1, 2, 3], 1, 8) -> [1, 8, 2, 3]
+([1, 2, 3], 2, 8) -> [1, 2, 8, 3]
+([1, 2, 3], 3, 8) -> [1, 2, 3, 8]
+([1, 2, 3], 4, 8) -> [1, 2, 3, 8]
+*** [synthesize related components at level 1] time used: 0.12ms ***
+State at level: 1
+TotalMap: (8 components, 6 types)
+Non-recursive LevelMaps:
+  1: (8 components, 6 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.10ms ***
+*** [synthesize unrelated components] time used: 0.07ms ***
+*** [synthesize related components at level 2] time used: 0.43ms ***
+State at level: 2
+TotalMap: (11 components, 6 types)
+Non-recursive LevelMaps:
+  2: (3 components, 2 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.07ms ***
+*** [synthesize unrelated components] time used: 0.43ms ***
+*** [synthesize related components at level 3] time used: 0.93ms ***
+State at level: 3
+TotalMap: (29 components, 6 types)
+Non-recursive LevelMaps:
+  3: (10 components, 2 types)
+Recursive LevelMaps:
+  3: (0 components, 0 types)
+*** [Goal searching] time used: 0.10ms ***
+*** [synthesize unrelated components] time used: 1.00ms ***
+*** [synthesize related components at level 4] time used: 1.87ms ***
+State at level: 4
+TotalMap: (64 components, 10 types)
+Non-recursive LevelMaps:
+  4: (10 components, 2 types)
+Recursive LevelMaps:
+  4: (3 components, 1 types)
+*** [Goal searching] time used: 0.12ms ***
+*** [synthesize unrelated components] time used: 1.47ms ***
+*** [synthesize related components at level 5] time used: 3.82ms ***
+State at level: 5
+TotalMap: (140 components, 10 types)
+Non-recursive LevelMaps:
+  5: (28 components, 2 types)
+Recursive LevelMaps:
+  5: (24 components, 2 types)
+*** [Goal searching] time used: 0.19ms ***
+*** [synthesize unrelated components] time used: 3.29ms ***
+*** [synthesize related components at level 6] time used: 8.26ms ***
+State at level: 6
+TotalMap: (293 components, 10 types)
+Non-recursive LevelMaps:
+  6: (47 components, 2 types)
+Recursive LevelMaps:
+  6: (131 components, 2 types)
+*** [Goal searching] time used: 5.16ms ***
+*** [synthesize unrelated components] time used: 6.81ms ***
+*** [synthesize related components at level 7] time used: 20.15ms ***
+State at level: 7
+TotalMap: (576 components, 10 types)
+Non-recursive LevelMaps:
+  7: (82 components, 2 types)
+Recursive LevelMaps:
+  7: (595 components, 2 types)
+*** [Goal searching] time used: 21.36ms ***
+*** [synthesize unrelated components] time used: 16.63ms ***
+*** [synthesize related components at level 8] time used: 55.45ms ***
+State at level: 8
+TotalMap: (1124 components, 10 types)
+Non-recursive LevelMaps:
+  8: (137 components, 2 types)
+Recursive LevelMaps:
+  8: (2501 components, 2 types)
+*** [Goal searching] time used: 133.71ms ***
+*** [synthesize unrelated components] time used: 52.33ms ***
+*** [synthesize related components at level 9] time used: 250.28ms ***
+State at level: 9
+TotalMap: (2145 components, 10 types)
+Non-recursive LevelMaps:
+  9: (236 components, 2 types)
+Recursive LevelMaps:
+  9: (10134 components, 2 types)
+Program Found:
+insert(@xs: List['0], @i: Int, @x: '0): List['0] =
+  if or(isNil(@xs), isNonNeg(neg(@i)))
+  then cons(@x, @xs)
+  else cons(head(@xs), insert(tail(@xs), dec(@i), @x))
+cost = 19
+*** [single synthesis] time used: 917.83ms ***
+Task name: nodesAtLevel
+sorted examples (11):
+(L, 1) -> []
+(L, 0) -> []
+(L, -1) -> []
+((12: L, L), -1) -> []
+((12: L, L), 0) -> [12]
+((12: L, L), 1) -> []
+((12: L, L), 2) -> []
+((12: (7: L, L), (9: L, L)), 1) -> [7, 9]
+((12: (7: L, L), (9: L, L)), 2) -> []
+((12: (15: (4: L, L), L), (9: L, L)), 3) -> []
+((15: (15: (4: L, L), L), (9: L, L)), 4) -> []
+*** [synthesize related components at level 1] time used: 0.11ms ***
+State at level: 1
+TotalMap: (7 components, 5 types)
+Non-recursive LevelMaps:
+  1: (7 components, 5 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.13ms ***
+*** [synthesize unrelated components] time used: 0.06ms ***
+*** [synthesize related components at level 2] time used: 0.40ms ***
+State at level: 2
+TotalMap: (9 components, 5 types)
+Non-recursive LevelMaps:
+  2: (2 components, 1 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.08ms ***
+*** [synthesize unrelated components] time used: 0.55ms ***
+*** [synthesize related components at level 3] time used: 0.84ms ***
+State at level: 3
+TotalMap: (24 components, 6 types)
+Non-recursive LevelMaps:
+  3: (6 components, 1 types)
+Recursive LevelMaps:
+  3: (2 components, 1 types)
+*** [Goal searching] time used: 0.12ms ***
+*** [synthesize unrelated components] time used: 0.91ms ***
+*** [synthesize related components at level 4] time used: 2.31ms ***
+State at level: 4
+TotalMap: (55 components, 12 types)
+Non-recursive LevelMaps:
+  4: (8 components, 2 types)
+Recursive LevelMaps:
+  4: (15 components, 2 types)
+*** [Goal searching] time used: 1.29ms ***
+*** [synthesize unrelated components] time used: 2.20ms ***
+*** [synthesize related components at level 5] time used: 6.59ms ***
+State at level: 5
+TotalMap: (115 components, 17 types)
+Non-recursive LevelMaps:
+  5: (15 components, 2 types)
+Recursive LevelMaps:
+  5: (67 components, 2 types)
+*** [Goal searching] time used: 2.34ms ***
+*** [synthesize unrelated components] time used: 4.54ms ***
+*** [synthesize related components at level 6] time used: 9.46ms ***
+State at level: 6
+TotalMap: (231 components, 17 types)
+Non-recursive LevelMaps:
+  6: (27 components, 2 types)
+Recursive LevelMaps:
+  6: (239 components, 2 types)
+*** [Goal searching] time used: 3.81ms ***
+*** [synthesize unrelated components] time used: 9.14ms ***
+*** [synthesize related components at level 7] time used: 23.98ms ***
+State at level: 7
+TotalMap: (429 components, 18 types)
+Non-recursive LevelMaps:
+  7: (29 components, 2 types)
+Recursive LevelMaps:
+  7: (853 components, 2 types)
+*** [Goal searching] time used: 26.80ms ***
+*** [synthesize unrelated components] time used: 20.70ms ***
+*** [synthesize related components at level 8] time used: 66.98ms ***
+State at level: 8
+TotalMap: (777 components, 19 types)
+Non-recursive LevelMaps:
+  8: (47 components, 2 types)
+Recursive LevelMaps:
+  8: (3165 components, 2 types)
+*** [Goal searching] time used: 81.90ms ***
+*** [synthesize unrelated components] time used: 61.97ms ***
+*** [synthesize related components at level 9] time used: 371.32ms ***
+State at level: 9
+TotalMap: (1357 components, 19 types)
+Non-recursive LevelMaps:
+  9: (72 components, 2 types)
+Recursive LevelMaps:
+  9: (12217 components, 2 types)
+*** [Goal searching] time used: 383.10ms ***
+*** [synthesize unrelated components] time used: 231.42ms ***
+*** [synthesize related components at level 10] time used: 867.50ms ***
+State at level: 10
+TotalMap: (2244 components, 19 types)
+Non-recursive LevelMaps:
+  10: (63 components, 2 types)
+Recursive LevelMaps:
+  10: (47453 components, 2 types)
+*** [Goal searching] time used: 1,318.59ms ***
+*** [synthesize unrelated components] time used: 700.49ms ***
+*** [synthesize related components at level 11] time used: 3,964.62ms ***
+State at level: 11
+TotalMap: (3678 components, 19 types)
+Non-recursive LevelMaps:
+  11: (96 components, 2 types)
+Recursive LevelMaps:
+  11: (183192 components, 2 types)
+Program Found:
+nodesAtLevel(@tree: Tree['0], @level: Int): List['0] =
+  if or(isLeaf(@tree), not(isNonNeg(@level)))
+  then nil()
+  else if isNonNeg(neg(@level))
+       then cons(treeValue(@tree), nil())
+       else concat(nodesAtLevel(treeLeft(@tree), dec(@level)), nodesAtLevel(treeRight(@tree), div2(@level)))
+cost = 27
+*** [single synthesis] time used: 11,540.88ms ***
+Task name: contains
+sorted examples (7):
+([1, 2, 3], 1) -> T
+([1, 2, 3], 2) -> T
+([1, 2, 3], 3) -> T
+([1, 2, 3], 4) -> F
+([1, 2, 3], -1) -> F
+([1, 2], 3) -> F
+([], 1) -> F
+*** [synthesize related components at level 1] time used: 0.06ms ***
+State at level: 1
+TotalMap: (7 components, 6 types)
+Non-recursive LevelMaps:
+  1: (7 components, 6 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.09ms ***
+*** [synthesize unrelated components] time used: 0.05ms ***
+*** [synthesize related components at level 2] time used: 0.36ms ***
+State at level: 2
+TotalMap: (8 components, 6 types)
+Non-recursive LevelMaps:
+  2: (1 components, 1 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.10ms ***
+*** [synthesize unrelated components] time used: 0.42ms ***
+*** [synthesize related components at level 3] time used: 0.66ms ***
+State at level: 3
+TotalMap: (12 components, 6 types)
+Non-recursive LevelMaps:
+  3: (1 components, 1 types)
+Recursive LevelMaps:
+  3: (1 components, 1 types)
+*** [Goal searching] time used: 0.10ms ***
+*** [synthesize unrelated components] time used: 0.48ms ***
+*** [synthesize related components at level 4] time used: 0.81ms ***
+State at level: 4
+TotalMap: (24 components, 9 types)
+Non-recursive LevelMaps:
+  4: (2 components, 1 types)
+Recursive LevelMaps:
+  4: (3 components, 1 types)
+*** [Goal searching] time used: 0.28ms ***
+*** [synthesize unrelated components] time used: 0.78ms ***
+*** [synthesize related components at level 5] time used: 1.38ms ***
+State at level: 5
+TotalMap: (39 components, 9 types)
+Non-recursive LevelMaps:
+  5: (3 components, 1 types)
+Recursive LevelMaps:
+  5: (7 components, 1 types)
+Program Found:
+contains(@xs: List['0], @x: '0): Bool =
+  if isNil(@xs)
+  then F()
+  else if equal(@x, head(@xs))
+       then T()
+       else contains(tail(@xs), @x)
+cost = 14
+*** [single synthesis] time used: 8.31ms ***
+Task name: dropLast
+sorted examples (5):
+([]) -> []
+([1]) -> []
+([1, 2]) -> [1]
+([1, 2, 3]) -> [1, 2]
+([1, 1, 1, 2, 3, 2]) -> [1, 1, 1, 2, 3]
+*** [synthesize related components at level 1] time used: 0.05ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+Non-recursive LevelMaps:
+  1: (6 components, 5 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.08ms ***
+*** [synthesize unrelated components] time used: 0.05ms ***
+*** [synthesize related components at level 2] time used: 0.43ms ***
+State at level: 2
+TotalMap: (8 components, 5 types)
+Non-recursive LevelMaps:
+  2: (2 components, 2 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.06ms ***
+*** [synthesize unrelated components] time used: 0.19ms ***
+*** [synthesize related components at level 3] time used: 0.53ms ***
+State at level: 3
+TotalMap: (14 components, 6 types)
+Non-recursive LevelMaps:
+  3: (4 components, 2 types)
+Recursive LevelMaps:
+  3: (1 components, 1 types)
+*** [Goal searching] time used: 0.12ms ***
+*** [synthesize unrelated components] time used: 0.69ms ***
+*** [synthesize related components at level 4] time used: 0.83ms ***
+State at level: 4
+TotalMap: (27 components, 9 types)
+Non-recursive LevelMaps:
+  4: (7 components, 2 types)
+Recursive LevelMaps:
+  4: (3 components, 2 types)
+*** [Goal searching] time used: 0.30ms ***
+*** [synthesize unrelated components] time used: 0.52ms ***
+*** [synthesize related components at level 5] time used: 1.45ms ***
+State at level: 5
+TotalMap: (41 components, 9 types)
+Non-recursive LevelMaps:
+  5: (9 components, 2 types)
+Recursive LevelMaps:
+  5: (13 components, 2 types)
+*** [Goal searching] time used: 1.21ms ***
+*** [synthesize unrelated components] time used: 0.90ms ***
+*** [synthesize related components at level 6] time used: 4.20ms ***
+State at level: 6
+TotalMap: (68 components, 9 types)
+Non-recursive LevelMaps:
+  6: (17 components, 2 types)
+Recursive LevelMaps:
+  6: (42 components, 2 types)
+Program Found:
+dropLast(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else if isNil(tail(@xs))
+       then nil()
+       else cons(head(@xs), dropLast(tail(@xs)))
+cost = 15
+*** [single synthesis] time used: 17.03ms ***
+Task name: evens
+sorted examples (5):
+([]) -> []
+([1]) -> [1]
+([1, 2]) -> [1]
+([1, 2, 3, 4]) -> [1, 3]
+([1, 2, 3, 4, 5, 6]) -> [1, 3, 5]
+*** [synthesize related components at level 1] time used: 0.06ms ***
+State at level: 1
+TotalMap: (6 components, 5 types)
+Non-recursive LevelMaps:
+  1: (6 components, 5 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.09ms ***
+*** [synthesize unrelated components] time used: 0.05ms ***
+*** [synthesize related components at level 2] time used: 0.31ms ***
+State at level: 2
+TotalMap: (8 components, 5 types)
+Non-recursive LevelMaps:
+  2: (2 components, 2 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.06ms ***
+*** [synthesize unrelated components] time used: 0.18ms ***
+*** [synthesize related components at level 3] time used: 0.47ms ***
+State at level: 3
+TotalMap: (14 components, 6 types)
+Non-recursive LevelMaps:
+  3: (4 components, 2 types)
+Recursive LevelMaps:
+  3: (1 components, 1 types)
+*** [Goal searching] time used: 0.08ms ***
+*** [synthesize unrelated components] time used: 0.33ms ***
+*** [synthesize related components at level 4] time used: 0.82ms ***
+State at level: 4
+TotalMap: (27 components, 9 types)
+Non-recursive LevelMaps:
+  4: (7 components, 2 types)
+Recursive LevelMaps:
+  4: (3 components, 2 types)
+*** [Goal searching] time used: 0.26ms ***
+*** [synthesize unrelated components] time used: 0.54ms ***
+*** [synthesize related components at level 5] time used: 1.47ms ***
+State at level: 5
+TotalMap: (41 components, 9 types)
+Non-recursive LevelMaps:
+  5: (9 components, 2 types)
+Recursive LevelMaps:
+  5: (13 components, 2 types)
+*** [Goal searching] time used: 0.52ms ***
+*** [synthesize unrelated components] time used: 0.82ms ***
+*** [synthesize related components at level 6] time used: 2.30ms ***
+State at level: 6
+TotalMap: (68 components, 9 types)
+Non-recursive LevelMaps:
+  6: (17 components, 2 types)
+Recursive LevelMaps:
+  6: (42 components, 2 types)
+*** [Goal searching] time used: 1.86ms ***
+*** [synthesize unrelated components] time used: 1.16ms ***
+*** [synthesize related components at level 7] time used: 4.27ms ***
+State at level: 7
+TotalMap: (113 components, 9 types)
+Non-recursive LevelMaps:
+  7: (32 components, 2 types)
+Recursive LevelMaps:
+  7: (131 components, 2 types)
+Program Found:
+evens(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else if isNil(tail(@xs))
+       then @xs
+       else cons(head(@xs), evens(tail(tail(@xs))))
+cost = 16
+*** [single synthesis] time used: 22.60ms ***
+Task name: tConcat
+sorted examples (6):
+(L, L) -> L
+(L, (1: L, L)) -> (1: L, L)
+((1: L, L), L) -> (1: L, L)
+((1: L, L), (2: (3: L, L), (4: L, L))) -> (1: (2: (3: L, L), (4: L, L)), (2: (3: L, L), (4: L, L)))
+((1: (2: L, L), (3: L, L)), (4: (5: L, L), (6: L, L))) -> (1: (2: (4: (5: L, L), (6: L, L)), (4: (5: L, L), (6: L, L))), (3: (4: (5: L, L), (6: L, L)), (4: (5: L, L), (6: L, L))))
+((1: L, (2: (3: L, L), (4: L, L))), (5: L, L)) -> (1: (5: L, L), (2: (3: (5: L, L), (5: L, L)), (4: (5: L, L), (5: L, L))))
+*** [synthesize related components at level 1] time used: 0.08ms ***
+State at level: 1
+TotalMap: (7 components, 5 types)
+Non-recursive LevelMaps:
+  1: (7 components, 5 types)
+Recursive LevelMaps:
+  1: (0 components, 0 types)
+*** [Goal searching] time used: 0.08ms ***
+*** [synthesize unrelated components] time used: 0.07ms ***
+*** [synthesize related components at level 2] time used: 0.30ms ***
+State at level: 2
+TotalMap: (13 components, 5 types)
+Non-recursive LevelMaps:
+  2: (6 components, 2 types)
+Recursive LevelMaps:
+  2: (0 components, 0 types)
+*** [Goal searching] time used: 0.06ms ***
+*** [synthesize unrelated components] time used: 0.15ms ***
+*** [synthesize related components at level 3] time used: 0.72ms ***
+State at level: 3
+TotalMap: (23 components, 6 types)
+Non-recursive LevelMaps:
+  3: (8 components, 2 types)
+Recursive LevelMaps:
+  3: (6 components, 1 types)
+*** [Goal searching] time used: 0.07ms ***
+*** [synthesize unrelated components] time used: 0.26ms ***
+*** [synthesize related components at level 4] time used: 0.93ms ***
+State at level: 4
+TotalMap: (31 components, 6 types)
+Non-recursive LevelMaps:
+  4: (4 components, 1 types)
+Recursive LevelMaps:
+  4: (42 components, 2 types)
+*** [Goal searching] time used: 1.22ms ***
+*** [synthesize unrelated components] time used: 0.53ms ***
+*** [synthesize related components at level 5] time used: 2.42ms ***
+State at level: 5
+TotalMap: (58 components, 9 types)
+Non-recursive LevelMaps:
+  5: (20 components, 2 types)
+Recursive LevelMaps:
+  5: (160 components, 2 types)
+*** [Goal searching] time used: 6.15ms ***
+*** [synthesize unrelated components] time used: 0.79ms ***
+*** [synthesize related components at level 6] time used: 6.84ms ***
+State at level: 6
+TotalMap: (154 components, 9 types)
+Non-recursive LevelMaps:
+  6: (90 components, 2 types)
+Recursive LevelMaps:
+  6: (502 components, 2 types)
+*** [Goal searching] time used: 15.05ms ***
+*** [synthesize unrelated components] time used: 1.40ms ***
+*** [synthesize related components at level 7] time used: 24.30ms ***
+State at level: 7
+TotalMap: (332 components, 9 types)
+Non-recursive LevelMaps:
+  7: (170 components, 2 types)
+Recursive LevelMaps:
+  7: (1583 components, 2 types)
+*** [Goal searching] time used: 40.04ms ***
+*** [synthesize unrelated components] time used: 2.65ms ***
+*** [synthesize related components at level 8] time used: 73.79ms ***
+State at level: 8
+TotalMap: (457 components, 9 types)
+Non-recursive LevelMaps:
+  8: (121 components, 2 types)
+Recursive LevelMaps:
+  8: (5632 components, 2 types)
+*** [Goal searching] time used: 1,043.11ms ***
+*** [synthesize unrelated components] time used: 6.53ms ***
+*** [synthesize related components at level 9] time used: 238.39ms ***
+State at level: 9
+TotalMap: (743 components, 9 types)
+Non-recursive LevelMaps:
+  9: (266 components, 1 types)
+Recursive LevelMaps:
+  9: (20392 components, 2 types)
+*** [Goal searching] time used: 13,879.21ms ***
+*** [synthesize unrelated components] time used: 23.53ms ***
+*** [synthesize related components at level 10] time used: 1,206.77ms ***
+State at level: 10
+TotalMap: (2537 components, 9 types)
+Non-recursive LevelMaps:
+  10: (1704 components, 2 types)
+Recursive LevelMaps:
+  10: (70041 components, 2 types)
+*** [Goal searching] time used: 59,737.15ms ***
+*** [synthesize unrelated components] time used: 60.81ms ***
+*** [synthesize related components at level 11] time used: 6,295.12ms ***
+State at level: 11
+TotalMap: (8854 components, 9 types)
+Non-recursive LevelMaps:
+  11: (6147 components, 2 types)
+Recursive LevelMaps:
+  11: (235244 components, 2 types)
+Program Found:
+tConcat(@baseTree: Tree['0], @inserted: Tree['0]): Tree['0] =
+  if isLeaf(@baseTree)
+  then @inserted
+  else createNode(treeValue(@baseTree), tConcat(treeLeft(@baseTree), @inserted), tConcat(treeRight(@baseTree), @inserted))
+cost = 15
+*** [single synthesis] time used: 87,490.20ms ***
+Summery:
+  name          cost  depth  examples         time
+  reverse         12      8         5     467.76ms
+  stutter         13      9         3     387.72ms
+  squareList      14      9         6   2,514.18ms
+  fib             15      8         8   1,566.77ms
+  insert          19      9         8     917.62ms
+  nodesAtLevel    27     11        11  11,540.63ms
+  contains        14      5         7       8.16ms
+  dropLast        15      6         5      16.90ms
+  evens           16      7         5      22.47ms
+  tConcat         15     11         6  87,489.93ms
+  Total          160     83        64     104.932s

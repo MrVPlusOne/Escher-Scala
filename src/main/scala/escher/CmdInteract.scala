@@ -5,12 +5,13 @@ package escher
   */
 object CmdInteract {
 
-  def printTable(elements: IS[IS[String]], spacing: Int, alignRightCols: Set[Int]): Unit = {
+  def printTable(elements: IS[IS[String]], spacing: Int, alignRightCols: Set[Int], indent: Int = 0): Unit = {
     val rows = elements.length
     val cols = elements.head.length
 
     val colWidths = (0 until cols).map(c => (0 until rows).map(r => elements(r)(c).length).max)
     elements.foreach(row => {
+      print(" " * indent)
       for(c <- row.indices){
         val str = row(c)
         if(alignRightCols contains c){

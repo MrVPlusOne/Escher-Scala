@@ -338,7 +338,7 @@ object Main {
           s"${examples._1}/${examples._2}",
           if(reboots==0) "None" else reboots.toString,
           TimeTools.nanoToMillisString(time))
-    } :+ IS(" Total", totalCost.toString, totalDepth.toString,
+    } :+ IS("   Total", totalCost.toString, totalDepth.toString,
       s"$totalExample1/$totalExample2", totalReboots.toString, TimeTools.nanoToSecondString(totalTime))
 
     CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4,5))
