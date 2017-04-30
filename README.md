@@ -1,11 +1,14 @@
 # Escher-Scala
 Example-Driven Recursive Program Synthesis
+<hr>
 
-This repository contains two algorithm: *TypedEscher* and *AscendRec*
+This repository contains two algorithm: **TypedEscher** and **AscendRec**
 
-*TypedEscher* is a Scala implementation of the algorithm described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system and other type-related optimizations to improve searching efficiency.
+**TypedEscher** is a Scala implementation of the algorithm described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system and other type-related optimizations to improve searching efficiency.
 
-*AscendRec* is a new algorithm based on *TypedEscher*, but unlike *TypedEscher*, which requires the user to provide additional input-output examples during synthesis, *AscendRec* dose not need any additional examples to finish its work.
+**AscendRec** is a new algorithm based on *TypedEscher*, but unlike *TypedEscher*, which requires the user to provide additional input-output examples during synthesis, *AscendRec* dose not need any additional examples to finish its work.
+
+<br>
 
 **Currently working in progress**
 
