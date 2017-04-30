@@ -40,7 +40,8 @@ object Main {
     def reverseSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
         argList(listValue()) -> listValue(),
-        argList(listValue(2, 3, 4)) -> listValue(4, 3, 2)
+        argList(listValue(1,2)) -> listValue(2,1),
+        argList(listValue(1,2,3)) -> listValue(3,2,1)
       )
 
       val refComp = CommonComps.reverse
@@ -257,6 +258,20 @@ object Main {
       synthesize(refComp.name, refComp.inputTypes, IS("xs"), refComp.returnType)(envComps = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
+    def flattenTreeSynthesis() = {
+      import BinaryTree._
+      val args = IS(
+        argList(BinaryLeaf),
+        argList(singleNode(1)),
+        argList(BinaryNode(1, singleNode(2), singleNode(3)))
+      )
+      val refComp = CommonComps.flattenTree
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(refComp.name, refComp.inputTypes, IS("tree"), refComp.returnType)(envComps = CommonComps.standardComps, examples, oracle = refComp.impl)
+    }
+
     def evensSynthesis() = {
       val args: IS[ArgList] = IS(
         argList(listValue()),
@@ -301,6 +316,7 @@ object Main {
         fibSynthesis,
         insertSynthesis,
         compressSynthesis,
+        flattenTreeSynthesis,
         nodesAtLevelSynthesis,
         containsSynthesis,
         dropLastSynthesis,

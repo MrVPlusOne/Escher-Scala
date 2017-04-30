@@ -308,8 +308,7 @@ object CommonComps {
     // list
     head, tail, cons, concat, nil,
     // integer
-    zero, inc, dec, neg, length, plus, div2
-
+    zero, inc, dec, neg, plus, div2
   )
 
   val rules_noTree = Map[ComponentImpl, ReducibleCheck](
@@ -496,6 +495,67 @@ object CommonComps {
     times -> reduces(commutative, associative(times), noDirectChildren(zero, neg)),
     div -> reduces(noDirectChildren(zero, neg))
   )
+
+  val sumUnder = ComponentImpl(
+    "sumUnder",
+    IS(tyInt), tyInt,
+    impl = {
+      case IS(ValueInt(n)) => if(n > 0) n * (n + 1) / 2 else 0
+    }
+  )
+
+  val flattenTree = {
+    def impl[A](tree: BinaryTree[A]): List[A] = tree match {
+      case BinaryNode(tag, left, right) => tag +: (impl(left) ++ impl(right))
+      case BinaryLeaf => List()
+    }
+
+    ComponentImpl(
+      "flattenTree",
+      IS(tyTree(tyVar(0))), tyList(tyVar(0)),
+      impl = {
+        case IS(ValueTree(tree)) => impl(tree)
+      }
+    )
+  }
+
+  val maxInList = {
+    ComponentImpl(
+      "maxInList",
+      IS(tyList(tyInt)), tyInt,
+      impl = {
+        case IS(ValueList(List())) => 0
+        case IS(ValueList(xs)) => xs.map{
+          case ValueInt(n) => n
+        }.max
+      }
+    )
+  }
+
+  val lastInList = {
+    ComponentImpl(
+      "lastInList",
+      IS(tyList(tyVar(0))), tyVar(0),
+      impl = {
+        case IS(ValueList(xs)) => if(xs.isEmpty) ValueError else xs.last
+      }
+    )
+  }
+
+  val shiftLeft = {
+    def impl[A](xs: List[A]): List[A] = xs match {
+      case List() => List()
+      case x :: t => impl(t) :+ x
+    }
+
+    ComponentImpl(
+      "shiftLeft",
+      IS(tyList(tyVar(0))), tyList(tyVar(0)),
+      impl = {
+        case IS(ValueList(xs)) => impl(xs)
+      }
+    )
+  }
 
   /** 1,1,2,3,5,8,... */
   val fib = {

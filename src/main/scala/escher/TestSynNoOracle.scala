@@ -108,18 +108,17 @@ object TestSynNoOracle {
 
       synthesizeUsingRef(CommonComps.nodesAtLevel, IS("tree", "level"), exampleInputs = IS(
         argList(BinaryLeaf, 1),
-        argList(BinaryLeaf, 0),
         argList(BinaryLeaf, -1),
         argList(singleNode(1), -1),
         argList(singleNode(1), 0),
         argList(singleNode(1), 1),
         argList(singleNode(1), 2),
         argList(BinaryNode(1, singleNode(7), singleNode(9)), 1),
-        argList(BinaryNode(1, singleNode(7), singleNode(9)), 2),
         argList(BinaryNode(1, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 3),
-        argList(BinaryNode(1, BinaryNode(15, singleNode(4), BinaryLeaf), singleNode(9)), 4),
-        argList(BinaryNode(1, BinaryNode(15, BinaryNode(3,singleNode(4), singleNode(5)), BinaryLeaf), singleNode(9)), 4),
-        argList(BinaryNode(1, BinaryNode(15, BinaryNode(3,singleNode(4), singleNode(5)), BinaryLeaf), singleNode(9)), 5)
+        argList(BinaryNode(1, singleNode(2), BinaryNode(3, singleNode(4), BinaryNode(5, singleNode(6), singleNode(7)))), 0),
+        argList(BinaryNode(1, singleNode(2), BinaryNode(3, singleNode(4), BinaryNode(5, singleNode(6), singleNode(7)))), 1),
+        argList(BinaryNode(1, singleNode(2), BinaryNode(3, singleNode(4), BinaryNode(5, singleNode(6), singleNode(7)))), 2),
+        argList(BinaryNode(1, singleNode(2), BinaryNode(3, singleNode(4), BinaryNode(5, singleNode(6), singleNode(7)))), 3)
       ))
     }
 
@@ -143,6 +142,15 @@ object TestSynNoOracle {
       ))
     }
 
+    val lastInList = {
+      synthesizeUsingRef(CommonComps.lastInList, IS("xs"), exampleInputs = IS(
+        argList(listValue(1)),
+        argList(listValue(1,2)),
+        argList(listValue(1,2,3)),
+        argList(listValue(1,3,7,9))
+      ))
+    }
+
     val tConcatSynthesis = {
       import BinaryTree._
 
@@ -163,6 +171,68 @@ object TestSynNoOracle {
         argList(listValue(5), listValue(7, 8, 9)),
         argList(listValue(2, 3), listValue(4, 5))
       ), additionalComps = (Set(CommonComps.createPair(tyFixVar(0), tyFixVar(1))), Map()))
+    }
+
+    val timesSynthesis = {
+      synthesizeUsingRef(CommonComps.times, IS("x", "y"), exampleInputs = IS(
+        argList(1,0),
+        argList(0,5),
+        argList(2,7),
+        argList(3,8),
+        argList(0,8),
+        argList(7,5)
+      ))
+    }
+
+    val sumUnderSynthesis = {
+      synthesizeUsingRef(CommonComps.sumUnder, IS("n"), exampleInputs = IS(
+        argList(0),
+        argList(1),
+        argList(2),
+        argList(3),
+        argList(4)
+      ))
+    }
+
+    val flattenTreeSynthesis = {
+      import BinaryTree._
+      synthesizeUsingRef(CommonComps.flattenTree, IS("tree"), exampleInputs = IS(
+        argList(BinaryLeaf),
+        argList(singleNode(1)),
+        argList(BinaryNode(1, singleNode(2), singleNode(3)))
+      ))
+    }
+
+    val maxInListSynthesis = {
+      synthesizeUsingRef(CommonComps.maxInList, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(3)),
+        argList(listValue(0, 2, 1)),
+        argList(listValue(1, 6, 2, 5)),
+        argList(listValue(1, 6, 7, 5)),
+        argList(listValue(10, 25, 7, 9, 18)),
+        argList(listValue(100, 25, 7, 9, 18))
+      ))
+    }
+
+    val lastInListSynthesis  = {
+      synthesizeUsingRef(CommonComps.lastInList, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(1, 2, 3)),
+        argList(listValue(1, 6, 7, 11)),
+        argList(listValue(10, 25, 7, 9, 18))
+      ))
+    }
+
+    val shiftLeftSynthesis  = {
+      synthesizeUsingRef(CommonComps.shiftLeft, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(1, 2, 3)),
+        argList(listValue(1, 6, 7, 11)),
+        argList(listValue(10, 25, 7, 9, 18))
+      ))
     }
 
     // below are failed tasks
@@ -207,12 +277,18 @@ object TestSynNoOracle {
       squareListSynthesis,
       fibSynthesis,
       insertSynthesis,
-      nodesAtLevelSynthesis,
+      lastInListSynthesis,
+      shiftLeftSynthesis,
+      maxInListSynthesis,
+      flattenTreeSynthesis,
+      sumUnderSynthesis,
+      timesSynthesis,
       containsSynthesis,
       dropLastSynthesis,
       evensSynthesis,
       tConcatSynthesis,
-      cartesianSynthesis
+      cartesianSynthesis,
+      nodesAtLevelSynthesis
     )
 
     var totalTime: Long = 0
