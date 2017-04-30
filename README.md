@@ -1,13 +1,17 @@
 # Escher-Scala
-Recursive Program Synthesis
+Example-Driven Recursive Program Synthesis
 
-A Scala implementation of the algorithm described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system to improve searching efficiency.
+This repository contains two algorithm: *TypedEscher* and *AscendRec*
+
+*TypedEscher* is a Scala implementation of the algorithm described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system and other type-related optimizations to improve searching efficiency.
+
+*AscendRec* is a new algorithm based on *TypedEscher*, but unlike *TypedEscher*, which requires the user to provide additional input-output examples during synthesis, *AscendRec* dose not need any additional examples to finish its work.
 
 **Currently working in progress**
 
-Example Run:
+### Results (TypedEscher):
 
- <img src="documentation/summery_121.png" width="600px" alt="summery"/>
+ <img src="documentation/summery.png" width="600px" alt="summery"/>
 
 - Duplicate each element of a list
 
@@ -28,3 +32,11 @@ Example Run:
 - Remove all duplicates in a list (synthesized without using additional components)
 
 <img src="documentation/dedup.png" width="600px" alt="dedup"/>
+
+see also [result.txt](documentation/txt_results/result.txt)
+
+### Results (AscendRec)
+
+ <img src="documentation/summery_AscendRec.png" width="500px" alt="summery"/>
+
+ see also [result_AscendRec.txt](documentation/txt_results/result_AscendRec.txt)
