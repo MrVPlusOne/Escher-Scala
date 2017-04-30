@@ -7,7 +7,7 @@ A Scala implementation of the algorithm described in this paper [Recursive Progr
 
 Example Run:
 
- <img src="documentation/summery.png" width="600px" alt="summery"/>
+ <img src="documentation/summery_121.png" width="600px" alt="summery"/>
 
 - Duplicate each element of a list
 
@@ -25,6 +25,6 @@ Example Run:
 
 <img src="documentation/compress.png" width="600px" alt="compress"/>
 
-- Remove all duplicates in a list (synthesized without additional components)
+- Remove all duplicates in a list (synthesized without using additional components)
 
 <img src="documentation/dedup.png" width="600px" alt="dedup"/>
