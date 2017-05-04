@@ -68,6 +68,7 @@ class AscendRecGoalSearch(maxCompCost: Int,
     //        bufferMiss += 1
     //    }
 
+    /** no buffer implemented yet */
     def buffered(searchResult: SearchResult): Option[(Int, Term)] = {
       //      buffer(keySet) = searchResult
       searchResult match {

@@ -1,6 +1,7 @@
 package escher
 
-import escher.Synthesis.ArgList
+import escher.CommonComps.ReducibleCheck
+import escher.Synthesis.{ArgList, SynthesizedComponent}
 
 
 /**
@@ -8,22 +9,8 @@ import escher.Synthesis.ArgList
   */
 object Main {
 
-  def testDivide(): Unit ={
-    import escher.Synthesis._
-
-    val a = divideNumberAsSum(2000,3,0)
-    println{
-      a.length
-    }
-  }
-
-  def testCartesianProduct(): Unit = {
-    import escher.Synthesis._
-    val r = cartesianProduct(IndexedSeq(Map(1->2,3->4), Map(5->6), Map(7->8, 9->10)))
-    println(
-      r.toList
-    )
-  }
+  case class TestCase(name: String, examples: IndexedSeq[(ArgList, TermValue)],
+                      result: () => Option[SynthesizedComponent])
 
 
   def testSynthesisTyped(): Unit = {
@@ -36,6 +23,23 @@ object Main {
     )
 
     import syn._
+
+
+    def synthesizeUsingRef(refComp: ComponentImpl, argNames: IS[String],
+                           exampleInputs: IS[ArgList],
+                           additionalComps: (Set[ComponentImpl], Map[ComponentImpl, ReducibleCheck]) = (Set(), Map())) = {
+      val examples = exampleInputs.map(argList => argList -> refComp.executeEfficient(argList)).sortWith(Synthesis.exampleLt)
+      val additionalImpls = additionalComps._1
+
+      TestCase(refComp.name, examples, () => {
+        println(s"Task name: ${refComp.name}")
+        Synthesis.showExamples("sorted examples", examples, maxExamplesShown = 50)
+        val r = synthesize(refComp.name, refComp.inputTypes, argNames, refComp.returnType)(
+          envComps = CommonComps.standardComps ++ additionalImpls, examples,
+          PartialFunction{ (args: IS[TermValue]) => refComp.executeEfficient(args)} )
+        r.map(_._1)
+      })
+    }
 
     def reverseSynthesis() = {
       val examples: IS[(ArgList, TermValue)] = IS(
@@ -306,6 +310,24 @@ object Main {
       synthesize(refComp.name, refComp.inputTypes, IS("baseTree", "inserted"), refComp.returnType)(envComps = CommonComps.standardComps, examples, oracle = refComp.impl)
     }
 
+    def sortIntsSynthesis() = {
+
+      val args: IS[ArgList] = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(5,6,7)),
+        argList(listValue(7,6,5)),
+        argList(listValue(5,7,6)),
+        argList(listValue(9,12,4,3))
+      )
+
+      val refComp = CommonComps.sortInts
+
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(refComp.name, refComp.inputTypes, IS("xs"), refComp.returnType)(envComps = CommonComps.standardComps, examples, oracle = refComp.impl)
+    }
+
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
@@ -324,7 +346,7 @@ object Main {
         dedupSynthesis(useContains = true),
         tConcatSynthesis
       )
-    val slowTasks = Seq[TestCase](modSynthesis)
+    val slowTasks = Seq[TestCase](modSynthesis, sortIntsSynthesis, dedupSynthesis(useContains = false))
 
     val records = for (task <- tasks) yield {
       val (time, result) = TimeTools.printTimeUsed("single synthesis") {

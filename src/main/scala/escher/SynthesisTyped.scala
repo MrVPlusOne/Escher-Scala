@@ -171,6 +171,10 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
       returnTypeVectorTrees(cost-1).elements
     }
 
+    def boolTermsOfCost(cost: Int): Iterable[(ValueVector, Term)] = {
+      boolVectorTrees(cost-1).elements
+    }
+
     def openToLevel(n: Int): Unit ={
       (0 to n - _levelMaps.length).foreach(_ => openNextLevel())
     }
@@ -351,13 +355,14 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
 
       TimeTools.printTimeUsed("Goal searching") {
         state.createLibrariesForThisLevel()
-        val search = new BatchGoalSearchLoose(
+        val search = new BatchGoalSearch(
           level,
           termOfCostAndVM = state.libraryOfCost,
           termsOfCost = state.termsOfCost,
+          boolTermsOfCost = state.boolTermsOfCost,
           boolOfVM = state.boolLibrary
         )
-        search.searchMin(config.searchSizeFactor * level, goalVM).foreach { case (c, term) =>
+        search.searchThenFirst(config.searchSizeFactor * level, goalVM).foreach { case (c, term) =>
           return resultFromState(c, level, term)
         }
       }

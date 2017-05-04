@@ -673,4 +673,10 @@ object CommonComps {
       case IS(ValueTree(t1), ValueTree(t2)) => impl(t1,t2)
     })
   }
+
+  val sortInts = {
+    ComponentImpl("sortList", IS(tyList(tyInt)), tyList(tyInt), impl = {
+      case IS(ValueList(xs: List[ValueInt])) => xs.sortBy(_.value)
+    })
+  }
 }
