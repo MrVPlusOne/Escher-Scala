@@ -42,5 +42,5 @@ The codebase implements two algorithms: **TypedEscher** and **AscendRec**
 
 <img src="documentation/dedup.png" width="600px" alt="dedup"/>
 
-See full output log in [result_TypedEscher.txt](documentation/text_results/result_TypedEscher.txt) and [result_AscendRec.txt](documentation/txt_results/result_AscendRec.txt)
+See full output log in [result_TypedEscher.txt](documentation/text_results/result_TypedEscher.txt) and [result_AscendRec.txt](documentation/text_results/result_AscendRec.txt)
 
