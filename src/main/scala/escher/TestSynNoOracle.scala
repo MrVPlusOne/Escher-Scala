@@ -11,7 +11,7 @@ object TestSynNoOracle {
 
 
     val syn = new SynNoOracle(
-      Config(maxLevel = 15, logLevels = true, logReboot = true, logComponents = false, searchSizeFactor = 3),
+      Config(maxLevel = 15, logLevels = true, logComponents = false, searchSizeFactor = 3),
       Console.print
     )
 
@@ -36,10 +36,17 @@ object TestSynNoOracle {
       })
     }
 
+    val lengthSynthesis = {
+      synthesizeUsingRef(CommonComps.length, IS("xs"), exampleInputs = IS(
+        argList(listValue(2, 3, 4)),
+        argList(listValue(1)),
+        argList(listValue())
+      ))
+    }
+
     val reverseSynthesis = {
       synthesizeUsingRef(CommonComps.reverse, IS("xs"), exampleInputs = IS(
-        argList(listValue(1, 2, 3)),
-        argList(listValue(1, 2)),
+        argList(listValue(2, 3, 4)),
         argList(listValue(2, 3)),
         argList(listValue(1)),
         argList(listValue())
@@ -235,6 +242,52 @@ object TestSynNoOracle {
       ))
     }
 
+    val compressTraceCompleteSynthesis = {
+      synthesizeUsingRef(CommonComps.compress, IS("xs"), exampleInputs = IS(
+          argList(listValue()),
+          argList(listValue(2)),
+          argList(listValue(2, 3, 3, 9, 9)),
+          argList(listValue(2, 3, 9)),
+          argList(listValue(3, 3, 3, 9)),
+          argList(listValue(3, 3, 9)),
+          argList(listValue(3, 3, 9, 9)),
+          argList(listValue(3, 9)),
+          argList(listValue(3, 9, 9)),
+          argList(listValue(7)),
+          argList(listValue(9)),
+          argList(listValue(9, 2)),
+          argList(listValue(9, 9)),
+          argList(listValue(9, 9, 2))
+      ))
+    }
+
+    val dedupTraceCompleteSynthesis = {
+      synthesizeUsingRef(CommonComps.dedup, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(3,3)),
+        argList(listValue(2,3)),
+        argList(listValue(1,2,3)),
+        argList(listValue(1,2,3,2)),
+        argList(listValue(1,1,1,2,3,2)),
+        argList(listValue(2,2,2,3,3,3)),
+        argList(listValue(1,2,3,2,1))
+      ), additionalComps = (Set(CommonComps.contains), Map()))
+
+      def dedupSynthesis(useContains: Boolean)() = {
+        val args: IS[ArgList] = IS(
+          argList(listValue()),
+          argList(listValue(1)),
+          argList(listValue(3,3)),
+          argList(listValue(2,3)),
+          argList(listValue(1,2,3)),
+          argList(listValue(1,2,3,2)),
+          argList(listValue(1,1,1,2,3,2)),
+          argList(listValue(1,2,3,2,1))
+        )
+      }
+    }
+
     // below are failed tasks
 
 
@@ -266,28 +319,47 @@ object TestSynNoOracle {
       ), additionalComps = (if(useContains) Set(CommonComps.contains) else Set(), Map()))
     }
 
+    val sortIntsSynthesis = {
+      synthesizeUsingRef(CommonComps.sortInts, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(9)),
+        argList(listValue(12)),
+        argList(listValue(4)),
+        argList(listValue(9,12)), argList(listValue(12,9)),
+        argList(listValue(12,4)), argList(listValue(4,12)),
+        argList(listValue(9,4)), argList(listValue(4,9)),
+        argList(listValue(9,12,4))
+      ))
+    }
+
     val failedTasks = Seq(
       compressSynthesis,
-      dedupSynthesis(true)
+      dedupSynthesis(true),
+      sortIntsSynthesis
     )
 
     val tasks = Seq(
+      sortIntsSynthesis,
       reverseSynthesis,
+      lengthSynthesis,
+      compressTraceCompleteSynthesis,
       stutterSynthesis,
       squareListSynthesis,
-      fibSynthesis,
       insertSynthesis,
+      containsSynthesis,
       lastInListSynthesis,
       shiftLeftSynthesis,
       maxInListSynthesis,
-      flattenTreeSynthesis,
-      sumUnderSynthesis,
-      timesSynthesis,
-      containsSynthesis,
       dropLastSynthesis,
       evensSynthesis,
-      tConcatSynthesis,
       cartesianSynthesis,
+
+      fibSynthesis,
+      sumUnderSynthesis,
+      timesSynthesis,
+
+      flattenTreeSynthesis,
+      tConcatSynthesis,
       nodesAtLevelSynthesis
     )
 

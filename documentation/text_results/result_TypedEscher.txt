@@ -1,0 +1,757 @@
+*** [single synthesis] time used: 500.17ms ***
+------ Synthesis for reverse Succeeded! (0 reboots) ------
+Time used for the last reboot: 400.43ms
+Initial Examples (3):
+([]) -> []
+([1, 2]) -> [2, 1]
+([1, 2, 3]) -> [3, 2, 1]
+Additional examples provided (9):
+([2, 3]) -> [3, 2]
+([2]) -> [2]
+([1, 1]) -> [1, 1]
+([3, 3]) -> [3, 3]
+([1]) -> [1]
+([3]) -> [3]
+([3, 2]) -> [2, 3]
+([1, 3]) -> [3, 1]
+ ...(1 more not shown)...
+TotalMap: (197 components, 9 types)
+
+Program found:
+
+reverse(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else concat(reverse(tail(@xs)), cons(head(@xs), nil()))
+
+*** [single synthesis] time used: 19.19ms ***
+------ Synthesis for length Succeeded! (0 reboots) ------
+Time used for the last reboot: 18.69ms
+Initial Examples (3):
+([]) -> 0
+([1]) -> 1
+([2, 3, 4]) -> 3
+Additional examples provided (2):
+([4]) -> 1
+([3, 4]) -> 2
+TotalMap: (40 components, 10 types)
+
+Program found:
+
+length(@xs: List['0]): Int =
+  if isNil(@xs)
+  then zero()
+  else inc(length(tail(@xs)))
+
+*** [single synthesis] time used: 414.62ms ***
+------ Synthesis for compress Succeeded! (0 reboots) ------
+Time used for the last reboot: 414.49ms
+Initial Examples (8):
+([]) -> []
+([7]) -> [7]
+([9, 9]) -> [9]
+([3, 9]) -> [3, 9]
+([2, 3, 9]) -> [2, 3, 9]
+([9, 9, 2]) -> [9, 2]
+([3, 3, 3, 9]) -> [3, 9]
+([2, 3, 3, 9, 9]) -> [2, 3, 9]
+Additional examples provided (22):
+([3, 9, 9, 9]) -> [3, 9]
+([2, 3]) -> [2, 3]
+([3, 9, 9]) -> [3, 9]
+([2, 9, 9]) -> [2, 9]
+([3, 3, 9, 9]) -> [3, 9]
+([3, 9, 3]) -> [3, 9, 3]
+([3, 9, 3, 9]) -> [3, 9, 3, 9]
+([3, 9, 9, 2]) -> [3, 9, 2]
+ ...(14 more not shown)...
+TotalMap: (622 components, 9 types)
+
+Program found:
+
+compress(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then @xs
+  else if isNil(tail(@xs))
+       then @xs
+       else if equal(head(@xs), head(tail(@xs)))
+            then compress(tail(@xs))
+            else cons(head(@xs), compress(tail(@xs)))
+
+*** [single synthesis] time used: 79.05ms ***
+------ Synthesis for stutter Succeeded! (0 reboots) ------
+Time used for the last reboot: 78.90ms
+Initial Examples (3):
+([]) -> []
+([5]) -> [5, 5]
+([5, 6, 3]) -> [5, 5, 6, 6, 3, 3]
+Additional examples provided (10):
+([6, 5]) -> [6, 6, 5, 5]
+([5, 6]) -> [5, 5, 6, 6]
+([6]) -> [6, 6]
+([5, 3]) -> [5, 5, 3, 3]
+([5, 5]) -> [5, 5, 5, 5]
+([6, 3]) -> [6, 6, 3, 3]
+([3, 3]) -> [3, 3, 3, 3]
+([3]) -> [3, 3]
+ ...(2 more not shown)...
+TotalMap: (385 components, 9 types)
+
+Program found:
+
+stutter(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else cons(head(@xs), cons(head(@xs), stutter(tail(@xs))))
+
+*** [single synthesis] time used: 799.02ms ***
+------ Synthesis for squareList Succeeded! (0 reboots) ------
+Time used for the last reboot: 798.85ms
+Initial Examples (6):
+(0) -> []
+(1) -> [1]
+(2) -> [1, 4]
+(-3) -> []
+(3) -> [1, 4, 9]
+(4) -> [1, 4, 9, 16]
+Additional examples provided (2):
+(-2) -> []
+(-1) -> []
+TotalMap: (15773 components, 8 types)
+
+Program found:
+
+squareList(@n: Int): List[Int] =
+  if isNonNeg(neg(@n))
+  then nil()
+  else concat(squareList(dec(@n)), cons(times(@n, @n), nil()))
+
+*** [single synthesis] time used: 554.10ms ***
+------ Synthesis for insert Succeeded! (0 reboots) ------
+Time used for the last reboot: 553.97ms
+Initial Examples (8):
+([], 0, 5) -> [5]
+([], 3, 5) -> [5]
+([3], -1, 1) -> [1, 3]
+([1, 2, 3], 0, 8) -> [8, 1, 2, 3]
+([1, 2, 3], 1, 8) -> [1, 8, 2, 3]
+([1, 2, 3], 2, 8) -> [1, 2, 8, 3]
+([1, 2, 3], 3, 8) -> [1, 2, 3, 8]
+([1, 2, 3], 4, 8) -> [1, 2, 3, 8]
+Additional examples provided (292):
+([3], 3, 2) -> [3, 2]
+([8, 8], 0, 8) -> [8, 8, 8]
+([3, 8], 3, 8) -> [3, 8, 8]
+([2, 3], -1, 3) -> [3, 2, 3]
+([2, 3], -4, 1) -> [1, 2, 3]
+([8], -3, 2) -> [2, 8]
+([8, 8], 4, 1) -> [8, 8, 1]
+([1, 2, 3], -2, 2) -> [2, 1, 2, 3]
+ ...(284 more not shown)...
+TotalMap: (2882 components, 10 types)
+
+Program found:
+
+insert(@xs: List['0], @i: Int, @x: '0): List['0] =
+  if or(isNil(@xs), isNonNeg(neg(@i)))
+  then cons(@x, @xs)
+  else cons(head(@xs), insert(tail(@xs), dec(@i), @x))
+
+*** [single synthesis] time used: 9.93ms ***
+------ Synthesis for contains Succeeded! (0 reboots) ------
+Time used for the last reboot: 9.33ms
+Initial Examples (7):
+([], 1) -> F
+([1, 2], 3) -> F
+([1, 2, 3], 1) -> T
+([1, 2, 3], -1) -> F
+([1, 2, 3], 2) -> T
+([1, 2, 3], 3) -> T
+([1, 2, 3], 4) -> F
+Additional examples provided (22):
+([2], 2) -> T
+([3], 2) -> F
+([2, 3], 3) -> T
+([2, 3], 2) -> T
+([2, 3], -1) -> F
+([], -1) -> F
+([2], 3) -> F
+([1, 2], 2) -> T
+ ...(14 more not shown)...
+TotalMap: (44 components, 9 types)
+
+Program found:
+
+contains(@xs: List['0], @x: '0): Bool =
+  if isNil(@xs)
+  then F()
+  else if equal(@x, head(@xs))
+       then T()
+       else contains(tail(@xs), @x)
+
+*** [single synthesis] time used: 5.64ms ***
+------ Synthesis for lastInList Succeeded! (0 reboots) ------
+Time used for the last reboot: 5.52ms
+Initial Examples (5):
+([]) -> Err
+([1]) -> 1
+([1, 2, 3]) -> 3
+([1, 6, 7, 11]) -> 11
+([10, 25, 7, 9, 18]) -> 18
+Additional examples provided (9):
+([2, 3]) -> 3
+([10]) -> 10
+([25, 7, 9, 18]) -> 18
+([3]) -> 3
+([9, 18]) -> 18
+([7, 11]) -> 11
+([7, 9, 18]) -> 18
+([11]) -> 11
+ ...(1 more not shown)...
+TotalMap: (37 components, 9 types)
+
+Program found:
+
+lastInList(@xs: List['0]): '0 =
+  if isNil(@xs)
+  then head(@xs)
+  else if isNil(tail(@xs))
+       then head(@xs)
+       else lastInList(tail(@xs))
+
+*** [single synthesis] time used: 22.74ms ***
+------ Synthesis for shiftLeft Succeeded! (0 reboots) ------
+Time used for the last reboot: 22.53ms
+Initial Examples (5):
+([]) -> []
+([1]) -> [1]
+([1, 2, 3]) -> [3, 2, 1]
+([1, 6, 7, 11]) -> [11, 7, 6, 1]
+([10, 25, 7, 9, 18]) -> [18, 9, 7, 25, 10]
+Additional examples provided (45):
+([7]) -> [7]
+([11, 7, 6]) -> [6, 7, 11]
+([10, 18, 9, 7]) -> [7, 9, 18, 10]
+([2, 3]) -> [3, 2]
+([25]) -> [25]
+([10]) -> [10]
+([11, 7]) -> [7, 11]
+([25, 7, 9]) -> [9, 7, 25]
+ ...(37 more not shown)...
+TotalMap: (342 components, 9 types)
+
+Program found:
+
+shiftLeft(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then @xs
+  else concat(shiftLeft(tail(@xs)), cons(head(@xs), nil()))
+
+New examples: ([]) -> 0; ([3]) -> 3; ([0, 2, 1]) -> 2; ([1, 6, 2, 5]) -> 6; ([1, 6, 7, 5]) -> 7; ([10, 25, 7, 9, 18]) -> 25; ([100, 25, 7, 9, 18]) -> 100; ([-25]) -> -25
+*** [single synthesis] time used: 233.48ms ***
+------ Synthesis for maxInList Succeeded! (1 reboots) ------
+Time used for the last reboot: 150.24ms
+Initial Examples (8):
+([]) -> 0
+([3]) -> 3
+([-25]) -> -25
+([0, 2, 1]) -> 2
+([1, 6, 2, 5]) -> 6
+([1, 6, 7, 5]) -> 7
+([10, 25, 7, 9, 18]) -> 25
+([100, 25, 7, 9, 18]) -> 100
+Additional examples provided (154):
+([7, 9, 18, 0]) -> 18
+([1, 5]) -> 5
+([7]) -> 7
+([50, 7, 9, 18]) -> 50
+([24]) -> 24
+([0, 1]) -> 1
+([0, 101]) -> 101
+([25]) -> 25
+ ...(146 more not shown)...
+TotalMap: (1678 components, 8 types)
+
+Program found:
+
+maxInList(@xs: List[Int]): Int =
+  if isNil(@xs)
+  then zero()
+  else if isNil(tail(@xs))
+       then head(@xs)
+       else if isNonNeg(plus(head(@xs), neg(maxInList(tail(@xs)))))
+            then head(@xs)
+            else maxInList(tail(@xs))
+
+*** [single synthesis] time used: 21.80ms ***
+------ Synthesis for dropLast Succeeded! (0 reboots) ------
+Time used for the last reboot: 20.32ms
+Initial Examples (5):
+([]) -> []
+([1]) -> []
+([1, 2]) -> [1]
+([1, 2, 3]) -> [1, 2]
+([1, 1, 1, 2, 3, 2]) -> [1, 1, 1, 2, 3]
+Additional examples provided (10):
+([2, 3]) -> [2]
+([1, 2, 3, 2]) -> [1, 2, 3]
+([2]) -> []
+([1, 1]) -> [1]
+([1, 1, 2, 3, 2]) -> [1, 1, 2, 3]
+([3]) -> []
+([3, 2]) -> [3]
+([2, 3, 2]) -> [2, 3]
+ ...(2 more not shown)...
+TotalMap: (114 components, 9 types)
+
+Program found:
+
+dropLast(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else if isNil(tail(@xs))
+       then nil()
+       else cons(head(@xs), dropLast(tail(@xs)))
+
+*** [single synthesis] time used: 24.17ms ***
+------ Synthesis for evens Succeeded! (0 reboots) ------
+Time used for the last reboot: 23.59ms
+Initial Examples (5):
+([]) -> []
+([1]) -> [1]
+([1, 2]) -> [1]
+([1, 2, 3, 4]) -> [1, 3]
+([1, 2, 3, 4, 5, 6]) -> [1, 3, 5]
+Additional examples provided (20):
+([5]) -> [5]
+([4]) -> [4]
+([2, 4, 6]) -> [2, 6]
+([1, 3, 4]) -> [1, 4]
+([5, 6]) -> [5]
+([6]) -> [6]
+([1, 2, 4, 6]) -> [1, 4]
+([1, 3, 4, 5, 6]) -> [1, 4, 6]
+ ...(12 more not shown)...
+TotalMap: (195 components, 9 types)
+
+Program found:
+
+evens(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then nil()
+  else if isNil(tail(@xs))
+       then @xs
+       else cons(head(@xs), evens(tail(tail(@xs))))
+
+*** [single synthesis] time used: 173.92ms ***
+------ Synthesis for cartesian Succeeded! (0 reboots) ------
+Time used for the last reboot: 168.85ms
+Initial Examples (4):
+([], [2, 3, 4]) -> []
+([5], []) -> []
+([5], [7, 8, 9]) -> [(5, 7), (5, 8), (5, 9)]
+([2, 3], [4, 5]) -> [(2, 4), (2, 5), (3, 4), (3, 5)]
+Additional examples provided (78):
+([], [8, 8]) -> []
+([5], [9, 7]) -> [(5, 9), (5, 7)]
+([5], [7, 8]) -> [(5, 7), (5, 8)]
+([], [7, 7]) -> []
+([], [7, 8]) -> []
+([], [9, 7]) -> []
+([], [4, 4]) -> []
+([3, 2], [5]) -> [(3, 5), (2, 5)]
+ ...(70 more not shown)...
+TotalMap: (1290 components, 15 types)
+
+Program found:
+
+cartesian(@xs: List['0], @ys: List['1]): List[Pair['0,'1]] =
+  if or(isNil(@ys), isNil(@xs))
+  then nil()
+  else if isNil(tail(@xs))
+       then cons(createPair(head(@xs), head(@ys)), cartesian(@xs, tail(@ys)))
+       else concat(cartesian(cons(head(@xs), nil()), @ys), cartesian(tail(@xs), @ys))
+
+*** [single synthesis] time used: 34.56ms ***
+------ Synthesis for dedup Succeeded! (0 reboots) ------
+Time used for the last reboot: 33.28ms
+Initial Examples (9):
+([]) -> []
+([1]) -> [1]
+([3, 3]) -> [3]
+([2, 3]) -> [2, 3]
+([1, 2, 3]) -> [1, 2, 3]
+([1, 2, 3, 2]) -> [1, 3, 2]
+([1, 2, 3, 2, 1]) -> [3, 2, 1]
+([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]
+([2, 2, 2, 3, 3, 3]) -> [2, 3]
+Additional examples provided (16):
+([2, 3, 3, 3]) -> [2, 3]
+([2]) -> [2]
+([1, 3, 2]) -> [1, 3, 2]
+([3, 3, 3]) -> [3]
+([2, 2, 3]) -> [2, 3]
+([1, 1, 2, 3, 2]) -> [1, 3, 2]
+([3]) -> [3]
+([3, 2]) -> [3, 2]
+ ...(8 more not shown)...
+TotalMap: (204 components, 9 types)
+
+Program found:
+
+dedup(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then @xs
+  else if contains(tail(@xs), head(@xs))
+       then dedup(tail(@xs))
+       else cons(head(@xs), dedup(tail(@xs)))
+
+*** [single synthesis] time used: 228.46ms ***
+------ Synthesis for fib Succeeded! (0 reboots) ------
+Time used for the last reboot: 228.34ms
+Initial Examples (8):
+(0) -> 1
+(1) -> 1
+(2) -> 2
+(-3) -> 1
+(3) -> 3
+(4) -> 5
+(5) -> 8
+(6) -> 13
+Additional examples provided (4):
+(-2) -> 1
+(-5) -> 1
+(-1) -> 1
+(-4) -> 1
+TotalMap: (3446 components, 4 types)
+
+Program found:
+
+fib(@n: Int): Int =
+  if isNonNeg(neg(dec(@n)))
+  then inc(zero())
+  else plus(fib(dec(@n)), fib(dec(dec(@n))))
+
+*** [single synthesis] time used: 9.01ms ***
+------ Synthesis for sumUnder Succeeded! (0 reboots) ------
+Time used for the last reboot: 8.91ms
+Initial Examples (5):
+(0) -> 0
+(1) -> 1
+(2) -> 3
+(3) -> 6
+(4) -> 10
+Additional examples provided (3):
+(-3) -> 0
+(-2) -> 0
+(-1) -> 0
+TotalMap: (211 components, 4 types)
+
+Program found:
+
+sumUnder(@n: Int): Int =
+  if isNonNeg(neg(@n))
+  then zero()
+  else plus(@n, sumUnder(dec(@n)))
+
+New examples: (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-1, 0) -> 0
+New examples: (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (0, -1) -> 0
+New examples: (0, -1) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (1, -1) -> -1
+New examples: (0, -1) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-1, 1) -> -1
+New examples: (0, -1) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-1, -1) -> 1
+New examples: (0, -1) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (0, -2) -> 0
+New examples: (0, -1) -> 0; (0, -2) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-2, 0) -> 0
+New examples: (0, -1) -> 0; (0, -2) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (-2, 0) -> 0; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-2, 1) -> -2
+New examples: (0, -1) -> 0; (0, -2) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (-2, 0) -> 0; (-2, 1) -> -2; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-1, -2) -> 2
+New examples: (0, -1) -> 0; (0, -2) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (-1, -2) -> 2; (-2, 0) -> 0; (-2, 1) -> -2; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-1, 2) -> -2
+New examples: (0, -1) -> 0; (0, -2) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (-1, -2) -> 2; (-1, 2) -> -2; (-2, 0) -> 0; (-2, 1) -> -2; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-2, -1) -> 2
+New examples: (0, -1) -> 0; (0, -2) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (-1, -2) -> 2; (-1, 2) -> -2; (-2, 0) -> 0; (-2, 1) -> -2; (-2, -1) -> 2; (2, 7) -> 14; (3, 8) -> 24; (7, 5) -> 35; (-3, 1) -> -3
+New examples: (0, -1) -> 0; (0, -2) -> 0; (0, 5) -> 0; (0, 8) -> 0; (1, 0) -> 0; (-1, 0) -> 0; (1, -1) -> -1; (-1, 1) -> -1; (-1, -1) -> 1; (-1, -2) -> 2; (-1, 2) -> -2; (-2, 0) -> 0; (-2, 1) -> -2; (-2, -1) -> 2; (2, 7) -> 14; (-3, 1) -> -3; (3, 8) -> 24; (7, 5) -> 35; (1, -2) -> -2
+*** [single synthesis] time used: 59,827.43ms ***
+------ Synthesis for times Succeeded! (13 reboots) ------
+Time used for the last reboot: 15,231.29ms
+Initial Examples (19):
+(0, -1) -> 0
+(0, -2) -> 0
+(0, 5) -> 0
+(0, 8) -> 0
+(1, 0) -> 0
+(-1, 0) -> 0
+(1, -1) -> -1
+(-1, 1) -> -1
+(-1, -1) -> 1
+(-1, -2) -> 2
+(-1, 2) -> -2
+(1, -2) -> -2
+(-2, 0) -> 0
+(-2, 1) -> -2
+(-2, -1) -> 2
+(2, 7) -> 14
+(-3, 1) -> -3
+(3, 8) -> 24
+(7, 5) -> 35
+Additional examples provided (182):
+(5, 1) -> 5
+(-7, 2) -> -14
+(1, -7) -> -7
+(-5, 4) -> -20
+(3, 2) -> 6
+(3, -1) -> -3
+(6, 2) -> 12
+(-5, 0) -> 0
+ ...(174 more not shown)...
+TotalMap: (35204 components, 4 types)
+
+Program found:
+
+times(@x: Int, @y: Int): Int =
+  if equal(zero(), @x)
+  then div2(@x)
+  else if isNonNeg(@x)
+       then plus(@y, times(dec(@x), @y))
+       else plus(neg(@y), times(inc(@x), @y))
+
+*** [single synthesis] time used: 27.88ms ***
+------ Synthesis for flattenTree Succeeded! (0 reboots) ------
+Time used for the last reboot: 24.81ms
+Initial Examples (3):
+(L) -> []
+((1: L, L)) -> [1]
+((1: (2: L, L), (3: L, L))) -> [1, 2, 3]
+Additional examples provided (16):
+((2: (3: L, L), L)) -> [2, 3]
+((1: (3: L, L), L)) -> [1, 3]
+((3: (2: L, L), L)) -> [3, 2]
+((3: L, (2: L, L))) -> [3, 2]
+((2: L, (2: L, L))) -> [2, 2]
+((2: L, L)) -> [2]
+((3: L, L)) -> [3]
+((1: (1: L, L), L)) -> [1, 1]
+ ...(8 more not shown)...
+TotalMap: (274 components, 17 types)
+
+Program found:
+
+flattenTree(@tree: Tree['0]): List['0] =
+  if isLeaf(@tree)
+  then nil()
+  else concat(cons(treeTag(@tree), flattenTree(treeLeft(@tree))), flattenTree(treeRight(@tree)))
+
+*** [single synthesis] time used: 14,899.01ms ***
+------ Synthesis for tConcat Succeeded! (0 reboots) ------
+Time used for the last reboot: 14,896.21ms
+Initial Examples (6):
+(L, L) -> L
+(L, (1: L, L)) -> (1: L, L)
+((1: L, L), L) -> (1: L, L)
+((1: L, L), (2: (3: L, L), (4: L, L))) -> (1: (2: (3: L, L), (4: L, L)), (2: (3: L, L), (4: L, L)))
+((1: (2: L, L), (3: L, L)), (4: (5: L, L), (6: L, L))) -> (1: (2: (4: (5: L, L), (6: L, L)), (4: (5: L, L), (6: L, L))), (3: (4: (5: L, L), (6: L, L)), (4: (5: L, L), (6: L, L))))
+((1: L, (2: (3: L, L), (4: L, L))), (5: L, L)) -> (1: (5: L, L), (2: (3: (5: L, L), (5: L, L)), (4: (5: L, L), (5: L, L))))
+Additional examples provided (2213):
+(L, (2: (3: L, L), (2: L, L))) -> (2: (3: L, L), (2: L, L))
+((5: L, L), (2: (2: L, L), (2: L, L))) -> (5: (2: (2: L, L), (2: L, L)), (2: (2: L, L), (2: L, L)))
+((1: L, (1: (5: L, L), L)), (5: L, L)) -> (1: (5: L, L), (1: (5: (5: L, L), (5: L, L)), (5: L, L)))
+((3: (2: L, L), (2: L, L)), (1: L, L)) -> (3: (2: (1: L, L), (1: L, L)), (2: (1: L, L), (1: L, L)))
+((5: L, L), (2: L, (3: L, L))) -> (5: (2: L, (3: L, L)), (2: L, (3: L, L)))
+((5: (6: L, L), L), (3: L, L)) -> (5: (6: (3: L, L), (3: L, L)), (3: L, L))
+((6: L, (5: L, L)), (1: (2: L, L), (3: L, L))) -> (6: (1: (2: L, L), (3: L, L)), (5: (1: (2: L, L), (3: L, L)), (1: (2: L, L), (3: L, L))))
+((6: L, L), (2: (3: L, L), (3: L, L))) -> (6: (2: (3: L, L), (3: L, L)), (2: (3: L, L), (3: L, L)))
+ ...(2205 more not shown)...
+TotalMap: (22927 components, 9 types)
+
+Program found:
+
+tConcat(@baseTree: Tree['0], @inserted: Tree['0]): Tree['0] =
+  if isLeaf(@baseTree)
+  then @inserted
+  else createNode(treeTag(@baseTree), tConcat(treeLeft(@baseTree), @inserted), tConcat(treeRight(@baseTree), @inserted))
+
+*** [single synthesis] time used: 1,751.12ms ***
+------ Synthesis for nodesAtLevel Succeeded! (0 reboots) ------
+Time used for the last reboot: 1,748.14ms
+Initial Examples (11):
+(L, 0) -> []
+(L, 1) -> []
+(L, -1) -> []
+((12: L, L), 0) -> [12]
+((12: L, L), -1) -> []
+((12: L, L), 1) -> []
+((12: L, L), 2) -> []
+((12: (7: L, L), (9: L, L)), 1) -> [7, 9]
+((12: (7: L, L), (9: L, L)), 2) -> []
+((12: (15: (4: L, L), L), (9: L, L)), 3) -> []
+((15: (15: (4: L, L), L), (9: L, L)), 4) -> []
+Additional examples provided (427):
+((12: L, (15: (4: L, L), L)), -3) -> []
+((9: (15: (4: L, L), L), (9: L, L)), -1) -> []
+((12: (4: L, L), (4: L, L)), 3) -> []
+((9: (9: L, L), L), -4) -> []
+((9: (9: L, L), (4: L, L)), 0) -> [9]
+((9: L, (7: L, L)), 2) -> []
+((12: (9: L, L), (4: L, L)), 1) -> [9, 4]
+((12: L, (7: L, L)), 2) -> []
+ ...(419 more not shown)...
+TotalMap: (7440 components, 19 types)
+
+Program found:
+
+nodesAtLevel(@tree: Tree['0], @level: Int): List['0] =
+  if or(isLeaf(@tree), not(isNonNeg(@level)))
+  then nil()
+  else if isNonNeg(neg(@level))
+       then cons(treeTag(@tree), nil())
+       else concat(nodesAtLevel(treeLeft(@tree), dec(@level)), nodesAtLevel(treeRight(@tree), dec(@level)))
+
+New examples: (0, 1) -> 0; (0, 5) -> 0; (7, 1) -> 0; (7, 2) -> 1; (7, 3) -> 1; (14, -2) -> 0; (14, 4) -> 2; (15, 8) -> 7; (16, 9) -> 7; (0, 0) -> Err
+New examples: (0, 0) -> Err; (0, 1) -> 0; (0, 5) -> 0; (7, 1) -> 0; (7, 2) -> 1; (7, 3) -> 1; (14, -2) -> 0; (14, 4) -> 2; (15, 8) -> 7; (16, 9) -> 7; (-1, -1) -> 0
+New examples: (0, 0) -> Err; (0, 1) -> 0; (0, 5) -> 0; (-1, -1) -> 0; (7, 1) -> 0; (7, 2) -> 1; (7, 3) -> 1; (14, -2) -> 0; (14, 4) -> 2; (15, 8) -> 7; (16, 9) -> 7; (-1, -2) -> -1
+New examples: (0, 0) -> Err; (0, 1) -> 0; (0, 5) -> 0; (-1, -1) -> 0; (-1, -2) -> -1; (7, 1) -> 0; (7, 2) -> 1; (7, 3) -> 1; (14, -2) -> 0; (14, 4) -> 2; (15, 8) -> 7; (16, 9) -> 7; (-1, 1) -> 0
+New examples: (0, 0) -> Err; (0, 1) -> 0; (0, 5) -> 0; (-1, -1) -> 0; (-1, 1) -> 0; (-1, -2) -> -1; (7, 1) -> 0; (7, 2) -> 1; (7, 3) -> 1; (14, -2) -> 0; (14, 4) -> 2; (15, 8) -> 7; (16, 9) -> 7; (-1, 2) -> -1
+*** [single synthesis] time used: 40,103.45ms ***
+------ Synthesis for mod Succeeded! (5 reboots) ------
+Time used for the last reboot: 27,502.19ms
+Initial Examples (14):
+(0, 0) -> Err
+(0, 1) -> 0
+(0, 5) -> 0
+(-1, -1) -> 0
+(-1, 1) -> 0
+(-1, -2) -> -1
+(-1, 2) -> -1
+(7, 1) -> 0
+(7, 2) -> 1
+(7, 3) -> 1
+(14, -2) -> 0
+(14, 4) -> 2
+(15, 8) -> 7
+(16, 9) -> 7
+Additional examples provided (588):
+(5, 1) -> 0
+(-8, -3) -> -2
+(-13, 2) -> -1
+(-13, -7) -> -6
+(-4, 8) -> -4
+(-4, -8) -> -4
+(-7, 2) -> -1
+(-14, -9) -> -5
+ ...(580 more not shown)...
+TotalMap: (71089 components, 4 types)
+
+Program found:
+
+mod(@a: Int, @b: Int): Int =
+  plus(@a, neg(times(@b, div(@a, @b))))
+
+New examples: ([]) -> []; ([1]) -> [1]; ([5, 6, 7]) -> [5, 6, 7]; ([7, 6, 5]) -> [5, 6, 7]; ([5, 7, 6]) -> [5, 6, 7]; ([9, 12, 4, 3]) -> [3, 4, 9, 12]; ([7]) -> [7]
+*** [single synthesis] time used: 123,855.01ms ***
+------ Synthesis for sortList Succeeded! (1 reboots) ------
+Time used for the last reboot: 81,287.91ms
+Initial Examples (7):
+([]) -> []
+([1]) -> [1]
+([7]) -> [7]
+([5, 6, 7]) -> [5, 6, 7]
+([7, 6, 5]) -> [5, 6, 7]
+([5, 7, 6]) -> [5, 6, 7]
+([9, 12, 4, 3]) -> [3, 4, 9, 12]
+Additional examples provided (3702):
+([0, -21]) -> [-21, 0]
+([4, 0, -1]) -> [-1, 0, 4]
+([-1, 4, 4]) -> [-1, 4, 4]
+([9, 1]) -> [1, 9]
+([1, 0, 12]) -> [0, 1, 12]
+([8, 2, 9]) -> [2, 8, 9]
+([-13, 3]) -> [-13, 3]
+([1, -1, -3]) -> [-3, -1, 1]
+ ...(3694 more not shown)...
+TotalMap: (209997 components, 8 types)
+
+Program found:
+
+sortList(@xs: List[Int]): List[Int] =
+  if isNil(@xs)
+  then nil()
+  else if isNonNeg(plus(neg(head(@xs)), head(concat(sortList(tail(@xs)), @xs))))
+       then cons(head(@xs), sortList(tail(@xs)))
+       else cons(head(sortList(tail(@xs))), sortList(cons(head(@xs), tail(sortList(tail(@xs))))))
+
+New examples: ([]) -> []; ([1]) -> [1]; ([3, 3]) -> [3]; ([2, 3]) -> [2, 3]; ([1, 2, 3]) -> [1, 2, 3]; ([1, 2, 3, 2]) -> [1, 3, 2]; ([1, 2, 3, 2, 1]) -> [3, 2, 1]; ([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 2, 3, 3, 3]) -> [2, 3]; ([3, 3, 2]) -> [3, 2]
+New examples: ([]) -> []; ([1]) -> [1]; ([3, 3]) -> [3]; ([2, 3]) -> [2, 3]; ([1, 2, 3]) -> [1, 2, 3]; ([3, 3, 2]) -> [3, 2]; ([1, 2, 3, 2]) -> [1, 3, 2]; ([1, 2, 3, 2, 1]) -> [3, 2, 1]; ([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 2, 3, 3, 3]) -> [2, 3]; ([3, 2, 3]) -> [2, 3]
+New examples: ([]) -> []; ([1]) -> [1]; ([3, 3]) -> [3]; ([2, 3]) -> [2, 3]; ([1, 2, 3]) -> [1, 2, 3]; ([3, 3, 2]) -> [3, 2]; ([3, 2, 3]) -> [2, 3]; ([1, 2, 3, 2]) -> [1, 3, 2]; ([1, 2, 3, 2, 1]) -> [3, 2, 1]; ([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 2, 3, 3, 3]) -> [2, 3]; ([2, 2, 1, 1]) -> [2, 1]
+New examples: ([]) -> []; ([1]) -> [1]; ([3, 3]) -> [3]; ([2, 3]) -> [2, 3]; ([1, 2, 3]) -> [1, 2, 3]; ([3, 3, 2]) -> [3, 2]; ([3, 2, 3]) -> [2, 3]; ([1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 1, 1]) -> [2, 1]; ([1, 2, 3, 2, 1]) -> [3, 2, 1]; ([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 2, 3, 3, 3]) -> [2, 3]; ([2, 1, 1, 1]) -> [2, 1]
+New examples: ([]) -> []; ([1]) -> [1]; ([3, 3]) -> [3]; ([2, 3]) -> [2, 3]; ([1, 2, 3]) -> [1, 2, 3]; ([3, 3, 2]) -> [3, 2]; ([3, 2, 3]) -> [2, 3]; ([1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 1, 1]) -> [2, 1]; ([2, 1, 1, 1]) -> [2, 1]; ([1, 2, 3, 2, 1]) -> [3, 2, 1]; ([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 2, 3, 3, 3]) -> [2, 3]; ([3, 2, 3, 3]) -> [2, 3]
+New examples: ([]) -> []; ([1]) -> [1]; ([3, 3]) -> [3]; ([2, 3]) -> [2, 3]; ([1, 2, 3]) -> [1, 2, 3]; ([3, 3, 2]) -> [3, 2]; ([3, 2, 3]) -> [2, 3]; ([1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 1, 1]) -> [2, 1]; ([2, 1, 1, 1]) -> [2, 1]; ([3, 2, 3, 3]) -> [2, 3]; ([1, 2, 3, 2, 1]) -> [3, 2, 1]; ([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 2, 3, 3, 3]) -> [2, 3]; ([2, 1, 3, 2]) -> [1, 3, 2]
+New examples: ([]) -> []; ([1]) -> [1]; ([3, 3]) -> [3]; ([2, 3]) -> [2, 3]; ([1, 2, 3]) -> [1, 2, 3]; ([3, 3, 2]) -> [3, 2]; ([3, 2, 3]) -> [2, 3]; ([1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 1, 1]) -> [2, 1]; ([2, 1, 1, 1]) -> [2, 1]; ([3, 2, 3, 3]) -> [2, 3]; ([2, 1, 3, 2]) -> [1, 3, 2]; ([1, 2, 3, 2, 1]) -> [3, 2, 1]; ([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]; ([2, 2, 2, 3, 3, 3]) -> [2, 3]; ([2, 2, 1, 2]) -> [1, 2]
+*** [single synthesis] time used: 99,517.76ms ***
+------ Synthesis for dedup Succeeded! (7 reboots) ------
+Time used for the last reboot: 42,832.39ms
+Initial Examples (16):
+([]) -> []
+([1]) -> [1]
+([3, 3]) -> [3]
+([2, 3]) -> [2, 3]
+([1, 2, 3]) -> [1, 2, 3]
+([3, 3, 2]) -> [3, 2]
+([3, 2, 3]) -> [2, 3]
+([1, 2, 3, 2]) -> [1, 3, 2]
+([2, 2, 1, 1]) -> [2, 1]
+([2, 1, 1, 1]) -> [2, 1]
+([3, 2, 3, 3]) -> [2, 3]
+([2, 1, 3, 2]) -> [1, 3, 2]
+([2, 2, 1, 2]) -> [1, 2]
+([1, 2, 3, 2, 1]) -> [3, 2, 1]
+([1, 1, 1, 2, 3, 2]) -> [1, 3, 2]
+([2, 2, 2, 3, 3, 3]) -> [2, 3]
+Additional examples provided (149):
+([1, 1, 2, 2]) -> [1, 2]
+([3, 2, 3, 2]) -> [3, 2]
+([3, 2, 1, 2]) -> [3, 1, 2]
+([2, 1, 2, 3]) -> [1, 2, 3]
+([2, 3, 2, 3, 2]) -> [3, 2]
+([3, 2, 2, 3, 2]) -> [3, 2]
+([1, 1, 1, 1]) -> [1]
+([3, 1, 3]) -> [1, 3]
+ ...(141 more not shown)...
+TotalMap: (128188 components, 9 types)
+
+Program found:
+
+dedup(@xs: List['0]): List['0] =
+  if isNil(@xs)
+  then @xs
+  else if isNil(tail(@xs))
+       then @xs
+       else if equal(head(@xs), head(dedup(tail(@xs))))
+            then cons(head(@xs), tail(dedup(tail(@xs))))
+            else if equal(dedup(tail(tail(@xs))), dedup(cons(head(@xs), tail(tail(@xs)))))
+                 then dedup(tail(@xs))
+                 else cons(head(@xs), dedup(tail(@xs)))
+
+Summery:
+    name          cost  depth  examples  reboots          time
+    reverse         12      8       3/9     None      500.16ms
+    length           8      4       3/2     None       19.19ms
+    compress        25      9      8/22     None      414.61ms
+    stutter         13      9      3/10     None       79.04ms
+    squareList      14      9       6/2     None      799.01ms
+    insert          19      9     8/292     None      554.10ms
+    contains        14      5      7/22     None        9.93ms
+    lastInList      14      5       5/9     None        5.64ms
+    shiftLeft       12      8      5/45     None       22.73ms
+    maxInList       24      8     8/154        1      233.48ms
+    dropLast        15      6      5/10     None       21.79ms
+    evens           16      7      5/20     None       24.17ms
+    cartesian       32     12      4/78     None      173.92ms
+    dedup           19      7      9/16     None       34.56ms
+    fib             15      8       8/4     None      228.46ms
+    sumUnder        10      5       5/3     None        9.01ms
+    times           22      8    19/182       13   59,827.43ms
+    flattenTree     14     10      3/16     None       27.88ms
+    tConcat         15     11    6/2213     None   14,899.00ms
+    nodesAtLevel    27     11    11/427     None    1,751.12ms
+    mod              8      8    14/588        5   40,103.45ms
+    sortList        35     13    7/3702        1  123,855.01ms
+    dedup           46     16    16/149        7   99,517.75ms
+    Total          429    196  168/7975       27      343.111s
+
+Process finished with exit code 0

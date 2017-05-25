@@ -349,11 +349,11 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
 
     (1 to config.maxCost).foreach(level => {
-      TimeTools.printTimeUsed(s"synthesize related components at level $level"){
+      TimeTools.printTimeUsed(s"synthesize related components at level $level", config.logLevels){
         synthesizeAtLevel(level, synBoolAndReturnType = true)
       }
 
-      TimeTools.printTimeUsed("Goal searching") {
+      TimeTools.printTimeUsed("Goal searching", config.logLevels) {
         state.createLibrariesForThisLevel()
         val search = new BatchGoalSearch(
           level,
@@ -367,12 +367,14 @@ class SynthesisTyped(config: Config, logger: String => Unit) {
         }
       }
 
-      TimeTools.printTimeUsed(s"synthesize unrelated components"){
+      TimeTools.printTimeUsed(s"synthesize unrelated components", config.logLevels){
         synthesizeAtLevel(level, synBoolAndReturnType = false)
       }
 
-      logger(s"State at level: $level\n")
-      state.print(exampleCount)
+      if(config.logLevels) {
+        logger(s"State at level: $level\n")
+        state.print(exampleCount)
+      }
       state.openNextLevel()
     })
     None

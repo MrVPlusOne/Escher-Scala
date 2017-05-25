@@ -116,7 +116,8 @@ object ComponentImpl{
         }
       })
     }
-    impl(None, mutable.Map())
+    val buffer: mutable.Map[ArgList, TermValue] = mutable.Map()
+    impl(None, buffer)
   }
 
   def nonRecursiveImpl(signature: ComponentSignature,
@@ -352,8 +353,8 @@ object CommonComps {
     impl = { case IS(ValueTree(t)) => t == BinaryLeaf}
   )
 
-  val treeValue = ComponentImpl(
-    "treeValue",
+  val treeTag = ComponentImpl(
+    "treeTag",
     IS(tyTree(tyVar(0))),
     tyVar(0),
     impl = {
@@ -377,12 +378,12 @@ object CommonComps {
 
   val treeComps = Set(
     //binary tree
-    createLeaf, createNode, isLeaf, treeValue, treeLeft, treeRight
+    createLeaf, createNode, isLeaf, treeTag, treeLeft, treeRight
   )
 
   val rules_tree = Map[ComponentImpl, ReducibleCheck](
     isLeaf -> noDirectChildren(createNode),
-    treeValue -> noDirectChildren(createNode),
+    treeTag -> noDirectChildren(createNode),
     treeLeft -> noDirectChildren(createNode),
     treeRight -> noDirectChildren(createNode)
   )

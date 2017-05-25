@@ -18,7 +18,7 @@ object Main {
     import DSL._
 
     val syn = new SynthesisTyped(
-      Config(maxCost = 20, logLevels = false, logReboot = true, logComponents = false, searchSizeFactor = 3),
+      Config(maxCost = 20, logLevels = false, logReboot = false, logComponents = false, searchSizeFactor = 3),
       Console.print
     )
 
@@ -27,18 +27,12 @@ object Main {
 
     def synthesizeUsingRef(refComp: ComponentImpl, argNames: IS[String],
                            exampleInputs: IS[ArgList],
-                           additionalComps: (Set[ComponentImpl], Map[ComponentImpl, ReducibleCheck]) = (Set(), Map())) = {
-      val examples = exampleInputs.map(argList => argList -> refComp.executeEfficient(argList)).sortWith(Synthesis.exampleLt)
-      val additionalImpls = additionalComps._1
+                           additionalComps: Set[ComponentImpl] = Set()) = {
+      val args: IS[ArgList] = exampleInputs
 
-      TestCase(refComp.name, examples, () => {
-        println(s"Task name: ${refComp.name}")
-        Synthesis.showExamples("sorted examples", examples, maxExamplesShown = 50)
-        val r = synthesize(refComp.name, refComp.inputTypes, argNames, refComp.returnType)(
-          envComps = CommonComps.standardComps ++ additionalImpls, examples,
-          PartialFunction{ (args: IS[TermValue]) => refComp.executeEfficient(args)} )
-        r.map(_._1)
-      })
+      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+
+      synthesize(refComp.name, refComp.inputTypes, argNames, refComp.returnType)(envComps = CommonComps.standardComps ++ additionalComps, examples, oracle = refComp.impl)
     }
 
     def reverseSynthesis() = {
@@ -311,44 +305,106 @@ object Main {
     }
 
     def sortIntsSynthesis() = {
-
-      val args: IS[ArgList] = IS(
+      synthesizeUsingRef(CommonComps.sortInts, IS("xs"), exampleInputs = IS(
         argList(listValue()),
         argList(listValue(1)),
         argList(listValue(5,6,7)),
         argList(listValue(7,6,5)),
         argList(listValue(5,7,6)),
         argList(listValue(9,12,4,3))
-      )
+      ))
+    }
 
-      val refComp = CommonComps.sortInts
+    def lengthSynthesis() = {
+      synthesizeUsingRef(CommonComps.length, IS("xs"), exampleInputs = IS(
+        argList(listValue(2, 3, 4)),
+        argList(listValue(1)),
+        argList(listValue())
+      ))
+    }
 
-      val examples = args.map(argList => argList -> refComp.execute(argList, debug = false))
+    def sumUnderSynthesis() = {
+      synthesizeUsingRef(CommonComps.sumUnder, IS("n"), exampleInputs = IS(
+        argList(0),
+        argList(1),
+        argList(2),
+        argList(3),
+        argList(4)
+      ))
+    }
 
-      synthesize(refComp.name, refComp.inputTypes, IS("xs"), refComp.returnType)(envComps = CommonComps.standardComps, examples, oracle = refComp.impl)
+    def timesSynthesis() = {
+      synthesizeUsingRef(CommonComps.times, IS("x", "y"), exampleInputs = IS(
+        argList(1,0),
+        argList(0,5),
+        argList(2,7),
+        argList(3,8),
+        argList(0,8),
+        argList(7,5)
+      ))
+    }
+
+    def lastInListSynthesis()  = {
+      synthesizeUsingRef(CommonComps.lastInList, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(1, 2, 3)),
+        argList(listValue(1, 6, 7, 11)),
+        argList(listValue(10, 25, 7, 9, 18))
+      ))
+    }
+
+    def shiftLeftSynthesis()  = {
+      synthesizeUsingRef(CommonComps.shiftLeft, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(1)),
+        argList(listValue(1, 2, 3)),
+        argList(listValue(1, 6, 7, 11)),
+        argList(listValue(10, 25, 7, 9, 18))
+      ))
+    }
+
+    def maxInListSynthesis() = {
+      synthesizeUsingRef(CommonComps.maxInList, IS("xs"), exampleInputs = IS(
+        argList(listValue()),
+        argList(listValue(3)),
+        argList(listValue(0, 2, 1)),
+        argList(listValue(1, 6, 2, 5)),
+        argList(listValue(1, 6, 7, 5)),
+        argList(listValue(10, 25, 7, 9, 18)),
+        argList(listValue(100, 25, 7, 9, 18))
+      ))
     }
 
     type TestCase = () => Option[(Synthesis.SynthesizedComponent, syn.SynthesisState, SynthesisData)]
     val tasks: Seq[TestCase] =
       Seq(
         reverseSynthesis,
-        stutterSynthesis,
-        cartesianSynthesis,
-        squareListSynthesis,
-        fibSynthesis,
-        insertSynthesis,
+        lengthSynthesis,
         compressSynthesis,
-        flattenTreeSynthesis,
-        nodesAtLevelSynthesis,
+        stutterSynthesis,
+        squareListSynthesis,
+        insertSynthesis,
         containsSynthesis,
+        lastInListSynthesis,
+        shiftLeftSynthesis,
+        maxInListSynthesis,
         dropLastSynthesis,
         evensSynthesis,
+        cartesianSynthesis,
         dedupSynthesis(useContains = true),
-        tConcatSynthesis
+
+        fibSynthesis,
+        sumUnderSynthesis,
+        timesSynthesis,
+
+        flattenTreeSynthesis,
+        tConcatSynthesis,
+        nodesAtLevelSynthesis
       )
     val slowTasks = Seq[TestCase](modSynthesis, sortIntsSynthesis, dedupSynthesis(useContains = false))
 
-    val records = for (task <- tasks) yield {
+    val records = for (task <- tasks ++ slowTasks) yield {
       val (time, result) = TimeTools.printTimeUsed("single synthesis") {
         TimeTools.measureTime(task())
       }
@@ -376,7 +432,7 @@ object Main {
           s"${examples._1}/${examples._2}",
           if(reboots==0) "None" else reboots.toString,
           TimeTools.nanoToMillisString(time))
-    } :+ IS("   Total", totalCost.toString, totalDepth.toString,
+    } :+ IS("  Total", totalCost.toString, totalDepth.toString,
       s"$totalExample1/$totalExample2", totalReboots.toString, TimeTools.nanoToSecondString(totalTime))
 
     CmdInteract.printTable(dataToPrint, spacing = 2, Set(1,2,3,4,5))
@@ -385,7 +441,5 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     testSynthesisTyped()
-//    testSynthesisUntyped()
-//    testImmutableGoal()
   }
 }

@@ -135,15 +135,17 @@ class SynNoOracle(config: Config, logger: String => Unit){
     val goalVM = outputs.zipWithIndex.map(_.swap).toMap
 
     (1 to config.maxLevel).foreach(level => {
-      TimeTools.printTimeUsed(s"synthesize related components at level $level"){
+      TimeTools.printTimeUsed(s"synthesize related components at level $level", config.logLevels){
         synthesizeAtLevel(level, synBoolAndReturnType = true)
       }
 
-      logger(s"State at level: $level\n")
-      state.print(exampleCount)
+      if(config.logLevels) {
+        logger(s"State at level: $level\n")
+        state.print(exampleCount)
+      }
 
       if(!config.onlyForwardSearch) {
-        TimeTools.printTimeUsed("Goal searching") {
+        TimeTools.printTimeUsed("Goal searching", config.logLevels) {
           state.createLibrariesForThisLevel()
 
           val termsWithKnownVV = (1 to level).map{c => state.termsOfCost(c).toList}
@@ -186,7 +188,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
         }
       }
 
-      TimeTools.printTimeUsed(s"synthesize unrelated components"){
+      TimeTools.printTimeUsed(s"synthesize unrelated components", config.logLevels){
         synthesizeAtLevel(level, synBoolAndReturnType = false)
       }
 
@@ -465,7 +467,6 @@ object SynNoOracle {
                      logLevels: Boolean = true,
                      logComponents: Boolean = true,
                      logTotalMap: Boolean = true,
-                     logReboot: Boolean = true,
                      argListCompare: (ArgList, ArgList) => Boolean = ArgList.anyArgSmaller,
                      searchSizeFactor: Int = 3,
                      useReductionRules: Boolean = true,

@@ -2,17 +2,24 @@
 Example-Driven Recursive Program Synthesis
 <hr>
 
-This repository contains two algorithm: **TypedEscher** and **AscendRec**
+This repository contains the source code of this thesis [Oracle-free Synthesis of Recursive Programs](documentation/AscendRec-en.pdf).
 
-**TypedEscher** is a Scala implementation of the algorithm described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system and other type-related optimizations to improve searching efficiency.
+The codebase implements two algorithms: **TypedEscher** and **AscendRec**
+
+**TypedEscher** is a Scala implementation of the algorithm Escher described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system and other type-related optimizations to improve searching efficiency.
 
 **AscendRec** is a new algorithm based on *TypedEscher*, but unlike *TypedEscher*, which requires the user to provide additional input-output examples during synthesis, *AscendRec* dose not need any additional examples to finish its work.
 
 <br>
 
-**Currently working in progress**
+### Results taken from the [thesis](documentation/AscendRec-en.pdf).
 
-### Results (TypedEscher):
+ <img src="documentation/TypedEscherResults.png" width="800px" alt="summery"/>
+
+ <img src="documentation/AscendRecResults.png" width="800px" alt="summery"/>
+
+
+### Some Synthesized Programs(TypedEscher):
 
  <img src="documentation/summery.png" width="600px" alt="summery"/>
 
@@ -38,8 +45,3 @@ This repository contains two algorithm: **TypedEscher** and **AscendRec**
 
 see also [result.txt](documentation/txt_results/result.txt)
 
-### Results (AscendRec)
-
- <img src="documentation/summery_AscendRec.png" width="500px" alt="summery"/>
-
- see also [result_AscendRec.txt](documentation/txt_results/result_AscendRec.txt)
