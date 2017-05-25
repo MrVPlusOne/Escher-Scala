@@ -1,6 +1,6 @@
 package escher
 
-import escher.SynNoOracle.ExtendedCompImpl
+import escher.AscendRecSynthesizer.ExtendedCompImpl
 import escher.Term.{Component, If, Var}
 
 /**
@@ -8,6 +8,7 @@ import escher.Term.{Component, If, Var}
     *| Var(name) <br>
     *| Component(name, term, ..., term) <br>
     *| if term then term else term <br>
+  * please note this `term` is called `program` in the thesis.
   */
 sealed trait Term{
   def show: String = this match {

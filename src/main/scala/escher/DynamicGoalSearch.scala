@@ -5,7 +5,7 @@ import escher.Synthesis._
 import collection.{immutable, mutable}
 import BatchGoalSearch._
 import escher.DynamicGoalSearch.ExecuteHoleException
-import escher.SynNoOracle.ExtendedCompImpl
+import escher.AscendRecSynthesizer.ExtendedCompImpl
 
 class DynamicGoalSearch(
                          maxCompCost: Int,

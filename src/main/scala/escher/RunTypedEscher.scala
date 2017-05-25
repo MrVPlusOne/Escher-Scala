@@ -5,19 +5,19 @@ import escher.Synthesis.{ArgList, SynthesizedComponent}
 
 
 /**
-  * Created by weijiayi on 04/04/2017.
+  * Run TypedEscher on a benchmark suit.
   */
-object Main {
+object RunTypedEscher {
 
   case class TestCase(name: String, examples: IndexedSeq[(ArgList, TermValue)],
                       result: () => Option[SynthesizedComponent])
 
 
   def testSynthesisTyped(): Unit = {
-    import escher.SynthesisTyped._
+    import escher.TypedEscherSynthesizer._
     import DSL._
 
-    val syn = new SynthesisTyped(
+    val syn = new TypedEscherSynthesizer(
       Config(maxCost = 20, logLevels = false, logReboot = false, logComponents = false, searchSizeFactor = 3),
       Console.print
     )
@@ -408,7 +408,7 @@ object Main {
       val (time, result) = TimeTools.printTimeUsed("single synthesis") {
         TimeTools.measureTime(task())
       }
-      SynthesisTyped.printResult(syn, maxExamplesShown = 8)(result)
+      TypedEscherSynthesizer.printResult(syn, maxExamplesShown = 8)(result)
 
       val (comp,state,synData) = result.get
       val examples = (state.examples.length, synData.oracleBuffer.length)

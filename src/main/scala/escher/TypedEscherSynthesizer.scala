@@ -1,13 +1,13 @@
 package escher
 
 
-import SynthesisTyped._
+import TypedEscherSynthesizer._
 import Term.Component
 import Synthesis._
 
 import scala.collection.mutable
 
-object SynthesisTyped{
+object TypedEscherSynthesizer{
   /**
     *
     * @param deleteAllErr whether to delete synthesized components whose value vector consists only of Err
@@ -33,7 +33,7 @@ object SynthesisTyped{
     def init: SynthesisData = SynthesisData(oracleBuffer = IS(), reboots = 0, lastRebootTimeUsed = 0)
   }
 
-  def printResult(syn: SynthesisTyped, maxExamplesShown: Int = 9)
+  def printResult(syn: TypedEscherSynthesizer, maxExamplesShown: Int = 9)
                  (result: Option[(SynthesizedComponent, syn.SynthesisState, SynthesisData)]): Unit = {
 
     result match {
@@ -54,7 +54,7 @@ object SynthesisTyped{
 
 }
 
-class SynthesisTyped(config: Config, logger: String => Unit) {
+class TypedEscherSynthesizer(config: Config, logger: String => Unit) {
 
   def log(condition: Boolean)(msg: =>String): Unit = {
     if(condition)

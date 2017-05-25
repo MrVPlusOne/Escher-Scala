@@ -1,16 +1,19 @@
 package escher
 
-import escher.SynNoOracle._
+import escher.AscendRecSynthesizer._
 import DSL._
 import Synthesis._
 import escher.CommonComps.ReducibleCheck
 
 
-object TestSynNoOracle {
+/**
+  * Run AscendRec on a benchmark suit.
+*/
+object RunAscendRec {
   def main(args: Array[String]): Unit = {
 
 
-    val syn = new SynNoOracle(
+    val syn = new AscendRecSynthesizer(
       Config(maxLevel = 15, logLevels = true, logComponents = false, searchSizeFactor = 3),
       Console.print
     )

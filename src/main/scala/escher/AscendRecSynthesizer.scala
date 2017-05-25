@@ -1,12 +1,12 @@
 package escher
 
-import SynNoOracle._
+import AscendRecSynthesizer._
 import escher.Term.Component
 import Synthesis._
 import escher.CommonComps.ReducibleCheck
 
 
-class SynNoOracle(config: Config, logger: String => Unit){
+class AscendRecSynthesizer(config: Config, logger: String => Unit){
 
   def synthesize(name: String, inputTypesFree: IndexedSeq[Type], inputNames: IndexedSeq[String], returnTypeFree: Type)
                 (envComps: Set[ComponentImpl],
@@ -457,7 +457,7 @@ class SynNoOracle(config: Config, logger: String => Unit){
 }
 
 
-object SynNoOracle {
+object AscendRecSynthesizer {
   type RecMap = Map[Term, ExtendedValueVec]
 
   case class Config(
