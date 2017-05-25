@@ -12,6 +12,11 @@ The codebase implements two algorithms: **TypedEscher** and **AscendRec**
 
 <br>
 
+### How to use the source code
+Simply download or clone this project and run [sbt](http://www.scala-sbt.org) from within the root directory.
+
+To compile and run the benchmark suits, use `sbt run` and choose `RunTypedEscher` or `RunAscendRec` as the Main Class.
+
 ### Results taken from the [thesis](documentation/AscendRec-en.pdf).
 
 See full output logs in [result_TypedEscher.txt](documentation/text_results/result_TypedEscher.txt) and [result_AscendRec.txt](documentation/text_results/result_AscendRec.txt)
