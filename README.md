@@ -6,22 +6,21 @@ This repository contains the source code of this thesis [Oracle-free Synthesis o
 
 The codebase implements two algorithms: **TypedEscher** and **AscendRec**
 
-**TypedEscher** is a Scala implementation of the algorithm Escher described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system and other type-related optimizations to improve searching efficiency.
+**TypedEscher** is a Scala implementation of the *Escher* algorithm, described in this paper [Recursive Program Synthesis(CAV'13)](https://www.microsoft.com/en-us/research/publication/recursive-program-synthesis/), with the addition of a polymorphic static type system and other type-related optimizations to improve searching efficiency.
 
-**AscendRec** is a new algorithm based on *TypedEscher*, but unlike *TypedEscher*, which requires the user to provide additional input-output examples during synthesis, *AscendRec* dose not need any additional examples to finish its work.
+**AscendRec** is a new algorithm based on *TypedEscher*, but unlike *TypedEscher*, which requires the user to provide additional input-output examples during synthesis, *AscendRec* dose not need any additional examples to work.
 
 <br>
 
 ### Results taken from the [thesis](documentation/AscendRec-en.pdf).
 
- <img src="documentation/TypedEscherResults.png" width="800px" alt="summery"/>
+ <img src="documentation/TypedEscherResults.png" width="660px" alt="summery"/>
 
- <img src="documentation/AscendRecResults.png" width="800px" alt="summery"/>
+ <img src="documentation/AscendRecResults.png" width="660px" alt="summery"/>
 
 
 ### Some Synthesized Programs(TypedEscher):
 
- <img src="documentation/summery.png" width="600px" alt="summery"/>
 
 - Duplicate each element of a list
 
@@ -43,5 +42,5 @@ The codebase implements two algorithms: **TypedEscher** and **AscendRec**
 
 <img src="documentation/dedup.png" width="600px" alt="dedup"/>
 
-see also [result.txt](documentation/txt_results/result.txt)
+See full output log in [result_TypedEscher.txt](documentation/text_results/result_TypedEscher.txt) and [result_AscendRec.txt](documentation/txt_results/result_AscendRec.txt)
 
