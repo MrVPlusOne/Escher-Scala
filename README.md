@@ -14,7 +14,7 @@ The codebase implements two algorithms: **TypedEscher** and **AscendRec**
 
 ### Results taken from the [thesis](documentation/AscendRec-en.pdf).
 
-See full output log in [result_TypedEscher.txt](documentation/text_results/result_TypedEscher.txt) and [result_AscendRec.txt](documentation/text_results/result_AscendRec.txt)
+See full output logs in [result_TypedEscher.txt](documentation/text_results/result_TypedEscher.txt) and [result_AscendRec.txt](documentation/text_results/result_AscendRec.txt)
 
  <img src="documentation/TypedEscherResults.png" width="660px" alt="summery"/>
 
